@@ -317,6 +317,7 @@ void TaskPool::fill(double timeInterval)
 		setTaskName(benchmarkSelect, temp);
 		Task temptask = Task(taskNumber, virtualNowTime, std::string(temp));
 		temptask.set_state(TaskState::Unexecuted);
+		temptask.benchmark_num = benchmarkSelect;
 
 		pool.push_back(temptask);
 
