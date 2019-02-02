@@ -43,16 +43,18 @@ int Logger:: createLogFile(const string& name) {
 
 
 	//out_log << "task#|task ID|arrival time|deadline|core|start time|finish time|exe time|status|energy" << endl;
-
+	//out_log << "Task ID    Node ID    Start Time    Excution   Time   Finished Time" << endl;
 	for (unsigned int i = 0; i < logs_.size(); i++) {
 		out_log << logs_.at(i).print();
+		numComplete++;
 	}
 
 	auto currentTime = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(currentTime);
+	
 	out_log << "Simulation Start Time : ";
 	out_log<<std::ctime(&time)<<endl;
-	out_log<<"total task number : "<< numAllTask<<endl;
+	out_log<<"total task number : "<< numComplete<<endl;
 	out_log.close();
 	return 0;
 }
