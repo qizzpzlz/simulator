@@ -21,20 +21,10 @@ double getEstimateTime(Task& task) {
 		{29.25, 57.37, 1.11, 220.39, 158.54, 19.66, 18.85, 45.5, 164.65, 34.03, 151.92, 17.16, 118.99, 35.16, 4.05, 9.64, 1.7, 59.05, 148.18, 60.95, 2.23, 106.27, 284.35, 42.65, 63.29, 126.67, 196.43, 10.7, 71.32}};
 		*/
 
-	static const double estimateTable[8][29] = {
-	{43.24, 84.5, 1.62, 328.32, 238.11, 27.04, 22.72, 63.95, 245.74, 48.72, 224.46, 25.67, 176.12, 52.21, 5.81, 14.33, 2.53, 88.78, 218.47, 80.29, 3.34, 158.63, 423.02, 58.04, 94.07, 187.37, 293.52, 15.7, 107.22},
-	{43.24, 84.5, 1.62, 328.32, 238.11, 27.04, 22.72, 63.95, 245.74, 48.72, 224.46, 25.67, 176.12, 52.21, 5.81, 14.33, 2.53, 88.78, 218.47, 80.29, 3.34, 158.63, 423.02, 58.04, 94.07, 187.37, 293.52, 15.7, 107.22},
-	{43.24, 84.5, 1.62, 328.32, 238.11, 27.04, 22.72, 63.95, 245.74, 48.72, 224.46, 25.67, 176.12, 52.21, 5.81, 14.33, 2.53, 88.78, 218.47, 80.29, 3.34, 158.63, 423.02, 58.04, 94.07, 187.37, 293.52, 15.7, 107.22},
-	{43.24, 84.5, 1.62, 328.32, 238.11, 27.04, 22.72, 63.95, 245.74, 48.72, 224.46, 25.67, 176.12, 52.21, 5.81, 14.33, 2.53, 88.78, 218.47, 80.29, 3.34, 158.63, 423.02, 58.04, 94.07, 187.37, 293.52, 15.7, 107.22},
-	{29.25, 57.37, 1.11, 220.39, 158.54, 19.66, 18.85, 45.5, 164.65, 34.03, 151.92, 17.16, 118.99, 35.16, 4.05, 9.64, 1.7, 59.05, 148.18, 60.95, 2.23, 106.27, 284.35, 42.65, 63.29, 126.67, 196.43, 10.7, 71.32},
-	{29.25, 57.37, 1.11, 220.39, 158.54, 19.66, 18.85, 45.5, 164.65, 34.03, 151.92, 17.16, 118.99, 35.16, 4.05, 9.64, 1.7, 59.05, 148.18, 60.95, 2.23, 106.27, 284.35, 42.65, 63.29, 126.67, 196.43, 10.7, 71.32},
-	{29.25, 57.37, 1.11, 220.39, 158.54, 19.66, 18.85, 45.5, 164.65, 34.03, 151.92, 17.16, 118.99, 35.16, 4.05, 9.64, 1.7, 59.05, 148.18, 60.95, 2.23, 106.27, 284.35, 42.65, 63.29, 126.67, 196.43, 10.7, 71.32},
-	{29.25, 57.37, 1.11, 220.39, 158.54, 19.66, 18.85, 45.5, 164.65, 34.03, 151.92, 17.16, 118.99, 35.16, 4.05, 9.64, 1.7, 59.05, 148.18, 60.95, 2.23, 106.27, 284.35, 42.65, 63.29, 126.67, 196.43, 10.7, 71.32} };
+	static const double estimateTable[29] = 
+	{43.24, 84.5, 1.62, 328.32, 238.11, 27.04, 22.72, 63.95, 245.74, 48.72, 224.46, 25.67, 176.12, 52.21, 5.81, 14.33, 2.53, 88.78, 218.47, 80.29, 3.34, 158.63, 423.02, 58.04, 94.07, 187.37, 293.52, 15.7, 107.22};
 
-
-	//return estimateTable[core][taskNameAtoi(task.name)];
-	return 0;
-	//나중에 추가
+	return estimateTable[task.benchmark_num];
 }
 void printAssign(Task& task) 
 {
@@ -112,4 +102,97 @@ int taskStatusItoa(char* dest, int status) {
 	}
 
 	return 0;
+}
+
+int taskNameAtoi(char* taskName) {
+	if (!strncmp(taskName, "per", 3)) {
+		return 0;
+	}
+	else if (!strncmp(taskName, "bzi", 3)) {
+		return 1;
+	}
+	else if (!strncmp(taskName, "gcc", 3)) {
+		return 2;
+	}
+	else if (!strncmp(taskName, "bwa", 3)) {
+		return 3;
+	}
+	else if (!strncmp(taskName, "gam", 3)) {
+		return 4;
+	}
+	else if (!strncmp(taskName, "mcf", 3)) {
+		return 5;
+	}
+	else if (!strncmp(taskName, "mil", 3)) {
+		return 6;
+	}
+	else if (!strncmp(taskName, "zeu", 3)) {
+		return 7;
+	}
+	else if (!strncmp(taskName, "gro", 3)) {
+		return 8;
+	}
+	else if (!strncmp(taskName, "cac", 3)) {
+		return 9;
+	}
+	else if (!strncmp(taskName, "les", 3)) {
+		return 10;
+	}
+	else if (!strncmp(taskName, "nam", 3)) {
+		return 11;
+	}
+	else if (!strncmp(taskName, "gob", 3)) {
+		return 12;
+	}
+	else if (!strncmp(taskName, "dea", 3)) {
+		return 13;
+	}
+	else if (!strncmp(taskName, "sop", 3)) {
+		return 14;
+	}
+	else if (!strncmp(taskName, "pov", 3)) {
+		return 15;
+	}
+	else if (!strncmp(taskName, "cal", 3)) {
+		return 16;
+	}
+	else if (!strncmp(taskName, "hmm", 3)) {
+		return 17;
+	}
+	else if (!strncmp(taskName, "sje", 3)) {
+		return 18;
+	}
+	else if (!strncmp(taskName, "Gem", 3)) {
+		return 19;
+	}
+	else if (!strncmp(taskName, "lib", 3)) {
+		return 20;
+	}
+	else if (!strncmp(taskName, "h26", 3)) {
+		return 21;
+	}
+	else if (!strncmp(taskName, "ton", 3)) {
+		return 22;
+	}
+	else if (!strncmp(taskName, "lbm", 3)) {
+		return 23;
+	}
+	else if (!strncmp(taskName, "omn", 3)) {
+		return 24;
+	}
+	else if (!strncmp(taskName, "ast", 3)) {
+		return 25;
+	}
+	else if (!strncmp(taskName, "wrf", 3)) {
+		return 26;
+	}
+	else if (!strncmp(taskName, "sph", 3)) {
+		return 27;
+	}
+	else if (!strncmp(taskName, "xal", 3)) {
+		return 28;
+	}
+	else {
+		return 66;
+	}
 }

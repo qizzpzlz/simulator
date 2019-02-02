@@ -1,15 +1,5 @@
-Task ID :     0  Node ID : 0  Start Time : 0.0000  Excution Time : 0.0000   Finished Time : 0.0000 
-Task ID :     1  Node ID : 4  Start Time : 3.4406  Excution Time : 0  Finished Time : 3.4406
-Task ID :     2  Node ID : 2  Start Time : 4.7143  Excution Time : 0  Finished Time : 4.7143
-Task ID :     3  Node ID : 2  Start Time : 9.1197  Excution Time : 0  Finished Time : 9.1197
-Task ID :     4  Node ID : 6  Start Time : 9.7788  Excution Time : 0  Finished Time : 9.7788
-Task ID :     5  Node ID : 3  Start Time : 11.532  Excution Time : 0  Finished Time : 11.532
-Task ID :     6  Node ID : 7  Start Time : 12.444  Excution Time : 0  Finished Time : 12.444
-Task ID :     7  Node ID : 5  Start Time : 16.443  Excution Time : 0  Finished Time : 16.443
-Task ID :     8  Node ID : 2  Start Time : 41.647  Excution Time : 0  Finished Time : 41.647
-Task ID :     9  Node ID : 1  Start Time : 47.704  Excution Time : 0  Finished Time : 47.704
-Task ID :    10  Node ID : 0  Start Time : 58.482  Excution Time : 0  Finished Time : 58.482
-Task ID :    11  Node ID : 5  Start Time : 63.331  Excution Time : 0  Finished Time : 63.331
-Simulation Start Time : Sat Feb  2 18:47:47 2019
+Task ID :     2  Node ID : 0  Start Time : 47.704  Excution Time : 43.24  Finished Time : 47.954
+Task ID :     6  Node ID : 5  Start Time : 63.331  Excution Time : 58.04  Finished Time : 70.484
+Simulation Start Time : Sat Feb  2 19:10:14 2019
 
-total task number : 12
+total task number : 2
