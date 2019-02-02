@@ -19,7 +19,7 @@ void Simulation::simulate()
 		cout << "Simulation End. Reason : Simulation Time Interval is 0" << endl;
 	}
 
-	logger.clearLog();
+	logger_.clearLog();
 	//vQ.flush();
 	//vPQ.flush();
 
@@ -57,9 +57,13 @@ void Simulation::simulate()
 	run_scheduler(nextAT, *arrived_task);
 	//	cout<< "7" << endl;
 
+	int count = 0;
 
 		//이제 시뮬레이터 종료까지 계속 스케줄러와 CPU를 실행한다.
 	while (!taskPool_.isEnd()) {
+
+		count++;
+
 		nextAT = taskPool_.getTime();
 
 		bool allCoreLeachAT = false;
@@ -96,7 +100,7 @@ void Simulation::simulate()
 				}
 				else if (nextAT < node.get_current_time() + node.get_left_time()) {
 					//실행 완료시간이 다음 작업 도착시간을 넘기면 도착시간까지만 실행
-					node.execute(nextAT);
+					node.execute(nextAT, logger_);
 					node.set_arrival_time_reached(true);
 				}
 				else {
@@ -106,7 +110,7 @@ void Simulation::simulate()
 					//}
 					/*else {*/
 						//완료신호가 없을 때는 통상적으로 실행시킨다.
-						node.execute(nextAT);
+						node.execute(nextAT, logger_);
 					/*}*/
 				}
 			}
@@ -148,11 +152,8 @@ void Simulation::simulate()
 		// Reset arrival indicators
 		for (auto& node : nodes_)
 		{
-			node.set_arrival_time_reached = false;
+			node.set_arrival_time_reached(false);
 		}
-	}
-	for (auto& node : nodes_) {
-		nodes_= 
 	}
 
 	//여기에 시뮬레이션 종료까지 작동하는 코드를 집어넣어야합니다.
@@ -195,7 +196,11 @@ void Simulation::simulate()
 
 
 
-	logger.createLogFile(scheduler_.get_algorithm_name());
+	logger_.createLogFile(scheduler_.get_algorithm_name());
+
+	char a;
+	cout << count;
+	cin >> a;
 }
 
 //const Task& Simulation::get_arrived_task() const

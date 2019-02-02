@@ -42,7 +42,9 @@ Task& TaskPool::dequeue_task() {
 	nowTaskNum++;
 	*/
 
-	return pool.at(nowTaskNum);
+	Task& task { pool.at(nowTaskNum) };
+	nowTaskNum++;
+	return task;
 }
 
 double TaskPool::getTime(void) {

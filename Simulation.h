@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static Logger logger;
+//static Logger logger;
 
 class Simulation
 {
@@ -34,7 +34,7 @@ public:
 private:
 	std::vector<Node> nodes_;
 	double time_elapsed_;
-	//Logger logger_;
+	Logger logger_;
 	//Task arrived_task_;
 	Scheduler scheduler_;
 	Cluster cluster_;

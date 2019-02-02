@@ -2,6 +2,7 @@
 #include "Task.h"
 #include "States.h"
 #include "VirtualQueue.h"
+class Logger;
 using namespace std;
 
 
@@ -11,13 +12,13 @@ public:
 	const int Id{ id_gen_++ };
 
 	//virtual ~Node();
-	double execute(double current_time);
+	double execute(double current_time, Logger& logger);
 	//double kill();
 
 	double get_current_time() const { return current_time_; }
 	void set_current_time(double time);
 	void set_task(Task&& task);
-	Task& get_task() const;
+	Task& get_task();
 
 	double get_left_time() const;
 	double get_exe_time() const;
@@ -33,7 +34,8 @@ public:
 
 private:
 	static int id_gen_;
-	Task* current_task_ptr_ = nullptr;
+	//Task* current_task_ptr_ = nullptr;
+	Task current_task_;
 	double current_time_ = 0;
 	double left_time_ = 0;
 	double exe_time_ = 0;

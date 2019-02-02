@@ -8,10 +8,10 @@
 class Task
 {
 public:
-	const unsigned long id;
-	const std::string name;
-	double estimatedTime;
-	double leftTime;
+	unsigned long id;
+	std::string name;
+	double estimatedTime{0};
+	double leftTime{0};
 
 	Task() : id{ 0 }, name { "undefined" }{}
 
@@ -28,17 +28,17 @@ public:
 
 	double get_arrival_time() const { return arrival_time_; }
 	double get_start_time() const { return start_time_; }
-	double finished_time() const { return finished_time_; }
-	double execution_time() const { return execution_time_; }
+	double get_finished_time() const { return finished_time_; }
+	double get_execution_time() const { return execution_time_; }
 
 	int get_executed_core_id() const { return executed_core_id_; }
 	void set_executed_core_id(const int id) { executed_core_id_ = id; }
 
-	//// TODO: copy & move operators
+	////// TODO: copy & move operators
 	//Task& operator=(const Task& task) 
 	//{
-	//	auto copied = Task{ task.id, task.arrival_time_, task.name };
-	//	task = copied;
+	//	*this = Task{ task.id, task.arrival_time_, task.name };
+	//	return *this;
 	//}
 
 	//Task& operator=(Task&& task) noexcept
@@ -50,7 +50,7 @@ public:
 	//Task(Task&& task) noexcept : Task(task.id, task.arrival_time_, task.name) {}
 
 	// The copy constructor
-	Task(const Task& task) : Task(task.id, task.arrival_time_, task.name){}
+	//Task(const Task& task) : Task(task.id, task.arrival_time_, task.name){}
 
 	std::string print();
 
@@ -65,6 +65,6 @@ private:
 	double arrival_time_;
 	double cpu_usage_, mem_usage_, storage_usage;
 	TaskState state_{ TaskState::Unexecuted };
-	double start_time_, execution_time_, finished_time_;
+	double start_time_{ 0 }, execution_time_{ 0 }, finished_time_{ 0 };
 	int executed_core_id_;
 };

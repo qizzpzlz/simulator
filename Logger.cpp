@@ -27,19 +27,19 @@ int Logger:: createLogFile(const string& name) {
 	ofstream out_log("logs.txt");
 	
 
-	sort(logs_.begin(), logs_.end(), compareStart);
-	stable_sort(logs_.begin(), logs_.end(), compareNum);
+	//sort(logs_.begin(), logs_.end(), compareStart);
+	//stable_sort(logs_.begin(), logs_.end(), compareNum);
 
-	double numAllTask = ((double)logs_.back().id) + 1;
-
+	//double numAllTask = ((double)logs_.back().id) + 1;
+	double numAllTask = 0;
 	double numComplete = 0;
 	double numDrop = 0;
 	double numFail = 0;
 
-	for (unsigned int i = 0; i < logs_.size(); i++) 
-	{
-		numComplete++;
-	}
+	//for (unsigned int i = 0; i < logs_.size(); i++) 
+	//{
+	//	numComplete++;
+	//}
 
 
 	//out_log << "task#|task ID|arrival time|deadline|core|start time|finish time|exe time|status|energy" << endl;

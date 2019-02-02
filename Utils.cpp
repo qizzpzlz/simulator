@@ -79,7 +79,7 @@ bool compareNum(Task p, Task s) {
 }
 
 bool compareStart(Task p, Task s) {
-	return p.get_start_time < s.get_start_time;
+	return p.get_start_time() < s.get_start_time();
 }
 
 

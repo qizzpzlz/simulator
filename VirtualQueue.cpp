@@ -18,6 +18,7 @@ void VirtualQueue::enqueue(Task& task)
 Task VirtualQueue::dequeue()
 {
 	Task task = list_.front();
+	list_.erase(list_.begin());
 	return task;
 }
 
