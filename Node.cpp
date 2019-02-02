@@ -31,7 +31,7 @@ bool Node::try_set_task_from_queue()
 	return true;
 }
 
-double Node:: execute(double current_time, Logger& logger)
+double Node:: execute(double next_arrival_time, Logger& logger)
 {
 	Task& task = current_task_;
 
@@ -40,10 +40,12 @@ double Node:: execute(double current_time, Logger& logger)
 		//할 일 없음.
 		return 0;
 	}
-	else if (task.get_state() == TaskState::Running) {
-
 	
-
+	if (task.get_state() == TaskState::Unexecuted) 
+	{
+		// Renew current time
+		if (current_time_ < task.get_arrival_time() && task.get_arrival_time() < next_arrival_time)
+			set_current_time(task.get_arrival_time());
 
 		//한 번 실행됬다가 남은 작업을 실행할 때 상태 전환
 		//실행 시킬 수 있다면 실행상태로.
@@ -53,15 +55,19 @@ double Node:: execute(double current_time, Logger& logger)
 		printResume(cpu[core]);
 		*/
 		task.set_start_time(get_current_time());
-		
+		task.set_state(TaskState::Running);
+	}
+	else if (task.get_state() == TaskState::Running)
+	{
+		;
 	}
 
-	if (current_time < current_time_ + task.leftTime) {
+	if (next_arrival_time < current_time_ + task.leftTime) {
 		//다음 도착, 종료예정시간까지 실행이 불가능하다면
 		//다음 도착, 종료예정시간까지만 실행
-		task.leftTime -= current_time - current_time_;
-		task.set_execution_time(task.get_execution_time() + current_time - current_time_);
-		current_time_ = current_time;
+		task.leftTime -= next_arrival_time - current_time_;
+		task.set_execution_time(task.get_execution_time() + next_arrival_time - current_time_);
+		current_time_ = next_arrival_time;
 		//printf("4 : %f\n",now);
 		//cpu[core].state = Execute;
 	}
@@ -77,14 +83,9 @@ double Node:: execute(double current_time, Logger& logger)
 		//printCom(cpu[core]);
 		logger.writeLog(task);
 		state_ = NodeState::Idle;
-		task.set_state(TaskState::Completed);
 	}
 
-
-	
-
-	return exe_time_;
-
+	return task.get_execution_time();
 }
 
 void Node:: set_current_time(const double time)
@@ -96,10 +97,10 @@ void Node::set_task(Task&& task)
 {
 	//current_task_ptr_ = &task;
 	current_task_ = task;
-	current_task_.set_state(TaskState::Running);
+	//current_task_.set_state(TaskState::Unexecuted);
 	//state_ = task.get_state();
 	state_ = NodeState::Running;
-	set_current_time(task.get_arrival_time());
+	//set_current_time(task.get_arrival_time());
 }
 Task& Node:: get_task()
 {	

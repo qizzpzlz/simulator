@@ -12,7 +12,7 @@ public:
 	const int Id{ id_gen_++ };
 
 	//virtual ~Node();
-	double execute(double current_time, Logger& logger);
+	double execute(double next_arrival_time, Logger& logger);
 	//double kill();
 
 	double get_current_time() const { return current_time_; }

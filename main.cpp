@@ -4,7 +4,7 @@
 
 int main()
 {
-	double simulationTime = 100;
+	double simulationTime = 7200;
 	int nodeNum = 8;
 	RandomAlgorithm algorithm{};
 
