@@ -12,6 +12,7 @@ public:
 	std::string name;
 	double estimatedTime{0};
 	double leftTime{0};
+	int benchmark_num;
 
 	Task() : id{ 0 }, name { "undefined" }{}
 
