@@ -68,6 +68,9 @@ double Node:: execute(double next_arrival_time, Logger& logger)
 		task.leftTime -= next_arrival_time - current_time_;
 		task.set_execution_time(task.get_execution_time() + next_arrival_time - current_time_);
 		current_time_ = next_arrival_time;
+		task.set_finished_time(current_time_+ task.leftTime);
+
+		logger.writeLog(task);
 		//printf("4 : %f\n",now);
 		//cpu[core].state = Execute;
 	}

@@ -54,7 +54,7 @@ int Logger:: createLogFile(const string& name) {
 	
 	out_log << "Simulation Start Time : ";
 	out_log<<std::ctime(&time)<<endl;
-	out_log<<"total task number : "<< numComplete<<endl;
+	out_log<<"Total number of logs : "<< numComplete<<endl;
 	out_log.close();
 	return 0;
 }

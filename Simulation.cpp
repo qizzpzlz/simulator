@@ -199,7 +199,7 @@ void Simulation::simulate()
 	logger_.createLogFile(scheduler_.get_algorithm_name());
 
 	char a;
-	cout << count;
+	//cout << count;
 	cin >> a;
 }
 
