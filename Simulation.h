@@ -7,14 +7,25 @@
 #include "TaskPool.h"
 #include "Task.h"
 
+#define MAIN 0
+#define SET_ENV 1
+#define SET_TIME 1
+#define SET_CORE 2
+#define SET_ALGO 3
+
+
 using namespace std;
+
+
+
 
 //static Logger logger;
 
 class Simulation
 {
 public:
-	const double simulationTime{ 7200 };
+	double simulationTime{7200 };
+	int numNode;
 
 	Simulation(SchedulerAlgorithm& algorithm, double simulationTime, int nodeNumber);
 	~Simulation();
@@ -26,6 +37,12 @@ public:
 	const Task& get_arrived_task() const;
 	void set_arrived_task(Task task);
 	void run_scheduler(double currentTime, Task& arrivedTask);
+	
+	void print_intro();
+	void print_menu(int select);
+	void print_result();
+
+	void set_simulation_environment();
 
 	//Task& operator=(const Task&) = default;
 
