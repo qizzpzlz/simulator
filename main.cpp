@@ -7,14 +7,6 @@
 #include "includes/Cluster_Simulation.h"
 #include "spdlog/spdlog.h"
 
-#include <Windows.h>
-void print_cwd()
-{
-	char result[MAX_PATH];
-	std::string str(result, GetModuleFileName(NULL, result, MAX_PATH));
-	std::cout << str << std::endl;
-}
-
 //const std::string SCENARIO_PATH = "D:\\OneDrive\\Documents\\C++\\simulator\\scenarios\\";
 const std::string SCENARIO_PATH = "../../../scenarios/";
 const std::string HOSTS_FILE = "hosts_final.json";
@@ -23,22 +15,17 @@ const std::string SCENARIO_FILE = "sliced_10000_Scenario_From_1000000_1000000.js
 
 int main()
 {	
-
-	print_cwd();
-
-	spdlog::info("Hello, spdlog!");
-
 	// Temporary CLI for input files
 	std::string scenario_path;
 	std::string host_path;
 	int lines;
-	//std::cout << "##Cluster Simulator" << std::endl;
-	//std::cout << "Path to scenario file: ";
-	//std::cin >> scenario_path;
-	//std::cout << "Input the number of lines to read: ";
-	//std::cin >> lines;
-	//std::cout << "Path to host file: ";
-	//std::cin >> host_path;
+	std::cout << "##Cluster Simulator" << std::endl;
+	std::cout << "Path to scenario file: ";
+	std::cin >> scenario_path;
+	std::cout << "Input the number of lines to read: ";
+	std::cin >> lines;
+	std::cout << "Path to host file: ";
+	std::cin >> host_path;
 	
 	ClusterSimulator::Scenario scenario;
 	ClusterSimulator::Cluster cluster;
