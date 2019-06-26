@@ -42,6 +42,8 @@ namespace ClusterSimulator
 		spdlog::info("Job #{0} is added to Queue {1}.", job.id, this->name);
 		ClusterSimulation::file_logger->info("Job #{0} is added to Queue {1}.", job.id, this->name);
 
+		//##################################################
+
 		// TODO: instant dispatch
 		jobs_.clear();
 		spdlog::info("Job #{0} is dispatched to Host {1}", job.id, job.get_dedicated_host_name());

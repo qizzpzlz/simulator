@@ -7,9 +7,12 @@ project (cluster-simulator)
 
 set(CMAKE_CXX_STANDARD 17)
 
+
 # Build spdlog
 add_library(spdlog STATIC dependencies/spdlog.cpp)
 target_compile_definitions(spdlog PUBLIC SPDLOG_COMPILED_LIB)
+target_include_directories(spdlog PUBLIC dependencies/)
+target_include_directories(spdlog PUBLIC dependencies/spdlog/)
 
 
 file(GLOB SRC_FILES
@@ -29,6 +32,10 @@ target_include_directories(cluster-simulator PUBLIC src/)
 target_include_directories(cluster-simulator PUBLIC dependencies/)
 target_include_directories(cluster-simulator PUBLIC includes/)
 target_include_directories(cluster-simulator PUBLIC scenarios/)
+
+set_target_properties(cluster-simulator PROPERTIES
+	CXX_STANDARD 17
+)
 
 
 

@@ -97,12 +97,16 @@ namespace ClusterSimulator
 		}
 	}
 
+	/**
+	 * 
+	 */
 	void ClusterSimulation::after_delay(std::chrono::milliseconds delay, Action block)
 	{
 		events_.push(EventItem{current_time_ + delay, std::move(block)});
 		spdlog::debug("Event is added ");
 	}
 
+	// No use
 	bool ClusterSimulation::run(ms run_time)
 	{
 		//while (!events_.empty() && current_time_ <= run_time)

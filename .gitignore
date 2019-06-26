@@ -341,6 +341,7 @@ healthchecksdb
 
 # build files
 out/
+build/
 
 # scenarios
 scenarios/
