@@ -1,6 +1,7 @@
 #pragma once
 #include "EnumConverter.h"
 #include <string>
+#include <vector>
 
 namespace ClusterSimulator
 {
@@ -79,18 +80,5 @@ namespace ClusterSimulator
 }
 
 
-template<> char const* Utils::enum_strings<ClusterSimulator::HostStatus>::data[] = {
-	"OK", 
-	"Closed_Adm",
-	"Closed_Busy",
-	"Closed_Excl",
-	"Closed_cu_Excl",
-	"Closed_Full",
-	"Closed_LIM",
-	"Closed_Lock",
-	"Closed_Wind",
-	"Closed_EGO",
-	"Unavail",
-	"Unreach"
-};
+//template<> const std::vector<std::string> Utils::enum_strings<ClusterSimulator::HostStatus>::data;
 

@@ -1,12 +1,14 @@
 #pragma once
 #include <ostream>
+#include <vector>
+#include <algorithm>
 
 namespace Utils
 {
 	template<typename T>
 	struct enum_strings
 	{
-		static char const* data[];
+		static const std::vector<std::string> data;
 	};
 
 	template<typename T>
