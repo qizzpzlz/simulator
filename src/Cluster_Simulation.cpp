@@ -43,6 +43,14 @@ namespace ClusterSimulator
 		return *it;
 	}
 
+	std::vector<Host> ClusterSimulation::all_host()
+	{	
+		auto it = cluster_.get_all_nodes();
+		spdlog::info("size {}", it.size());
+		return it;
+		
+	}
+
 	Host& ClusterSimulation::find_host(const std::string& name) const
 	{
 		auto it = std::find_if(cluster_.begin(), cluster_.end(),
@@ -68,6 +76,8 @@ namespace ClusterSimulator
 				Queue& queue = simulation.find_queue(entry.event_detail.queue_name);
 			
 				queue.enqueue(Job{ entry, queue });
+		
+				queue.dispatch();
 				
 				simulation.num_submitted_jobs_++;
 			};

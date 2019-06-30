@@ -339,9 +339,21 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 
+# VSCode
+.vscode/
+
 # build files
 out/
 build/
+CMakeFiles/
+Makefile
+CMakeCache.txt
+cmake_install.cmake
+
+# Output files
+cluster-simulator
+libspdlog.a
+log_output.txt
 
 # scenarios
 scenarios/

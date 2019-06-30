@@ -11,11 +11,15 @@ namespace ClusterSimulator
 			spdlog::error("Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
 
 		slot_running_ += job.slot_required;
+		num_current_running_slots +=  job.slot_required;
+		num_current_jobs ++;
 	}
 
 	void Host::exit_job(const Job& job)
 	{
 		slot_running_ -= job.slot_required;
+		num_current_running_slots -=  job.slot_required;
+		num_current_jobs --;
 	}
 }
 

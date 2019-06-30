@@ -43,6 +43,7 @@ namespace ClusterSimulator
 		// TODO: use id instead of name
 		Queue& find_queue(const std::string& name);
 		Host& find_host(const std::string& name) const;
+		std::vector<Host> all_host();
 
 		std::size_t event_count() const { return events_.size(); }
 		//void log(const std::string& s) const { std::cout << current_time_ << " " << s << std::endl; }

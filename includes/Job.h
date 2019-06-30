@@ -22,7 +22,10 @@ namespace ClusterSimulator
 		const int slot_required;
 		const std::chrono::milliseconds run_time;
 		//std::shared_ptr<Queue> queue_managing_this_job;
-
+		bool is_multi_host;
+		const long mem_required;
+		const long swap_usage;
+		const double num_exec_procs;
 
 		Job(const ScenarioEntry& entry, const Queue& queue);
 

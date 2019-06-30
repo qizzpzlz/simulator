@@ -8,6 +8,7 @@ namespace ClusterSimulator
 {
 	class ClusterSimulation;
 	class Host;
+	class Cluster;
 
 	class Queue
 	{
@@ -34,8 +35,19 @@ namespace ClusterSimulator
 		bool is_default() const { return is_default_; }
 
 		void enqueue(Job&& job);
+
+		void dispatch();
+
+		Host& policy(Job& job);
+		
+		//const std::vector<Host> get_all_nodes() const { return nodes_; }
+
 	private:
 		ClusterSimulation& simulation_;
+		//Cluster& cluster_;
+		
+
+
 		//Policy policy_ = queue.simple_default_policy;
 
 		// characteristics
