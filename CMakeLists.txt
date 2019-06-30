@@ -7,6 +7,7 @@ project (cluster-simulator)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 if(NOT MSVC)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -38,9 +39,14 @@ add_executable (cluster-simulator ${SRC_FILES})
 
 target_link_libraries(cluster-simulator spdlog)
 
+add_subdirectory(dependencies/bprinter dependencies)
+target_link_libraries(cluster-simulator dependencies/bprinter)
+
 target_include_directories(cluster-simulator PUBLIC src/)
 target_include_directories(cluster-simulator PUBLIC dependencies/)
 target_include_directories(cluster-simulator PUBLIC includes/)
 target_include_directories(cluster-simulator PUBLIC scenarios/)
+
+
 
 # TODO: Add tests and install targets if needed.

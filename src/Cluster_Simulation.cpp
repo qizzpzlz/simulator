@@ -9,11 +9,16 @@
 
 //#include "spdlog/spdlog.h"
 #include "../dependencies/spdlog/sinks/basic_file_sink.h"
+#include "../dependencies/spdlog/common.h"
+#include <fstream>
+
 //#include "dependencies/
 
 namespace ClusterSimulator
 {
 	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "log_output.txt");
+	std::ofstream ClusterSimulation::jobmart_file_;
+	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
 		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) }
@@ -21,34 +26,32 @@ namespace ClusterSimulator
 		// TODO: set default queue
 
 		current_time_ = scenario.initial_time_point;
+		std::sort(all_queues_.begin(), all_queues_.end());
+
+		dispatch_all_ = [this]
+		{
+			for (auto& q : this->all_queues_)
+				q.dispatch();
+			this->after_delay(this->dispatch_frequency, this->dispatch_all_, true);
+		};
 
 		//spdlog::register_logger(file_logger);
 		//spdlog::
 
+		initialise_tp();
 		std::cout << "Simulation start!" << std::endl;
-	}
-
-	ClusterSimulation::~ClusterSimulation()
-	{
 	}
 
 	Queue& ClusterSimulation::find_queue(const std::string& name)
 	{
-		auto it = std::find_if(all_queues_.begin(), all_queues_.end(),
+		auto it = all_queues_.begin();
+		it = std::find_if(it, all_queues_.end(),
 		             [&name](Queue& queue) { return queue.name == name; });
 
 		if (it == all_queues_.end())
 			throw std::out_of_range("Can't find a queue of name " + name + " in this simulation.");
 
 		return *it;
-	}
-
-	std::vector<Host> ClusterSimulation::all_host()
-	{	
-		auto it = cluster_.get_all_nodes();
-		spdlog::info("size {}", it.size());
-		return it;
-		
 	}
 
 	Host& ClusterSimulation::find_host(const std::string& name) const
@@ -75,7 +78,7 @@ namespace ClusterSimulator
 
 				Queue& queue = simulation.find_queue(entry.event_detail.queue_name);
 			
-				queue.enqueue(Job{ entry, queue });
+				queue.enqueue(Job{ entry, queue, simulation.get_current_time() });
 		
 				queue.dispatch();
 				
@@ -107,12 +110,13 @@ namespace ClusterSimulator
 		}
 	}
 
+
 	/**
 	 * 
 	 */
-	void ClusterSimulation::after_delay(std::chrono::milliseconds delay, Action block)
+	void ClusterSimulation::after_delay(std::chrono::milliseconds delay, Action block, bool ignore_timestamp)
 	{
-		events_.push(EventItem{current_time_ + delay, std::move(block)});
+		events_.push(EventItem{current_time_ + delay, std::move(block), ignore_timestamp});
 		spdlog::debug("Event is added ");
 	}
 
@@ -131,6 +135,7 @@ namespace ClusterSimulator
 		auto entry = scenario_.pop();
 
 		events_.push(EventItem(entry, *this));
+		after_delay(dispatch_frequency, dispatch_all_, true);
 
 		//events_.push()
 		while (true)
@@ -195,10 +200,38 @@ namespace ClusterSimulator
 	{
 		const auto event_item = events_.top();
 		events_.pop();
-		current_time_ = event_item.time;
-		spdlog::info("Current Time: {0}", current_time_.time_since_epoch().count());
-		file_logger->info("Current Time: {0}", current_time_.time_since_epoch().count());
+
+		if (current_time_ != event_item.time)
+		{
+			current_time_ = event_item.time;
+			if (!event_item.ignore_timestamp)
+				log(LogLevel::info, "Current Time: {0}", current_time_.time_since_epoch().count());
+		}
 		event_item.action();
+	}
+
+
+	void ClusterSimulation::initialise_tp()
+	{
+		jobmart_file_.open("jobmart_raw_replica.txt");
+		//tp_.AddColumn("submit_time_gmt", 10);
+		//tp_.AddColumn("start_time_gmt", 10);
+		//tp_.AddColumn("finish_time_gmt", 10);
+		//tp_.AddColumn("submit_time", 10);
+		tp_.AddColumn("start_time", 10);
+		tp_.AddColumn("finish_time", 10);
+		tp_.AddColumn("queue_name", 20);
+		tp_.AddColumn("exec_hostname", 10);
+		tp_.AddColumn("num_exec_procs", 10);
+		tp_.AddColumn("num_slots", 10);
+		tp_.AddColumn("job_exit_status", 10);
+		tp_.AddColumn("application_name", 20);
+		tp_.AddColumn("job_id", 5);
+		tp_.AddColumn("job_run_time", 10);
+		tp_.AddColumn("job_mem_usage", 10);
+		tp_.AddColumn("job_swap_usage", 10);
+		tp_.AddColumn("job_cpu_time", 10);
+		tp_.PrintHeader();
 	}
 }
 

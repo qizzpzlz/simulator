@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "Job.h"
+#include <queue>
 
 namespace ClusterSimulator
 {
@@ -16,9 +17,15 @@ namespace ClusterSimulator
 		//friend class Job;
 		//using Policy = std::function<Host&(Queue& queue)>
 
-		const std::string name;
-		const int id{ id_gen_++ };
-		const int priority;
+		std::string name;
+		int id{ id_gen_++ };
+		int priority;
+
+		bool operator<(const Queue& other) const { return priority < other.priority; }
+
+		// Copy and Move
+		//Queue(const Queue&);
+		//Queue& operator=(const Queue&);
 
 		/// Creates a default queue.
 		explicit Queue(ClusterSimulation& simulation);
@@ -36,14 +43,23 @@ namespace ClusterSimulator
 
 		void enqueue(Job&& job);
 
-		void dispatch();
+		bool dispatch();
 
-		Host& policy(Job& job);
+		Host& policy(const Job& job) const;
 		
 		//const std::vector<Host> get_all_nodes() const { return nodes_; }
 
 	private:
-		ClusterSimulation& simulation_;
+		class CompareJob
+		{
+		public:
+			bool operator() (const Job& a, const Job& b)
+			{
+				return true;
+			}
+		};
+
+		ClusterSimulation* simulation_;
 		//Cluster& cluster_;
 		
 
@@ -56,9 +72,10 @@ namespace ClusterSimulator
 		int default_host_specification_{};
 
 		// fields
-		std::vector<Job> jobs_;
-		// TODO: maybe unnecessary
-		std::vector<Job> pending_jobs_;
+		//std::vector<Job> jobs_;
+		std::priority_queue<Job, std::vector<Job>, CompareJob> jobs_;
+        // TODO: maybe unnecessary
+        std::vector<Job> pending_jobs_;
 		std::vector<Job> running_jobs_;
 		std::vector<Job> suspended_jobs_;
 
@@ -80,10 +97,6 @@ namespace ClusterSimulator
 		static int id_gen_;
 		static const int DEFAULT_PRIORITY = 40;
 		
-		Host& simple_default_policy(Queue& queue)
-		{
-			
-		}
 
 		class StaticQueueData
 		{

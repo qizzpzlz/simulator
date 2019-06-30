@@ -1,19 +1,19 @@
-#include <iostream>
-//#include <Cluster_Simulation.h>
 #include "includes/Parser.h"
 #include "includes/Scenario.h"
 #include "includes/Cluster.h"
 #include "includes/Cluster_Simulation.h"
 #include "spdlog/spdlog.h"
+#include <fstream>
 
-//const std::string SCENARIO_PATH = "D:\\OneDrive\\Documents\\C++\\simulator\\scenarios\\";
-const std::string SCENARIO_PATH = "scenarios/";
+//#if defined 
+const std::string SCENARIO_PATH = "../scenarios/";
+//const std::string SCENARIO_PATH = std::filesystem::current_path().string() + "/scenarios/";
 const std::string HOSTS_FILE = "hosts_final.json";
 const std::string SCENARIO_FILE = "sliced_10000_Scenario_From_1000000_1000000.json";
 //const std::string SCENARIO_PATH = "/scenarios/";
 
 int main()
-{	
+{
 	// Temporary CLI for input files
 	std::string scenario_path;
 	std::string host_path;
@@ -32,12 +32,12 @@ int main()
 	// Parse the given scenario and the cluster from json files.
 	if (!host_path.empty() && !scenario_path.empty())
 	{
-		scenario = ClusterSimulator::Parser::parse_scenario(scenario_path, 50);
+		scenario = ClusterSimulator::Parser::parse_scenario(scenario_path);
 		cluster = ClusterSimulator::Parser::parse_cluster(host_path);
 	}
 	else
 	{
-		scenario = ClusterSimulator::Parser::parse_scenario(SCENARIO_PATH + SCENARIO_FILE, 50);
+		scenario = ClusterSimulator::Parser::parse_scenario(SCENARIO_PATH + SCENARIO_FILE, 5000);
 		cluster = ClusterSimulator::Parser::parse_cluster(SCENARIO_PATH + HOSTS_FILE);
 	}
 
@@ -64,5 +64,7 @@ int main()
 	//Simulation simulation{algorithm, simulationTime, nodeNum};
 
 	//simulation.simulate();
+
+	ClusterSimulator::ClusterSimulation::jobmart_file_.close();
 }
 

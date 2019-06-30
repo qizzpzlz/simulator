@@ -11,23 +11,44 @@
 
 namespace ClusterSimulator
 {
-	std::map<std::string, int> Queue::StaticQueueData::queue_priorities;
+	std::map<std::string, int> Queue::StaticQueueData::queue_priorities{};
+	const Queue::StaticQueueData Queue::data{};
 
-	Queue::Queue(ClusterSimulation& simulation) :  name{ "normal" }, priority{ DEFAULT_PRIORITY }, simulation_{ simulation }
+	//Queue::Queue(const Queue& other)
+	//	: name{other.name}
+	//	, id{other.id}
+	//	, priority{other.priority}
+	//	, simulation_{other.simulation_}
+	//{
+	//	std::copy(other.jobs_.)
+	//}
+
+	//Queue& Queue::operator=(const Queue&)
+	//{
+	//}
+
+	Queue::Queue(ClusterSimulation& simulation) 
+		: name{ "normal" }
+		, priority{ DEFAULT_PRIORITY }
+		, simulation_{ &simulation }
 	{
 		is_default_ = true;
 	}
 
 	Queue::Queue(ClusterSimulation& simulation, int priority, std::string name) 
-	:  name{ std::move(name) }, priority{ priority }, simulation_{ simulation }
-	{
+		: name{ std::move(name) }
+		, priority{ priority }
+		, simulation_{ &simulation } 
+	{ 
 
 	}
 
 	Queue::Queue(ClusterSimulation& simulation, const std::string& name) 
-	: name{name}, priority{StaticQueueData::queue_priorities[name]}, simulation_{ simulation }
-	{
-		
+		: name{name}
+		, priority{StaticQueueData::queue_priorities[name]}
+		, simulation_{ &simulation }
+	{ 
+
 	}
 
 
@@ -41,7 +62,8 @@ namespace ClusterSimulator
 		if (job_name == "-" || job_name.empty())
 			return;
 
-		jobs_.push_back(job);
+		//jobs_.push_back(job);
+		jobs_.push(job);
 		spdlog::info("Job #{0} is added to Queue {1}.", job.id, this->name);
 		ClusterSimulation::file_logger->info("Job #{0} is added to Queue {1}.", job.id, this->name);
 
@@ -68,15 +90,13 @@ namespace ClusterSimulator
 		//if (job.get_exit_host_status() == ""
 	}
 
-	Host& Queue::policy(Job& job)
+	Host& Queue::policy(const Job& job) const
 	{
-		
-		std::vector<Host> host_list = simulation_.all_host();
-		int score; 
-		Host& best_host= simulation_.find_host(job.get_dedicated_host_name()); 
-		int best_score = best_host.max_slot - best_host.num_current_running_slots + best_host.max_mem + best_host.nprocs + best_host.max_swp;
-		spdlog::info("Ori best_Score {0}, host{1}", best_score, best_host.name);
-		ClusterSimulation::file_logger->info("Ori best_Score {0}, host{1}", best_score, best_host.name);
+		Cluster& cluster{ simulation_->get_cluster() };
+		Host* best_host = &simulation_->find_host(job.get_dedicated_host_name());
+		int best_score =  best_host->score();
+		//spdlog::info("Ori best_Score {0}, host{1}", best_score, best_host->name);
+		//ClusterSimulation::file_logger->info("Ori best_Score {0}, host{1}", best_score, best_host->name);
 			
 		//mutihost jobs
 		//if(job.is_multi_host)(
@@ -90,67 +110,70 @@ namespace ClusterSimulator
 		//	return simulation_.find_host(job.get_dedicated_host_name());
 		//}
 
-
-		for (auto& host : host_list)
+		for (Host& host : cluster)
 		{	
 			//spdlog::info("host name {0}, host.max_slot {1} \n", host.name, host.max_slot);
-			if(host.status==HostStatus::OK 
-			&& host.num_current_running_slots + job.slot_required < host.max_slot 
-			&& job.mem_required < host.max_mem
-			&& job.num_exec_procs < host.nprocs
-			&& job.swap_usage < host.max_swp
-			
-			)
+			if(host.is_executable(job))
 			{
 				//spdlog::info("avail hosts{}", host.name);
 				//ClusterSimulation::file_logger->info("avail hosts{}", host.name);
 
-				score = host.max_slot - host.num_current_running_slots + host.max_mem + host.nprocs + host.max_swp;
+				const int score{ host.score() };
 				//TO-DO : score = cpu factor here ..? 
-				if(score> best_score){
+				if(score > best_score){
 					best_score = score;
-					//best_host= host;
-					spdlog::info("best_Score updated{0}, host{1}", best_score, host.name);
-					ClusterSimulation::file_logger->info("hbest_Score updated{0}, host{1}", best_score, host.name);
+					best_host = &host;
+					//spdlog::info("best_Score updated{0}, host{1}", best_score, host.name);
+					//ClusterSimulation::file_logger->info("hbest_Score updated{0}, host{1}", best_score, host.name);
 				}
 				
 			}
 		}	
 
-		//return *best_host;
 		//TO-DO : 찾지 못했을때
-		//throw std::out_of_range("Can't find a host to dispatch");
-		return best_host;
+		if (!best_host)
+			throw std::out_of_range("Can't find a host to dispatch");
+
+		return *best_host;
 		
 	}	
-	void Queue::dispatch()
-   {
+	bool Queue::dispatch()
+	{
+		bool flag{ false };
+
 	   // For all jobs in the current queue
 		while (!jobs_.empty())
 		{
+			flag = true;
 			// Pop a job from the inner queue;
-			Job& job = jobs_.back();
-			jobs_.pop_back();
+			const Job& job{jobs_.top()};
+			//spdlog::info("job is {}", job.id);
+			//ClusterSimulation::file_logger->info("job is {}",job.id);
 			
-			spdlog::info("job is {}", job.id);
-			ClusterSimulation::file_logger->info("job is {}",job.id);
 			
 			Host& host = policy(job);
 			//spdlog::info("host is {}", host.name);
+			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
+				, name, job.id, host.name);
 			
 			//TO-DO : host.register()
 			host.execute_job(job);
-			simulation_.after_delay(job.run_time, [&host, job]
+			const auto start_time = simulation_->get_current_time();
+			job.start_time = start_time;
+			simulation_->after_delay(job.run_time, [&host, job]
 			{
 				host.exit_job(job);
 				std::stringstream ss(job.get_exit_host_status());
 				ss >> Utils::enum_from_string<HostStatus>(host.status);
-				spdlog::info("Job #{0} is finished in Host {1}. (run time: {2}ms)", job.id, host.name, 
-					job.run_time.count());
-				
+				ClusterSimulation::log(LogLevel::info, "Job #{0} is finished in Host {1}. (run time: {2}ms)"
+					, job.id, host.name, job.run_time.count());
+				ClusterSimulation::log_jobmart(job);
 			});
 
+			jobs_.pop();
 		}
+
+		return flag;
 		
 		/* 
 		// Find the best host
@@ -161,7 +184,7 @@ namespace ClusterSimulator
 		
 		
 
-   }
+	}
 
 	int Queue::id_gen_ = 0;
 

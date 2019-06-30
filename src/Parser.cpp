@@ -6,6 +6,8 @@
 #include "../includes/Cluster.h"
 #include "../dependencies/json11.hpp"
 
+#include <future>
+
 namespace ClusterSimulator::Parser
 {
 		Scenario parse_scenario(const std::string& file_path, int limit)
@@ -18,7 +20,7 @@ namespace ClusterSimulator::Parser
 			fin.open(file_path);
 
 			if (!fin)
-				throw "File couldn't be opened.";
+				throw std::runtime_error("File couldn't be opened.");
 
 			std::cout << "Parsing scenario file..." << std::endl;
 
@@ -31,6 +33,9 @@ namespace ClusterSimulator::Parser
 			{
 				Json json = Json::parse(line, err);
 				const Json& details = json["event_detail"];
+				if (details["exec_hostname"].string_value().empty())
+					continue;
+
 				ScenarioEntry entry;
 				if (!flag)
 				{
@@ -60,6 +65,12 @@ namespace ClusterSimulator::Parser
 					entry.event_detail.job_exit_code = details["job_exit_code"].int_value();
 					entry.event_detail.job_non_cpu_time = details["job_non_cpu_time"].int_value();
 					entry.is_multi_host_submission = json["MultiHost"].bool_value();
+
+					if (entry.event_detail.exec_hostname.empty())
+					{
+						__nop();
+					}
+
 				}
 				else
 				{

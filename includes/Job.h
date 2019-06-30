@@ -14,27 +14,39 @@ namespace ClusterSimulator
 	class Queue;
 	//enum class HostStatus;
 
+	using ms = std::chrono::time_point<std::chrono::milliseconds>;
+
 	class Job
 	{
 	public:
-		const int id{ id_gen_++ };
-		const std::string application_name;
-		const int slot_required;
-		const std::chrono::milliseconds run_time;
-		//std::shared_ptr<Queue> queue_managing_this_job;
+		int id{ id_gen_++ };
+		//std::string application_name;
+		int slot_required;
+		std::chrono::milliseconds run_time;
+		std::shared_ptr<const Queue> queue_managing_this_job;
 		bool is_multi_host;
-		const long mem_required;
-		const long swap_usage;
-		const double num_exec_procs;
+		long mem_required;
+		long swap_usage;
+		double num_exec_procs;
 
-		Job(const ScenarioEntry& entry, const Queue& queue);
+		ms submit_time;
+		mutable ms start_time{};
+		mutable ms finish_time{};
 
+		Job(const ScenarioEntry& entry, const Queue& queue, const ms submit_time);
+
+		const std::string& get_application_name() const { return application_name_; }
 		const std::string& get_dedicated_host_name() const { return dedicated_host_name_; }
 		const std::string& get_exit_host_status() const { return exit_host_status_; }
 
+		long mem_usage;
+		double cpu_time;
+
 	private:
-		const std::string dedicated_host_name_;
-		const std::string exit_host_status_;
+		std::string application_name_;
+		std::string dedicated_host_name_;
+		std::string exit_host_status_;
+
 		//unsigned long id_;
 		//double submitted_time_;
 		//int num_cpu_required_;
