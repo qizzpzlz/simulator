@@ -1,6 +1,7 @@
 #include "../includes/Job.h"
 #include "../includes/Host.h"
 #include "../dependencies/spdlog/spdlog.h"
+#include "../includes/Cluster_Simulation.h"
 
 namespace ClusterSimulator
 {
@@ -8,7 +9,8 @@ namespace ClusterSimulator
 	void Host::execute_job(const Job& job)
 	{
 		if (slot_running_ + job.slot_required > max_slot)
-			spdlog::error("Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
+			ClusterSimulation::log(LogLevel::err, 
+				"Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
 
 		slot_running_ += job.slot_required;
 		num_current_running_slots +=  job.slot_required;

@@ -135,7 +135,9 @@ namespace ClusterSimulator
 		auto entry = scenario_.pop();
 
 		events_.push(EventItem(entry, *this));
-		after_delay(dispatch_frequency, dispatch_all_, true);
+
+		// TODO: periodic dispatching
+		//after_delay(dispatch_frequency, dispatch_all_, true);
 
 		//events_.push()
 		while (true)
