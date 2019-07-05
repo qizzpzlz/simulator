@@ -118,6 +118,8 @@ namespace ClusterSimulator
 			//(const Job -->  error (jobs_))
 			//job.status = PEND;
 			throw std::out_of_range("Can't find a host to dispatch");
+			const auto pend_start_time = simulation_->get_current_time();
+			job.pend_start_time = pend_start_time;
 			pending_jobs_.push_back(job);
 		}
 			
@@ -181,15 +183,29 @@ namespace ClusterSimulator
 			//eligible_hosts_.empty()
 			if(eligible_hosts_.empty()){
 				throw std::out_of_range("Can't find a host to dispatch");
+				const auto pend_start_time = simulation_->get_current_time();
+				job.pend_start_time = pend_start_time;
 				pending_jobs_.push_back(job);
 				jobs_.pop();
 			}
 			
 		}
 
+		pending();
 		return flag;
 		
 		
+	}
+
+	void Queue::pending(){
+		while(!pending_jobs_.empty()){
+			Job pended_job = pending_jobs_.back();
+			const auto current_time = simulation_->get_current_time();
+			auto pended_time = current_time - pended_job.pend_start_time;
+			pended_job.priority = pended_job.priority + pended_time.count();
+			jobs_.push(pended_job);
+			pending_jobs_.pop_back();
+		}
 	}
 
 	int Queue::id_gen_ = 0;

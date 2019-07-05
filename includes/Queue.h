@@ -60,6 +60,7 @@ namespace ClusterSimulator
 		
 		std::priority_queue<Host, std::vector<Host>, CompareHost> Match(const Job& job) const;
 
+		void pending();
 		//const std::vector<Host> get_all_nodes() const { return nodes_; }
 
 	private:
@@ -68,7 +69,7 @@ namespace ClusterSimulator
 		public:
 			bool operator() (const Job& a, const Job& b)
 			{
-				return true;
+				return a.priority > b.priority;
 			}
 		};
 		
