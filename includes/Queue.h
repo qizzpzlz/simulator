@@ -69,7 +69,7 @@ namespace ClusterSimulator
 		public:
 			bool operator() (const Job& a, const Job& b)
 			{
-				return true;
+				return a.priority > b.priority;
 			}
 		};
 		

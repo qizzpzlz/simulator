@@ -200,7 +200,8 @@ namespace ClusterSimulator
 	void Queue::pending(){
 		while(!pending_jobs_.empty()){
 			Job pended_job = pending_jobs_.back();
-			auto pended_time = pended_job.pend_start_time.time_since_epoch();
+			const auto current_time = simulation_->get_current_time();
+			auto pended_time = current_time - pended_job.pend_start_time;
 			pended_job.priority = pended_job.priority + pended_time.count();
 			jobs_.push(pended_job);
 			pending_jobs_.pop_back();
