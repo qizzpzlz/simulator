@@ -38,15 +38,28 @@ namespace ClusterSimulator
 		int get_priority() const { return priority; }
 
 		int count() const { return jobs_.size(); }
-	
+
 		bool is_default() const { return is_default_; }
 
 		void enqueue(Job&& job);
 
 		bool dispatch();
 
-		Host& policy(const Job& job) const;
+		//Host& policy(const Job& job) const;
+		void policy();
 		
+
+		class CompareHost
+		{
+		public:
+			bool operator() (const Host& a, const Host& b)
+			{
+				return a.score > b.score;
+			}
+		};
+		
+		std::priority_queue<Host, std::vector<Host>, CompareHost> Match(const Job& job) const;
+
 		//const std::vector<Host> get_all_nodes() const { return nodes_; }
 
 	private:
@@ -58,12 +71,12 @@ namespace ClusterSimulator
 				return true;
 			}
 		};
+		
 
+	
 		ClusterSimulation* simulation_;
 		//Cluster& cluster_;
 		
-
-
 		//Policy policy_ = queue.simple_default_policy;
 
 		// characteristics
@@ -74,8 +87,10 @@ namespace ClusterSimulator
 		// fields
 		//std::vector<Job> jobs_;
 		std::priority_queue<Job, std::vector<Job>, CompareJob> jobs_;
+		//std::priority_queue<Host, std::vector<Host>, CompareHost> eligible_host_list_;
+		//std::priority_queue<Host, std::vector<Host>, CompareHost> hosts_;
         // TODO: maybe unnecessary
-        std::vector<Job> pending_jobs_;
+        std::vector<Job>& pending_jobs_;
 		std::vector<Job> running_jobs_;
 		std::vector<Job> suspended_jobs_;
 

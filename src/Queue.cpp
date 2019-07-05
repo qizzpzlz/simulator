@@ -34,6 +34,7 @@ namespace ClusterSimulator
 	{
 		is_default_ = true;
 	}
+		
 
 	Queue::Queue(ClusterSimulation& simulation, int priority, std::string name) 
 		: name{ std::move(name) }
@@ -90,53 +91,46 @@ namespace ClusterSimulator
 		//if (job.get_exit_host_status() == ""
 	}
 
-	Host& Queue::policy(const Job& job) const
-	{
-		Cluster& cluster{ simulation_->get_cluster() };
-		Host* best_host = &simulation_->find_host(job.get_dedicated_host_name());
-		int best_score =  best_host->score();
-		//spdlog::info("Ori best_Score {0}, host{1}", best_score, best_host->name);
-		//ClusterSimulation::file_logger->info("Ori best_Score {0}, host{1}", best_score, best_host->name);
-			
-		//mutihost jobs
-		//if(job.is_multi_host)(
-		//  
-		//	return host[];
-		//)
-
-
-		//직접 호스트를 지정해준 경우
-		//if (!job.get_dedicated_host_name().empty()){
-		//	return simulation_.find_host(job.get_dedicated_host_name());
-		//}
-
-		for (Host& host : cluster)
+	//Doing filtering on candidate hosts
+	//Match and sort(used priority queue)
+	std::priority_queue<Host, std::vector<Host>, Queue::CompareHost> Queue::Match(const Job& job) const
+	{	
+		//지금은 cluster = candHostGroupList
+		//To-Do : get_cluster --> Queue.get_host_group_list
+		Cluster& cand_host_list{simulation_->get_cluster()};
+		//std::vector<Host> eligible_host_list_;
+		std::priority_queue<Host, std::vector<Host>, Queue::CompareHost> eligible_host_list_;
+		
+		for (Host& host : cand_host_list)
 		{	
 			//spdlog::info("host name {0}, host.max_slot {1} \n", host.name, host.max_slot);
 			if(host.is_executable(job))
 			{
-				//spdlog::info("avail hosts{}", host.name);
-				//ClusterSimulation::file_logger->info("avail hosts{}", host.name);
-
-				const int score{ host.score() };
-				//TO-DO : score = cpu factor here ..? 
-				if(score > best_score){
-					best_score = score;
-					best_host = &host;
-					//spdlog::info("best_Score updated{0}, host{1}", best_score, host.name);
-					//ClusterSimulation::file_logger->info("hbest_Score updated{0}, host{1}", best_score, host.name);
-				}
-				
+				eligible_host_list_.push(host);
+				//eligible_host_list_.push_back(host);
 			}
-		}	
+		}
 
 		//TO-DO : 찾지 못했을때
-		if (!best_host)
+		if (eligible_host_list_.empty())
+		{
+			//PEND
+			//(const Job -->  error (jobs_))
+			//job.status = PEND;
 			throw std::out_of_range("Can't find a host to dispatch");
+			pending_jobs_.push_back(job);
+		}
+			
+		return eligible_host_list_;
+	}
 
-		return *best_host;
-		
-	}	
+	//job의 순서를 정함
+	void Queue::policy()
+	{
+		//Scheduling policy
+		//jobs_.push();
+	}
+
 	bool Queue::dispatch()
 	{
 		bool flag{ false };
@@ -147,43 +141,55 @@ namespace ClusterSimulator
 			flag = true;
 			// Pop a job from the inner queue;
 			const Job& job{jobs_.top()};
+			
 			//spdlog::info("job is {}", job.id);
 			//ClusterSimulation::file_logger->info("job is {}",job.id);
-			
-			
-			Host& host = policy(job);
-			//spdlog::info("host is {}", host.name);
-			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
-				, name, job.id, host.name);
-			
-			//TO-DO : host.register()
-			host.execute_job(job);
-			const auto start_time = simulation_->get_current_time();
-			job.start_time = start_time;
-			simulation_->after_delay(job.run_time, [&host, job]
+			std::priority_queue<Host, std::vector<Host>, Queue::CompareHost> eligible_hosts_ = Match(job);
+			while (!eligible_hosts_.empty())
 			{
-				host.exit_job(job);
-				std::stringstream ss(job.get_exit_host_status());
-				ss >> Utils::enum_from_string<HostStatus>(host.status);
-				ClusterSimulation::log(LogLevel::info, "Job #{0} is finished in Host {1}. (run time: {2}ms)"
-					, job.id, host.name, job.run_time.count());
-				ClusterSimulation::log_jobmart(job);
-			});
+				Host best_host = eligible_hosts_.top();
 
-			jobs_.pop();
+				//check if best_host is executable
+				if(best_host.is_executable(job)){
+					//spdlog::info("host is {}", host.name);
+					ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
+						, name, job.id, best_host.name);
+					
+					//TO-DO : host.register()
+					best_host.execute_job(job);
+					const auto start_time = simulation_->get_current_time();
+					job.start_time = start_time;
+					simulation_->after_delay(job.run_time, [&best_host, job]
+					{
+						best_host.exit_job(job);
+						std::stringstream ss(job.get_exit_host_status());
+						ss >> Utils::enum_from_string<HostStatus>(best_host.status);
+						ClusterSimulation::log(LogLevel::info, "Job #{0} is finished in Host {1}. (run time: {2}ms)"
+							, job.id, best_host.name, job.run_time.count());
+						ClusterSimulation::log_jobmart(job);
+					});
+
+					jobs_.pop();
+					break;
+
+				}
+				else{
+					eligible_hosts_.pop();
+					continue;
+				}
+			}
+			//eligible_hosts_.empty()
+			if(eligible_hosts_.empty()){
+				throw std::out_of_range("Can't find a host to dispatch");
+				pending_jobs_.push_back(job);
+				jobs_.pop();
+			}
+			
 		}
 
 		return flag;
 		
-		/* 
-		// Find the best host
-		Host host = policy(job);
-		spdlog::info("dispatch");
-		ClusterSimulation::file_logger->info("dispatch");
-		*/
 		
-		
-
 	}
 
 	int Queue::id_gen_ = 0;
