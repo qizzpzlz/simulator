@@ -7,10 +7,10 @@
 namespace ClusterSimulator
 {
 	struct ScenarioEntry;
-	/*enum JobState
+	enum JobState
 	{
 		PEND, RUN, DONE, EXIT, PSUSP, USUSP, SSUSP, POST_DONE, POST_ERR, UNKWN, WAIT, ZOMBI
-	};*/
+	};
 	class Queue;
 	//enum class HostStatus;
 
@@ -41,6 +41,8 @@ namespace ClusterSimulator
 
 		long mem_usage;
 		double cpu_time;
+
+		JobState status;
 
 	private:
 		std::string application_name_;
