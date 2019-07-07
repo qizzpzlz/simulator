@@ -25,6 +25,7 @@ target_include_directories(spdlog PUBLIC dependencies/spdlog/)
 target_include_directories(spdlog PUBLIC "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 target_link_libraries(spdlog PUBLIC Threads::Threads)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/bprinter dependencies)
 
 file(GLOB SRC_FILES
 	./*.cpp
@@ -37,13 +38,13 @@ file(GLOB SRC_FILES
 # Add source to this project's executable.
 add_executable (cluster-simulator ${SRC_FILES})
 
+# Link external libraries to the executable.
 target_link_libraries(cluster-simulator spdlog)
-
-add_subdirectory(dependencies/bprinter dependencies)
-target_link_libraries(cluster-simulator dependencies/bprinter)
+target_link_libraries(cluster-simulator bprinter)
 
 target_include_directories(cluster-simulator PUBLIC src/)
 target_include_directories(cluster-simulator PUBLIC dependencies/)
+target_include_directories(cluster-simulator PUBLIC dependencies/bprinter)
 target_include_directories(cluster-simulator PUBLIC includes/)
 target_include_directories(cluster-simulator PUBLIC scenarios/)
 
