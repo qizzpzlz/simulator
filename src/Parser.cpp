@@ -65,12 +65,6 @@ namespace ClusterSimulator::Parser
 					entry.event_detail.job_exit_code = details["job_exit_code"].int_value();
 					entry.event_detail.job_non_cpu_time = details["job_non_cpu_time"].int_value();
 					entry.is_multi_host_submission = json["MultiHost"].bool_value();
-
-					if (entry.event_detail.exec_hostname.empty())
-					{
-						__nop();
-					}
-
 				}
 				else
 				{

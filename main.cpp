@@ -6,7 +6,7 @@
 #include <fstream>
 
 //#if defined 
-const std::string SCENARIO_PATH = "../scenarios/";
+const std::string SCENARIO_PATH = "scenarios/";
 //const std::string SCENARIO_PATH = std::filesystem::current_path().string() + "/scenarios/";
 const std::string HOSTS_FILE = "hosts_final.json";
 const std::string SCENARIO_FILE = "sliced_10000_Scenario_From_1000000_1000000.json";
