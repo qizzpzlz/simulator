@@ -35,12 +35,13 @@ namespace ClusterSimulator
 			for (auto& q : this->all_queues_)
 				flag &= q.dispatch();
 			if (flag) // pending jobs exist
-				this->after_delay(this->dispatch_frequency, this->dispatch_action_, true);
+				this->after_delay(this->dispatch_frequency, this->dispatch_action_);
 			else
 				this->next_dispatch_reserved = false;
 		};
 
 		initialise_tp();
+		reserve_dispatch_event();
 		std::cout << "Simulation start!" << std::endl;
 	}
 
@@ -116,9 +117,9 @@ namespace ClusterSimulator
 	/**
 	 * 
 	 */
-	void ClusterSimulation::after_delay(std::chrono::milliseconds delay, Action block, bool ignore_timestamp)
+	void ClusterSimulation::after_delay(std::chrono::milliseconds delay, Action block)
 	{
-		events_.push(EventItem{current_time_ + delay, std::move(block), ignore_timestamp});
+		events_.push(EventItem{current_time_ + delay, std::move(block)});
 		spdlog::debug("Event is added ");
 	}
 
@@ -134,7 +135,7 @@ namespace ClusterSimulator
 
 	bool ClusterSimulation::run()
 	{
-		auto entry = scenario_.pop();
+		const auto entry = scenario_.pop();
 
 		events_.push(EventItem(entry, *this));
 
@@ -204,8 +205,7 @@ namespace ClusterSimulator
 		if (current_time_ != event_item.time)
 		{
 			current_time_ = event_item.time;
-			if (!event_item.ignore_timestamp)
-				log(LogLevel::info, "Current Time: {0}", current_time_.time_since_epoch().count());
+			log(LogLevel::info, "Current Time: {0}", current_time_.time_since_epoch().count());
 		}
 		event_item.action();
 	}

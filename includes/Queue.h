@@ -57,8 +57,10 @@ namespace ClusterSimulator
 				return a.score() > b.score();
 			}
 		};
-		
-		std::priority_queue<Host, std::vector<Host>, CompareHost> match(const Job& job);
+
+		using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>, std::vector<std::reference_wrapper<Host>>, CompareHost>;
+		//using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>>;
+		Sorted_Hosts match(const Job& job);
 
 		void clean_pending_jobs();
 

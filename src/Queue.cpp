@@ -58,26 +58,30 @@ namespace ClusterSimulator
 
 	//Doing filtering on candidate hosts
 	//Match and sort(used priority queue)
-	std::priority_queue<Host, std::vector<Host>, Queue::CompareHost> Queue::match(const Job& job)
+	Queue::Sorted_Hosts Queue::match(const Job& job)
 	{	
 		//지금은 cluster = candHostGroupList
 		//To-Do : get_cluster --> Queue.get_host_group_list
 		Cluster& cand_host_list{simulation_->get_cluster()};
 
 		//std::vector<Host> eligible_host_list_;
-		std::priority_queue<Host, std::vector<Host>, Queue::CompareHost> eligible_host_list_;
+		Sorted_Hosts eligible_host_list{};
 		
-		for (const Host& host : cand_host_list)
+		for (Host& host : cand_host_list)
 		{	
 			if(host.is_executable(job))
 			{
-				eligible_host_list_.push(host);
+				eligible_host_list.push(std::reference_wrapper<Host>(host));
 			}
 		}
 
 		//TO-DO : 찾지 못했을때
-		if (eligible_host_list_.empty())
+		if (eligible_host_list.empty())
 		{
+			auto dedicated_host{ simulation_->find_host(job.get_dedicated_host_name()) };
+
+
+
 			//PEND
 			//(const Job -->  error (jobs_))
 			//job.status = PEND;
@@ -87,7 +91,7 @@ namespace ClusterSimulator
 			pending_jobs_.push_back(job);
 		}
 			
-		return eligible_host_list_;
+		return eligible_host_list;
 	}
 
 	//job의 순서를 정함
@@ -134,7 +138,7 @@ namespace ClusterSimulator
 			// Find best available host
 			while (!eligible_hosts.empty())
 			{
-				Host best_host = eligible_hosts.top();
+				Host& best_host = eligible_hosts.top();
 
 				//check if best_host is executable
 				//if(best_host.is_executable(job)) --> Why would we check availability here again?

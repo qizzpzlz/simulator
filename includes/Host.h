@@ -51,9 +51,9 @@ namespace ClusterSimulator
 		constexpr bool is_executable(const Job& job) const
 		{
 			return status == HostStatus::OK
-				&& job.slot_required + num_current_running_slots < max_slot
-				&& job.mem_required < max_mem
-				&& job.num_exec_procs < nprocs;
+				&& job.slot_required + num_current_running_slots <= max_slot
+				&& job.mem_required <= max_mem
+				&& job.num_exec_procs <= nprocs * ncores;
 				//&& job.swap_usage < max_swp;
 		}
 

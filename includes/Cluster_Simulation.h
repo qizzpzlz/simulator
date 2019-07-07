@@ -27,12 +27,10 @@ namespace ClusterSimulator
 		{
 			ms time;
 			Action action;
-			bool ignore_timestamp;
 
-			EventItem(ms time, Action action, bool ignore_timestamp) 
+			EventItem(ms time, Action action) 
 				: time{ time }
-				, action{ action }
-				, ignore_timestamp{ ignore_timestamp } {};
+				, action{ action } {};
 			EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation);
 			/// Creates an event item for dispatching jobs
 			explicit EventItem(ClusterSimulation& simulation);
@@ -62,8 +60,7 @@ namespace ClusterSimulator
 		Cluster& get_cluster() const { return cluster_; }
 
 		std::size_t event_count() const { return events_.size(); }
-		//void log(const std::string& s) const { std::cout << current_time_ << " " << s << std::endl; }
-		void after_delay(std::chrono::milliseconds delay, Action block, bool ignore_timestamp = false);
+		void after_delay(std::chrono::milliseconds delay, Action block);
 		bool run(std::chrono::time_point<std::chrono::milliseconds> run_time);
 		bool run();
 		
@@ -82,17 +79,20 @@ namespace ClusterSimulator
 		int num_failed_jobs_{ 0 };
 
 #pragma region logger
-	public:
+	private:
 		static std::ofstream jobmart_file_;
 		static std::shared_ptr<spdlog::logger> file_logger;
-		//static std::shared_ptr<spdlog::logger> jobmart_logger;
+		static bprinter::TablePrinter tp_;
+		static void initialise_tp();
 
+	public:
 		template<typename... Args>
 		static void log(LogLevel level, const char* fmt, const Args&... args)
 		{
 			spdlog::log(level, fmt, args...);
 			file_logger->log(level, fmt, args...);
 		}
+
 		template<typename T>
 		static void log(LogLevel level, const T& msg)
 		{
@@ -100,7 +100,6 @@ namespace ClusterSimulator
 			file_logger->log(level, msg);
 		}
 
-		//template<typename T>
 		static void log_jobmart(const Job& job)
 		{
 
@@ -180,10 +179,6 @@ namespace ClusterSimulator
 				
 			bprinter::endl();
 		}
-	private:
-
-		static bprinter::TablePrinter tp_;
-		static void initialise_tp();
 	};
 #pragma endregion
 }
