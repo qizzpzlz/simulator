@@ -20,13 +20,14 @@ namespace ClusterSimulator
 	{
 	public:
 		int id{ id_gen_++ };
-		//std::string application_name;
+		// The actual number of slots used for job execution.
 		int slot_required;
 		std::chrono::milliseconds run_time;
 		std::shared_ptr<const Queue> queue_managing_this_job;
 		bool is_multi_host;
 		long mem_required;
 		long swap_usage;
+		// The number of processors that the job initially requested for execution.
 		double num_exec_procs;
 
 		ms submit_time;

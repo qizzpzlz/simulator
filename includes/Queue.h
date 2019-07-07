@@ -2,13 +2,13 @@
 #include <map>
 #include <vector>
 #include <string>
-#include "Job.h"
 #include <queue>
+#include "Job.h"
+#include "Host.h"
 
 namespace ClusterSimulator
 {
 	class ClusterSimulation;
-	class Host;
 	class Cluster;
 
 	class Queue
@@ -35,11 +35,11 @@ namespace ClusterSimulator
 		~Queue();
 
 		/// Gets priority of this queue. Higher values have higher priority.
-		int get_priority() const { return priority; }
+		constexpr int get_priority() const { return priority; }
 
 		int count() const { return jobs_.size(); }
 
-		bool is_default() const { return is_default_; }
+		constexpr bool is_default() const { return is_default_; }
 
 		void enqueue(Job&& job);
 
@@ -54,14 +54,13 @@ namespace ClusterSimulator
 		public:
 			bool operator() (const Host& a, const Host& b)
 			{
-				return a.score > b.score;
+				return a.score() > b.score();
 			}
 		};
 		
-		std::priority_queue<Host, std::vector<Host>, CompareHost> Match(const Job& job) const;
+		std::priority_queue<Host, std::vector<Host>, CompareHost> match(const Job& job);
 
-		void pending();
-		//const std::vector<Host> get_all_nodes() const { return nodes_; }
+		void clean_pending_jobs();
 
 	private:
 		class CompareJob
@@ -91,7 +90,7 @@ namespace ClusterSimulator
 		//std::priority_queue<Host, std::vector<Host>, CompareHost> eligible_host_list_;
 		//std::priority_queue<Host, std::vector<Host>, CompareHost> hosts_;
         // TODO: maybe unnecessary
-        std::vector<Job>& pending_jobs_;
+        std::vector<Job> pending_jobs_;
 		std::vector<Job> running_jobs_;
 		std::vector<Job> suspended_jobs_;
 

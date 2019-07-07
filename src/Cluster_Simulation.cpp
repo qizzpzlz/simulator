@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include "../includes/Utils.h"
 #include "../includes/Queue.h"
 #include "../includes/Cluster.h"
 #include "../includes/Scenario.h"
@@ -28,15 +29,16 @@ namespace ClusterSimulator
 		current_time_ = scenario.initial_time_point;
 		std::sort(all_queues_.begin(), all_queues_.end());
 
-		dispatch_all_ = [this]
+		dispatch_action_ = [this]
 		{
+			bool flag{ true };
 			for (auto& q : this->all_queues_)
-				q.dispatch();
-			this->after_delay(this->dispatch_frequency, this->dispatch_all_, true);
+				flag &= q.dispatch();
+			if (flag) // pending jobs exist
+				this->after_delay(this->dispatch_frequency, this->dispatch_action_, true);
+			else
+				this->next_dispatch_reserved = false;
 		};
-
-		//spdlog::register_logger(file_logger);
-		//spdlog::
 
 		initialise_tp();
 		std::cout << "Simulation start!" << std::endl;
@@ -79,8 +81,9 @@ namespace ClusterSimulator
 				Queue& queue = simulation.find_queue(entry.event_detail.queue_name);
 			
 				queue.enqueue(Job{ entry, queue, simulation.get_current_time() });
-		
-				queue.dispatch();
+
+				//queue.dispatch();
+				simulation.reserve_dispatch_event();
 				
 				simulation.num_submitted_jobs_++;
 			};
@@ -100,8 +103,7 @@ namespace ClusterSimulator
 				std::stringstream ss;
 				ss << test;
 
-				spdlog::info("Host {0}'s status is changed to {1}", host.id, ss.str());
-				file_logger->info("Host {0}'s status is changed to {1}", host.id, ss.str());
+				log(LogLevel::info, "Host {0}'s status is changed to {1}", host.id, ss.str());
 			};
 		}
 		else
@@ -135,9 +137,6 @@ namespace ClusterSimulator
 		auto entry = scenario_.pop();
 
 		events_.push(EventItem(entry, *this));
-
-		// TODO: periodic dispatching
-		//after_delay(dispatch_frequency, dispatch_all_, true);
 
 		//events_.push()
 		while (true)
@@ -194,8 +193,7 @@ namespace ClusterSimulator
 			std::endl;
 
 
-		spdlog::info(ss.str());
-		file_logger->info(ss.str());
+		log(LogLevel::info, ss.str());
 	}
 
 	void ClusterSimulation::next()
@@ -212,7 +210,21 @@ namespace ClusterSimulator
 		event_item.action();
 	}
 
+	void ClusterSimulation::reserve_dispatch_event()
+	{
+		if (next_dispatch_reserved)
+			return;
 
+		after_delay(
+			Utils::get_time_left_until_next_period(current_time_, dispatch_frequency),
+			dispatch_action_);
+
+		next_dispatch_reserved = true;
+	}
+
+	/**
+	 * Initialise the table header of jobmart_raw_replica file.
+	 */
 	void ClusterSimulation::initialise_tp()
 	{
 		jobmart_file_.open("jobmart_raw_replica.txt");

@@ -25,37 +25,42 @@ namespace ClusterSimulator
 	class Host
 	{
 	public:
-		const std::string name;
-		const int cpu_factor;
-		const int ncpus;
-		const int nprocs;
-		const int ncores;
-		const int nthreads;
-		const int max_slot;
-		const int max_mem;
-		const int max_swp;
-		const int max_tmp;
-		const int id{ id_gen_++ };
-
-		constexpr int score() const { return max_slot - num_current_running_slots + max_mem + nprocs + max_swp; }
-		constexpr bool is_executable(const Job& job) const
-		{
-			return status == HostStatus::OK
-				&& job.slot_required + num_current_running_slots < max_slot
-				&& job.mem_required < max_mem
-				&& job.num_exec_procs < nprocs
-				&& job.swap_usage < max_swp;
-		}
+		std::string name;
+		// Speed of the host's CPU relative to other hosts in the cluster.
+		int cpu_factor;
+		// Number of CPUs you have specified for your host.
+		int ncpus;
+		// Number of physical processors.
+		int nprocs;
+		// Number of cores per processors.
+		int ncores;
+		int nthreads;
+		int max_slot;
+		int max_mem;
+		int max_swp;
+		int max_tmp;
+		int id{ id_gen_++ };
 
 		HostStatus status;
 		int num_current_jobs{ 0 };
 		int num_current_running_slots{ 0 };
 		bool is_available_at_least_once{ false };
 
+		
+		constexpr int score() const { return max_slot - num_current_running_slots + max_mem + nprocs + max_swp; }
+		constexpr bool is_executable(const Job& job) const
+		{
+			return status == HostStatus::OK
+				&& job.slot_required + num_current_running_slots < max_slot
+				&& job.mem_required < max_mem
+				&& job.num_exec_procs < nprocs;
+				//&& job.swap_usage < max_swp;
+		}
+
 		// Status mutator methods
 		void execute_job(const Job& job);
 		void exit_job(const Job& job);
-		void set_status(HostStatus value) 
+		void set_status(HostStatus value) noexcept
 		{
 			status = value;
 			if (!is_available_at_least_once && value == HostStatus::OK)

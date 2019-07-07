@@ -6,14 +6,11 @@
 #include "../includes/Cluster.h"
 #include "../dependencies/json11.hpp"
 
-#include <future>
-
 namespace ClusterSimulator::Parser
 {
 		Scenario parse_scenario(const std::string& file_path, int limit)
 		{
 			using namespace json11;
-			//using Seconds = std::chrono::time_point<std::chrono::seconds>;
 
 			Scenario scenario;
 			std::ifstream fin;
@@ -65,6 +62,11 @@ namespace ClusterSimulator::Parser
 					entry.event_detail.job_exit_code = details["job_exit_code"].int_value();
 					entry.event_detail.job_non_cpu_time = details["job_non_cpu_time"].int_value();
 					entry.is_multi_host_submission = json["MultiHost"].bool_value();
+
+					if (!entry.is_multi_host_submission && entry.event_detail.num_exec_procs > entry.event_detail.num_slots)
+					{
+						entry.is_multi_host_submission = true;
+					}
 				}
 				else
 				{

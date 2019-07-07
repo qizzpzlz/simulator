@@ -31,7 +31,7 @@ namespace ClusterSimulator
 
 			EventItem(ms time, Action action, bool ignore_timestamp) 
 				: time{ time }
-				, action{ std::move(action) }
+				, action{ action }
 				, ignore_timestamp{ ignore_timestamp } {};
 			EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation);
 			/// Creates an event item for dispatching jobs
@@ -39,32 +39,18 @@ namespace ClusterSimulator
 
 			bool operator<(const EventItem& a) const { return a.time < this->time; }
 		};
-		std::chrono::milliseconds dispatch_frequency{ 100 };
+		std::chrono::milliseconds dispatch_frequency{ 1000 };
 
 	private:
-		//class DispatchHelper
-		//{
-		//	ClusterSimulation& simulation;
-		//	explicit DispatchHelper(ClusterSimulation& sim)
-		//		: simulation{ sim } { }
-
-		//	void operator()() const
-		//	{
-		//		simulation.dispatch_all();
-		//		simulation.after_delay(simulation.dispatch_frequency,
-		//			simulation.dispatch_helper_);
-		//	}
-		//};
-		//DispatchHelper dispatch_helper_;
-		Action dispatch_all_;
-
-		void next();
+		Action dispatch_action_;
 		ms current_time_;
 		std::priority_queue<EventItem> events_{};
-		ms last_dispatch_time_;
-		constexpr ms next_dispatch_time() const { return last_dispatch_time_ + dispatch_frequency; }
+
+		void next();
 
 	public:
+		bool next_dispatch_reserved{ false };
+
 		ClusterSimulation(Scenario& scenario, Cluster& cluster);
 
 		ms get_current_time() const { return current_time_; }
@@ -81,6 +67,8 @@ namespace ClusterSimulator
 		bool run(std::chrono::time_point<std::chrono::milliseconds> run_time);
 		bool run();
 		
+		void reserve_dispatch_event();
+
 		void print_summary() const;
 
 	private:
@@ -93,6 +81,7 @@ namespace ClusterSimulator
 		int num_successful_jobs_{ 0 };
 		int num_failed_jobs_{ 0 };
 
+#pragma region logger
 	public:
 		static std::ofstream jobmart_file_;
 		static std::shared_ptr<spdlog::logger> file_logger;
@@ -196,6 +185,7 @@ namespace ClusterSimulator
 		static bprinter::TablePrinter tp_;
 		static void initialise_tp();
 	};
+#pragma endregion
 }
 
 

@@ -1,10 +1,10 @@
 #pragma once
-#include "Parser.h"
-#include "Scenario.h"
-#include "Cluster.h"
+#include <string>
 
 namespace ClusterSimulator
 {
+	class Scenario;
+	class Cluster;
 	namespace Parser
 	{
 		Scenario parse_scenario(const std::string& file_path, int limit = -1);
