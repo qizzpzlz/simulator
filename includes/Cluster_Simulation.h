@@ -80,12 +80,13 @@ namespace ClusterSimulator
 
 #pragma region logger
 	private:
-		static std::ofstream jobmart_file_;
 		static std::shared_ptr<spdlog::logger> file_logger;
 		static bprinter::TablePrinter tp_;
 		static void initialise_tp();
 
 	public:
+		static std::ofstream jobmart_file_;
+
 		template<typename... Args>
 		static void log(LogLevel level, const char* fmt, const Args&... args)
 		{
