@@ -34,7 +34,7 @@ namespace ClusterSimulator
 		mutable ms start_time{};
 		mutable ms finish_time{};
 		mutable ms pend_start_time{};
-
+;
 		int priority{0};
 
 		Job(const ScenarioEntry& entry, const Queue& queue, const ms submit_time);
