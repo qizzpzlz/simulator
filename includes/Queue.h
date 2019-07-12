@@ -21,6 +21,8 @@ namespace ClusterSimulator
 		int id{ id_gen_++ };
 		int priority;
 
+
+
 		bool operator<(const Queue& other) const { return priority < other.priority; }
 
 		// Copy and Move
@@ -49,19 +51,30 @@ namespace ClusterSimulator
 		void policy();
 		
 
-		class CompareHost
-		{
-		public:
-			bool operator() (const Host& a, const Host& b)
-			{
-				return a.score() > b.score();
-			}
-		};
+		//class CompareHost
+		//{
+		//public:
+		//	bool operator() (const Host& a, const Host& b)
+		//	{
+		//		return a.score() > b.score();
+		//	}
+		//};
 
-		using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>, std::vector<std::reference_wrapper<Host>>, CompareHost>;
+		//using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>, std::vector<std::reference_wrapper<Host>>, CompareHost>;
 		//using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>>;
-		Sorted_Hosts match(const Job& job);
+		//Sorted_Hosts match(const Job& job);
+		//std::vector<Host&>
+		
+		//std::sort(sorted_host_list.begin(), sorted_host_list.end(), [](const std::reference_wrapper<Host> &a, const std::reference_wrapper<Host> &b)  -> bool { return a.get().score() < b.get().score(); } );
+			
 
+		using Host_List = std::vector<std::reference_wrapper<Host>>;
+		Host_List match(const Job& job);
+		Host_List sort();
+		
+		//using Compare = std::function<bool(const std::reference_wrapper<Host>,  const std::reference_wrapper<Host>)
+		//Compare CompareHost;
+	
 		void clean_pending_jobs();
 
 	private:
@@ -73,6 +86,20 @@ namespace ClusterSimulator
 				return a.priority > b.priority;
 			}
 		};
+		using HostReference = std::reference_wrapper<Host>;
+		//using CompareHost = std::function<void(const std::reference_wrapper<Host>&, const std::reference_wrapper<Host>&)>; 
+		std::function<bool(const HostReference&, const HostReference&)> compare_host_function
+		{
+			[](const HostReference &a, const HostReference &b)
+			{	
+				return a.get().score() < b.get().score(); 
+			}
+		};
+
+		void set_compare_host_function(const std::function<bool(const HostReference&, const HostReference&)> compare_host) noexcept
+		{
+			compare_host_function = compare_host;
+		}
 		
 
 	
@@ -87,8 +114,8 @@ namespace ClusterSimulator
 		int default_host_specification_{};
 
 		// fields
-		//std::vector<Job> jobs_;
-		std::priority_queue<Job, std::vector<Job>, CompareJob> jobs_;
+		std::vector<Job> jobs_;
+		//std::priority_queue<Job, std::vector<Job>, CompareJob> jobs_;
 		//std::priority_queue<Host, std::vector<Host>, CompareHost> eligible_host_list_;
 		//std::priority_queue<Host, std::vector<Host>, CompareHost> hosts_;
         // TODO: maybe unnecessary
