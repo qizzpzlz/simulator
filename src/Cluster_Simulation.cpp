@@ -241,6 +241,7 @@ namespace ClusterSimulator
 		tp_.AddColumn("job_exit_status", 10);
 		tp_.AddColumn("application_name", 20);
 		tp_.AddColumn("job_id", 5);
+		tp_.AddColumn("job_pend_time", 10);
 		tp_.AddColumn("job_run_time", 10);
 		tp_.AddColumn("job_mem_usage", 10);
 		tp_.AddColumn("job_swap_usage", 10);
