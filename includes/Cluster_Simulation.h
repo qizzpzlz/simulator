@@ -146,6 +146,7 @@ namespace ClusterSimulator
 			// job_name
 			// job_cmd
 			// job_pend_time
+				job.total_pending_duration.count() <<
 			// job_run_time
 				job.run_time.count() <<
 			// job_turnaround_time

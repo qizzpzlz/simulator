@@ -33,15 +33,23 @@ namespace ClusterSimulator
 		ms submit_time;
 		mutable ms start_time{};
 		mutable ms finish_time{};
-		mutable ms pend_start_time{};
-;
+
+		std::chrono::milliseconds total_pending_duration{};
+		void update_total_pending_duration(ms current_time) { total_pending_duration = current_time - pend_start_time_; }
+
 		int priority{0};
+		JobState state;
 
 		Job(const ScenarioEntry& entry, const Queue& queue, const ms submit_time);
 
 		const std::string& get_application_name() const { return application_name_; }
 		const std::string& get_dedicated_host_name() const { return dedicated_host_name_; }
 		const std::string& get_exit_host_status() const { return exit_host_status_; }
+		void set_pending(ms time)
+		{
+			state = PEND;
+			pend_start_time_ = time;
+		}
 
 		long mem_usage;
 		double cpu_time;
@@ -52,6 +60,8 @@ namespace ClusterSimulator
 		std::string application_name_;
 		std::string dedicated_host_name_;
 		std::string exit_host_status_;
+
+		ms pend_start_time_{};
 
 		//unsigned long id_;
 		//double submitted_time_;

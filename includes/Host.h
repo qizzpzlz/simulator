@@ -3,6 +3,7 @@
 #include "EnumConverter.h"
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 namespace ClusterSimulator
 {
@@ -47,7 +48,10 @@ namespace ClusterSimulator
 		bool is_available_at_least_once{ false };
 
 		
-		constexpr int score() const { return max_slot - num_current_running_slots + max_mem + nprocs + max_swp; }
+		//constexpr int score() const { return max_slot - num_current_running_slots + max_mem + nprocs + max_swp; }
+		int host_score = rand()%10000;
+		constexpr int score() const { return host_score;}
+
 		constexpr bool is_executable(const Job& job) const
 		{
 			return status == HostStatus::OK
