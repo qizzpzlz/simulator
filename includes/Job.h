@@ -31,8 +31,8 @@ namespace ClusterSimulator
 		double num_exec_procs;
 
 		ms submit_time;
-		mutable ms start_time{};
-		mutable ms finish_time{};
+		ms start_time{};
+		ms finish_time{};
 
 		std::chrono::milliseconds total_pending_duration{};
 		void update_total_pending_duration(ms current_time) { total_pending_duration = current_time - pend_start_time_; }

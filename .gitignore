@@ -354,6 +354,7 @@ cmake_install.cmake
 cluster-simulator
 libspdlog.a
 log_output.txt
+jobmart_raw_replica.txt
 
 # scenarios
 scenarios/

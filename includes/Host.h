@@ -3,7 +3,7 @@
 #include "EnumConverter.h"
 #include <string>
 #include <vector>
-#include <cstdlib>
+#include <random>
 
 namespace ClusterSimulator
 {
@@ -49,8 +49,8 @@ namespace ClusterSimulator
 
 		
 		//constexpr int score() const { return max_slot - num_current_running_slots + max_mem + nprocs + max_swp; }
-		int host_score = rand()%10000;
-		constexpr int score() const { return host_score;}
+		//int host_score = rand()%10000;
+		int score() const noexcept { return score_; }
 
 		constexpr bool is_executable(const Job& job) const
 		{
@@ -70,6 +70,7 @@ namespace ClusterSimulator
 			if (!is_available_at_least_once && value == HostStatus::OK)
 				is_available_at_least_once = true;
 		}
+		void set_rand_score() noexcept { score_ = dist_(gen_); }
 
 		// Initialise Host from status data.
 		Host(const std::string name, int cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
@@ -91,9 +92,13 @@ namespace ClusterSimulator
 		}
 
 	private:
-		int slot_running_{ 0 };
+		int slot_running_{};
+		int score_{};
 
 		static int id_gen_;
+		static std::random_device rd_;
+		static std::mt19937 gen_;
+		static std::uniform_int_distribution<> dist_;
 	};
 }
 

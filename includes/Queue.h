@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <functional>
 #include "Job.h"
 #include "Host.h"
 
@@ -14,20 +15,9 @@ namespace ClusterSimulator
 	class Queue
 	{
 	public:
-		//friend class Job;
-		//using Policy = std::function<Host&(Queue& queue)>
-
 		std::string name;
 		int id{ id_gen_++ };
 		int priority;
-
-
-
-		bool operator<(const Queue& other) const { return priority < other.priority; }
-
-		// Copy and Move
-		//Queue(const Queue&);
-		//Queue& operator=(const Queue&);
 
 		/// Creates a default queue.
 		explicit Queue(ClusterSimulation& simulation);
@@ -36,88 +26,35 @@ namespace ClusterSimulator
 		Queue(ClusterSimulation& simulation, const std::string& name);
 		~Queue();
 
+		bool operator<(const Queue& other) const noexcept { return priority < other.priority; }
+
 		/// Gets priority of this queue. Higher values have higher priority.
 		constexpr int get_priority() const { return priority; }
-
 		int count() const { return jobs_.size(); }
-
 		constexpr bool is_default() const { return is_default_; }
 
+		bool dispatch();
 		void enqueue(Job&& job);
 
-		bool dispatch();
-
-		//Host& policy(const Job& job) const;
-		void policy();
-		
-
-		//class CompareHost
-		//{
-		//public:
-		//	bool operator() (const Host& a, const Host& b)
-		//	{
-		//		return a.score() > b.score();
-		//	}
-		//};
-
-		//using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>, std::vector<std::reference_wrapper<Host>>, CompareHost>;
-		//using Sorted_Hosts = std::priority_queue<std::reference_wrapper<Host>>;
-		//Sorted_Hosts match(const Job& job);
-		//std::vector<Host&>
-		
-		//std::sort(sorted_host_list.begin(), sorted_host_list.end(), [](const std::reference_wrapper<Host> &a, const std::reference_wrapper<Host> &b)  -> bool { return a.get().score() < b.get().score(); } );
-			
-
-		using Host_List = std::vector<std::reference_wrapper<Host>>;
-		Host_List match(const Job& job);
-		Host_List sort();
-		
-		//using Compare = std::function<bool(const std::reference_wrapper<Host>,  const std::reference_wrapper<Host>)
-		//Compare CompareHost;
-	
-		void clean_pending_jobs();
-
 	private:
-		class CompareJob
-		{
-		public:
-			bool operator() (const Job& a, const Job& b)
-			{
-				return a.priority > b.priority;
-			}
-		};
 		using HostReference = std::reference_wrapper<Host>;
-		//using CompareHost = std::function<void(const std::reference_wrapper<Host>&, const std::reference_wrapper<Host>&)>; 
-		std::function<bool(const HostReference&, const HostReference&)> compare_host_function
+		using HostList = std::vector<HostReference>;
+		HostList match(const Job& job);
+		void sort(HostList::iterator first, HostList::iterator last);
+		void policy();
+		void clean_pending_jobs();
+		void set_compare_host_function_(const std::function<bool(const HostReference&, const HostReference&)> compare_host) noexcept
 		{
-			[](const HostReference &a, const HostReference &b)
-			{	
-				return a.get().score() < b.get().score(); 
-			}
-		};
-
-		void set_compare_host_function(const std::function<bool(const HostReference&, const HostReference&)> compare_host) noexcept
-		{
-			compare_host_function = compare_host;
+			compare_host_function_ = compare_host;
 		}
-		
-
-	
-		ClusterSimulation* simulation_;
-		//Cluster& cluster_;
-		
-		//Policy policy_ = queue.simple_default_policy;
 
 		// characteristics
 		bool is_default_{};
-
 		int default_host_specification_{};
 
 		// fields
+		ClusterSimulation* simulation_;
 		std::vector<Job> jobs_;
-		//std::priority_queue<Job, std::vector<Job>, CompareJob> jobs_;
-		//std::priority_queue<Host, std::vector<Host>, CompareHost> eligible_host_list_;
-		//std::priority_queue<Host, std::vector<Host>, CompareHost> hosts_;
         // TODO: maybe unnecessary
         std::vector<Job> pending_jobs_;
 		std::vector<Job> running_jobs_;
@@ -138,9 +75,29 @@ namespace ClusterSimulator
 		// Restrict host
 		// Restrict job size
 
+		std::function<bool(const HostReference&, const HostReference&)> compare_host_function_
+		{
+			[](const HostReference &a, const HostReference &b)
+			{	
+				int s1 = a.get().score();
+				int s2 = b.get().score();
+
+				return s1 < s2;
+			}
+		};
+
+		// Static fields
 		static int id_gen_;
 		static const int DEFAULT_PRIORITY = 40;
 		
+		class CompareJob
+		{
+		public:
+			bool operator() (const Job& a, const Job& b)
+			{
+				return a.priority > b.priority;
+			}
+		};
 
 		class StaticQueueData
 		{
