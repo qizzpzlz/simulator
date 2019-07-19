@@ -65,7 +65,7 @@ namespace ClusterSimulator
 		{	
 			if(host.is_executable(job))
 			{
-				eligible_host_list.push_back(std::reference_wrapper<Host>(host));
+				eligible_host_list.push_back(&host);
 			}
 		}
 
@@ -78,7 +78,7 @@ namespace ClusterSimulator
 	void Queue::sort(Queue::HostList::iterator first, Queue::HostList::iterator end)
 	{
 		for (auto i{ first }; i != end; i++)
-			i->get().set_rand_score();
+			(*i)->set_rand_score();
 
 		std::sort(first, end, compare_host_function_);
 	}
@@ -149,7 +149,7 @@ namespace ClusterSimulator
 			sort(eligible_hosts.begin(), eligible_hosts.end());
 
 			// Find best available host
-			Host& best_host = eligible_hosts.back();
+			Host& best_host{ *eligible_hosts.back() };
 
 			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
 				,name, job.id, best_host.name);

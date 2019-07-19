@@ -99,6 +99,7 @@ namespace ClusterSimulator
 		static std::random_device rd_;
 		static std::mt19937 gen_;
 		static std::uniform_int_distribution<> dist_;
+		inline static const int MAX_RAND_NUM = 100;
 	};
 }
 

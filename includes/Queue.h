@@ -37,13 +37,13 @@ namespace ClusterSimulator
 		void enqueue(Job&& job);
 
 	private:
-		using HostReference = std::reference_wrapper<Host>;
+		using HostReference = Host*;
 		using HostList = std::vector<HostReference>;
 		HostList match(const Job& job);
 		void sort(HostList::iterator first, HostList::iterator last);
 		void policy();
 		void clean_pending_jobs();
-		void set_compare_host_function_(const std::function<bool(const HostReference&, const HostReference&)> compare_host) noexcept
+		void set_compare_host_function_(const std::function<bool(const HostReference, const HostReference)> compare_host) noexcept
 		{
 			compare_host_function_ = compare_host;
 		}
@@ -75,14 +75,11 @@ namespace ClusterSimulator
 		// Restrict host
 		// Restrict job size
 
-		std::function<bool(const HostReference&, const HostReference&)> compare_host_function_
+		std::function<bool(const HostReference, const HostReference)> compare_host_function_
 		{
-			[](const HostReference &a, const HostReference &b)
+			[](const HostReference a, const HostReference b)
 			{	
-				int s1 = a.get().score();
-				int s2 = b.get().score();
-
-				return s1 < s2;
+				return a->score() < b->score();
 			}
 		};
 

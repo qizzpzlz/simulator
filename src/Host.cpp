@@ -8,7 +8,7 @@ namespace ClusterSimulator
 	int Host::id_gen_ = 0;
 	std::random_device Host::rd_{};
 	std::mt19937 Host::gen_(rd_());
-	std::uniform_int_distribution<> Host::dist_(1, 6);
+	std::uniform_int_distribution<> Host::dist_(1, MAX_RAND_NUM);
 
 	void Host::execute_job(const Job& job)
 	{
