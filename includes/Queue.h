@@ -6,11 +6,14 @@
 #include <functional>
 #include "Job.h"
 #include "Host.h"
+#include "user.h"
+//#include "../includes/Limit.h"
 
 namespace ClusterSimulator
 {
 	class ClusterSimulation;
 	class Cluster;
+	class Limit;
 
 	class Queue
 	{
@@ -19,6 +22,106 @@ namespace ClusterSimulator
 		int id{ id_gen_++ };
 		int priority;
 
+		//Queue params
+		
+		/**
+		 * List of queue administrators (username or userGroup)
+		 * Default : not defined
+		 */
+		std::vector<User> admin;
+		
+		/**
+		 * The per-process (hard) core file size limit (in KB) 
+		 * for all of the processes that belong to a job from this queue
+		 * Default : unlimited
+		 */
+		//int core_limit{ -1 }
+
+		/**
+		 * Limits the total CPU time the job can use.
+		 * Default : unlimited
+		 */
+		std::chrono::milliseconds cpu_limit{ -1 };
+
+		/**
+		 * EXCLUSIVE=Y | N 
+		 * Jobs that are submitted to an exclusive queue with bsub -x are only dispatched to a host that has no other running jobs. 
+		 */
+		bool is_exclusive{ true };
+		
+		/**
+		 * Fairshare
+		 * default = not defined
+		 * FAIRSHARE=USER_SHARES[[user, number_shares] ...]
+		 */
+		class User_shares
+		{
+			User user;
+			int num_shares;
+		};
+		std::vector<User_shares> fairshare;
+		bool is_using_fairshare() const noexcept { return !fairshare.empty(); }
+
+		/**
+		 * ex)
+		 * HJOB_LIMIT = 1 
+		 * HOSTS=hostA hostB hostC 
+		 * 
+		 * Maximum number of job slots that this queue can use on any host.
+		 * This limit is configured per host, regardless of the number of processors it might have.
+		 * default = unlimited
+		 */
+		//To-Do : 맵 
+		// class Hjob_limit
+		// {
+		// 	int max_limit{ -1 };
+		// 	//std::vector<Host> hosts;
+		// 	Host host;
+		// };
+		// std::vector<Hjob_limit> hjob_limit;
+		struct HostInfo
+		{
+			int slot_dispatched;
+		};
+		std::map<const Host*, HostInfo> dispatched_hosts_;
+
+		std::vector<Limit*> limits;
+
+		int using_job_slots() const noexcept;
+		
+		//int hjob_limit{ -1 };
+		
+		//The number you specify is multiplied by the value of lsb.params MBD_SLEEP_TIME (60 seconds by default).
+		int job_accept_interval;
+
+		//Total number of job slots that this queue can use
+		int qjob_limit{ -1 };
+
+		//requeue_exit_value : Enables automatic job requeue and sets the LSB_EXIT_REQUEUE environment variable.
+		//REQUEUE_EXIT_VALUES=[exit_code ...] [EXCLUDE(exit_code ...)]
+
+		//RESOURCE_RESERVE=MAX_RESERVE_TIME[integer]
+		//Enables processor reservation and memory reservation for pending jobs for the queue
+
+		//Resource requirements used to determine eligible hosts
+		//res_req
+
+		//The name of a host or host model specifies the runtime normalization host to use.
+		std::chrono::milliseconds run_limit;
+
+		//The per-process (hard) stack segment size limit (in KB) for all of the processes belonging to a job from this queue
+		//int stack_limit;
+		
+		// Maximum number of job slots that each user can use in this queue.
+		int ujob_limit{ -1 };
+
+		/**
+		 * users : A space-separated list of user names or user groups that can submit jobs to the queue
+		 * default = all
+		 * USERS=all [~user_name ...] [~user_group ...] | [user_name ...] [user_group [~user_group ...] ...]
+		 */
+		std::vector<User> users;
+		
 		/// Creates a default queue.
 		explicit Queue(ClusterSimulation& simulation);
 		/// Creates a custom queue with custom priority and name.
