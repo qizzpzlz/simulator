@@ -44,53 +44,27 @@ namespace ClusterSimulator
 		std::chrono::milliseconds cpu_limit{ -1 };
 
 		/**
-		 * EXCLUSIVE=Y | N 
-		 * Jobs that are submitted to an exclusive queue with bsub -x are only dispatched to a host that has no other running jobs. 
-		 */
-		bool is_exclusive{ true };
-		
-		/**
 		 * Fairshare
 		 * default = not defined
 		 * FAIRSHARE=USER_SHARES[[user, number_shares] ...]
 		 */
-		class User_shares
+		class UserShares
 		{
-			User user;
+			User* user;
 			int num_shares;
 		};
-		std::vector<User_shares> fairshare;
+		std::vector<UserShares> fairshare;
 		bool is_using_fairshare() const noexcept { return !fairshare.empty(); }
 
-		/**
-		 * ex)
-		 * HJOB_LIMIT = 1 
-		 * HOSTS=hostA hostB hostC 
-		 * 
-		 * Maximum number of job slots that this queue can use on any host.
-		 * This limit is configured per host, regardless of the number of processors it might have.
-		 * default = unlimited
-		 */
-		//To-Do : 맵 
-		// class Hjob_limit
-		// {
-		// 	int max_limit{ -1 };
-		// 	//std::vector<Host> hosts;
-		// 	Host host;
-		// };
-		// std::vector<Hjob_limit> hjob_limit;
 		struct HostInfo
 		{
 			int slot_dispatched;
 		};
-		std::map<const Host*, HostInfo> dispatched_hosts_;
 
 		std::vector<Limit*> limits;
 
 		int using_job_slots() const noexcept;
-		
-		//int hjob_limit{ -1 };
-		
+
 		//The number you specify is multiplied by the value of lsb.params MBD_SLEEP_TIME (60 seconds by default).
 		int job_accept_interval;
 
@@ -106,9 +80,6 @@ namespace ClusterSimulator
 		//Resource requirements used to determine eligible hosts
 		//res_req
 
-		//The name of a host or host model specifies the runtime normalization host to use.
-		std::chrono::milliseconds run_limit;
-
 		//The per-process (hard) stack segment size limit (in KB) for all of the processes belonging to a job from this queue
 		//int stack_limit;
 		
@@ -120,36 +91,57 @@ namespace ClusterSimulator
 		 * default = all
 		 * USERS=all [~user_name ...] [~user_group ...] | [user_name ...] [user_group [~user_group ...] ...]
 		 */
-		std::vector<User> users;
+		std::vector<User*> users;
 		
-		/// Creates a default queue.
+		// Creates a default queue.
 		explicit Queue(ClusterSimulation& simulation);
-		/// Creates a custom queue with custom priority and name.
+		// Creates a custom queue with custom priority and name.
 		Queue(ClusterSimulation& simulation, int priority, std::string name = std::string());
 		Queue(ClusterSimulation& simulation, const std::string& name);
 		~Queue();
 
 		bool operator<(const Queue& other) const noexcept { return priority < other.priority; }
 
-		/// Gets priority of this queue. Higher values have higher priority.
-		constexpr int get_priority() const { return priority; }
+		// Gets priority of this queue. Higher values have higher priority.
+		int get_priority() const { return priority; }
 		int count() const { return jobs_.size(); }
-		constexpr bool is_default() const { return is_default_; }
+		bool is_default() const { return is_default_; }
 
 		bool dispatch();
 		void enqueue(Job&& job);
 
+		bool try_get_dispatched_host_info(const Host& host, HostInfo* out_info) const noexcept
+		{
+			const auto search = dispatched_hosts_.find(&host);
+			if (search == dispatched_hosts_.end())
+			{
+				out_info = nullptr;
+				return false;
+			}
+
+			*out_info = search->second;	// HostInfo is copy-assigned here!
+
+			return true;
+		}
+
 	private:
 		using HostReference = Host*;
 		using HostList = std::vector<HostReference>;
+
 		HostList match(const Job& job);
-		void sort(HostList::iterator first, HostList::iterator last);
+
+		void sort(HostList::iterator first, HostList::iterator last) const;
+
 		void policy();
+
 		void clean_pending_jobs();
+
 		void set_compare_host_function_(const std::function<bool(const HostReference, const HostReference)> compare_host) noexcept
 		{
 			compare_host_function_ = compare_host;
 		}
+
+		std::map<const Host* const, HostInfo> dispatched_hosts_;
 
 		// characteristics
 		bool is_default_{};

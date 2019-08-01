@@ -17,16 +17,19 @@ namespace ClusterSimulator
 				"Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
 
 		slot_running_ += job.slot_required;
-		num_current_running_slots +=  job.slot_required;
-		num_current_jobs ++;
+		num_current_running_slots += job.slot_required;
+		num_current_jobs++;
 	}
 
 	void Host::exit_job(const Job& job)
 	{
 		slot_running_ -= job.slot_required;
-		// TODO:
-		auto test = job.queue_managing_this_job->dispatched_hosts_;
-		test[this].slot_dispatched -= job.slot_required;
+
+		Queue::HostInfo info;
+		if (!job.queue_managing_this_job->try_get_dispatched_host_info(*this, &info))
+			throw std::runtime_error("Queue managing a job does not have information about the host of the job.");
+
+		info.slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
 		num_current_jobs --;
 	}
