@@ -24,4 +24,10 @@ namespace ClusterSimulator
     public:
         bool is_eligible(const Queue& queue, const Host& host, const Job& job) const override;
     };
+    class Exclusive : public Limit
+    {
+    public:
+        bool is_eligible(const Queue& queue, const Host& host, const Job& job) const override;
+    };
+
 }

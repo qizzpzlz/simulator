@@ -47,7 +47,7 @@ namespace ClusterSimulator
 		 * EXCLUSIVE=Y | N 
 		 * Jobs that are submitted to an exclusive queue with bsub -x are only dispatched to a host that has no other running jobs. 
 		 */
-		bool is_exclusive{ true };
+		//bool is_exclusive{ true }; //LIMIT
 		
 		/**
 		 * Fairshare
@@ -85,6 +85,7 @@ namespace ClusterSimulator
 		};
 		std::map<const Host*, HostInfo> dispatched_hosts_;
 
+		// HjobLimit, RuntimeLimit,  Exclusive
 		std::vector<Limit*> limits;
 
 		int using_job_slots() const noexcept;
@@ -107,7 +108,7 @@ namespace ClusterSimulator
 		//res_req
 
 		//The name of a host or host model specifies the runtime normalization host to use.
-		std::chrono::milliseconds run_limit;
+		//std::chrono::milliseconds run_limit;
 
 		//The per-process (hard) stack segment size limit (in KB) for all of the processes belonging to a job from this queue
 		//int stack_limit;

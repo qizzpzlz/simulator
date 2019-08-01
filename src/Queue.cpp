@@ -177,33 +177,6 @@ namespace ClusterSimulator
 
 			// Find best available host
 			Host& best_host{ *eligible_hosts.back() };
-
-			if(is_exclusive)
-			{
-				ClusterSimulation::log(LogLevel::info, "Dispatch job #{0} in exclusive queue {1}"
-							, job.id, name);
-
-				if(best_host.num_current_jobs !=0)
-				{
-					ClusterSimulation::log(LogLevel::info, "Cannot dispatch job #{0}. (Host {1} has running jobs)"
-								, job.id, best_host.name);
-					
-					ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pend start time: {1}ms)"
-								, job.id, job.run_time.count());
-					job.set_pending(simulation_->get_current_time());
-					pending_jobs_.push_back(job);
-
-					jobs_.pop_back();
-					continue;
-				}
-			}
-			
-			//limits
-			//if(cpu_limit != -1 && total_cpu_time > cpu_limit)
-			//{
-				//CPU_LIMIT ..?? 
-			
-			//qjob_limit
 			
 			// Register the best host to the dispatched hosts list.
 			auto search = dispatched_hosts_.find(&best_host);
