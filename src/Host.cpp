@@ -1,7 +1,7 @@
-#include "../includes/Job.h"
-#include "../includes/Host.h"
+#include "../includes/job.h"
+#include "../includes/host.h"
 #include "../dependencies/spdlog/spdlog.h"
-#include "../includes/Cluster_Simulation.h"
+#include "../includes/cluster_simulation.h"
 
 namespace ClusterSimulator
 {

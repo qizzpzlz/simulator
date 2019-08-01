@@ -1,11 +1,11 @@
 #include <utility>
 #include <sstream>
 #include <iostream>
-#include "../includes/Host.h"
-#include "../includes/Queue.h"
-#include "../includes/Job.h"
-#include "../includes/Limit.h"
-#include "../includes/Cluster_Simulation.h"
+#include "../includes/host.h"
+#include "../includes/queue.h"
+#include "../includes/job.h"
+#include "../includes/limit.h"
+#include "../includes/cluster_simulation.h"
 #include "../dependencies/spdlog/spdlog.h"
 
 //#include "spdlog/spdlog.h"

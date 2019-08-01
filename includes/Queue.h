@@ -4,10 +4,10 @@
 #include <string>
 #include <queue>
 #include <functional>
-#include "Job.h"
-#include "Host.h"
+#include "job.h"
+#include "host.h"
 #include "user.h"
-//#include "../includes/Limit.h"
+//#include "../includes/limit.h"
 
 namespace ClusterSimulator
 {

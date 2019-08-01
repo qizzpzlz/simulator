@@ -1,6 +1,6 @@
 #pragma once
-#include "Job.h"
-#include "EnumConverter.h"
+#include "job.h"
+#include "enum_converter.h"
 #include <string>
 #include <vector>
 #include <random>

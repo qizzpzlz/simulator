@@ -1,11 +1,11 @@
 #include <iostream>
 #include <sstream>
-#include "../includes/Utils.h"
-#include "../includes/Queue.h"
-#include "../includes/Cluster.h"
-#include "../includes/Scenario.h"
-#include "../includes/Cluster_Simulation.h"
-#include "../includes/Job.h"
+#include "../includes/utils.h"
+#include "../includes/queue.h"
+#include "../includes/cluster.h"
+#include "../includes/scenario.h"
+#include "../includes/cluster_simulation.h"
+#include "../includes/job.h"
 #include "../dependencies/spdlog/spdlog.h"
 
 //#include "spdlog/spdlog.h"

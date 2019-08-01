@@ -1,4 +1,4 @@
-#include "../includes/Cluster.h"
+#include "../includes/cluster.h"
 
 
 namespace ClusterSimulator

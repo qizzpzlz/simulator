@@ -1,9 +1,9 @@
-#include "Parser.h"
+#include "parser.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "../includes/Scenario.h"
-#include "../includes/Cluster.h"
+#include "../includes/scenario.h"
+#include "../includes/cluster.h"
 #include "../dependencies/json11.hpp"
 
 namespace ClusterSimulator::Parser

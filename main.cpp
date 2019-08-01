@@ -1,7 +1,7 @@
 #include "includes/Parser.h"
-#include "includes/Scenario.h"
-#include "includes/Cluster.h"
-#include "includes/Cluster_Simulation.h"
+#include "includes/scenario.h"
+#include "includes/cluster.h"
+#include "includes/cluster_simulation.h"
 #include "spdlog/spdlog.h"
 #include <fstream>
 

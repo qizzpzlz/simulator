@@ -1,12 +1,12 @@
 #pragma once
-//#include "Queue.h"
-//#include "Scenario.h"
-#include "Cluster.h"
+//#include "queue.h"
+//#include "scenario.h"
+#include "cluster.h"
 #include <functional>
 #include <chrono>
 #include <queue>
 #include <ctime>
-#include "Queue.h"
+#include "queue.h"
 #include "../dependencies/spdlog/spdlog.h"
 #include "../dependencies/spdlog/logger.h"
 #include "../dependencies/spdlog/common.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Host.h"
+#include "host.h"
 
 namespace ClusterSimulator
 {
