@@ -24,6 +24,9 @@ namespace ClusterSimulator
 	void Host::exit_job(const Job& job)
 	{
 		slot_running_ -= job.slot_required;
+		// TODO:
+		auto test = job.queue_managing_this_job->dispatched_hosts_;
+		test[this].slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
 		num_current_jobs --;
 	}
