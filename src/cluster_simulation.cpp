@@ -59,15 +59,21 @@ namespace ClusterSimulator
 		return *it;
 	}
 
-	Host& ClusterSimulation::find_host(const std::string& name) const
+	const Host& ClusterSimulation::find_host(const std::string& name) const
 	{
-		auto it = std::find_if(cluster_.begin(), cluster_.end(),
-			[&name](Host& host) { return host.name == name; });
+		//auto it = std::find_if(cluster_.begin(), cluster_.end(),
+		//	[&name](Host& host) { return host.name == name; });
 
+		//if (it == cluster_.end())
+		//	throw std::out_of_range("Can't find a host of name " + name + " in this cluster.");
+
+		//return *it;
+
+		auto it = cluster_.find_node(name);
 		if (it == cluster_.end())
 			throw std::out_of_range("Can't find a host of name " + name + " in this cluster.");
 
-		return *it;
+		return it->second;
 	}
 
 	ClusterSimulation::EventItem::EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation)
@@ -98,7 +104,7 @@ namespace ClusterSimulator
 				if (entry.event_detail.host_name.empty())
 					return;
 
-				Host& host = simulation.find_host(entry.event_detail.host_name);
+				Host& host = simulation.get_cluster().find_node(entry.event_detail.host_name)->second;
 
 				host.set_status(entry.event_detail.host_status);
 
@@ -175,7 +181,7 @@ namespace ClusterSimulator
 		//double total_cpu_power{ 0.0 };
 		int num_total_available_hosts{ 0 };
 		int num_total_applications{ scenario_.num_unique_apps() };
-		for (const auto& host : cluster_)
+		for (const auto& [name, host] : cluster_)
 		{
 			if (!host.is_available_at_least_once)
 				continue;

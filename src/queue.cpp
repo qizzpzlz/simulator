@@ -73,7 +73,7 @@ namespace ClusterSimulator
 		// TODO: Reuse host vector instead of allocating memory each time.
 		HostList eligible_host_list{};
 
-		for (Host& host : cand_host_list)
+		for (auto & [name, host] : cand_host_list)
 		{	
 			if(host.is_executable(job))
 			{

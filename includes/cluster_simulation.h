@@ -55,7 +55,7 @@ namespace ClusterSimulator
 
 		// TODO: use id instead of name
 		Queue& find_queue(const std::string& name);
-		Host& find_host(const std::string& name) const;
+		const Host& find_host(const std::string& name) const;
 		const Cluster& get_cluster_view() const { return cluster_; }
 		Cluster& get_cluster() const { return cluster_; }
 
