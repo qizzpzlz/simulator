@@ -23,6 +23,9 @@ namespace ClusterSimulator
 		Unreach
 	};
 
+	class Cluster;
+	class ClusterSimulation;
+
 	class Host
 	{
 	public:
@@ -42,26 +45,29 @@ namespace ClusterSimulator
 		int max_tmp;
 		int id{ id_gen_++ };
 
+		const Cluster* cluster;
+
 		HostStatus status;
 		int num_current_jobs{ 0 };
 		int num_current_running_slots{ 0 };
 		bool is_available_at_least_once{ false };
 
-		
-		//constexpr int score() const { return max_slot - num_current_running_slots + max_mem + nprocs + max_swp; }
-		//int host_score = rand()%10000;
-		int score() const noexcept { return score_; }
-
-		constexpr bool is_executable(const Job& job) const
+		constexpr int score() const noexcept { return score_; }
+		constexpr int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
+		constexpr bool is_executable(const Job& job) const noexcept
 		{
 			return status == HostStatus::OK
-				&& job.slot_required + num_current_running_slots <= max_slot
+				&& job.slot_required <= remaining_slots()
 				&& job.mem_required <= max_mem
 				&& job.num_exec_procs <= nprocs * ncores;
 				//&& job.swap_usage < max_swp;
 		}
+		std::chrono::milliseconds get_expected_run_time(const Job& job) const noexcept;
+		ms get_expected_time_of_all_completion() const noexcept { return expected_time_of_completion; }
 
-		// Status mutator methods
+
+		/* Status mutator methods */
+
 		void execute_job(const Job& job);
 		void exit_job(const Job& job);
 		void set_status(HostStatus value) noexcept
@@ -71,10 +77,11 @@ namespace ClusterSimulator
 				is_available_at_least_once = true;
 		}
 		void set_rand_score() noexcept { score_ = dist_(gen_); }
+		void try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept;
 
 		// Initialise Host from status data.
 		Host(const std::string name, int cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
-			int max_tmp, HostStatus status)
+			int max_tmp, HostStatus status, const Cluster& cluster)
 			: name(name),
 			  cpu_factor(cpu_factor),
 			  ncpus(ncpus),
@@ -85,6 +92,7 @@ namespace ClusterSimulator
 			  max_mem(max_mem),
 			  max_swp(max_swp),
 			  max_tmp(max_tmp),
+			  cluster(&cluster),
 			  status(status)
 		{
 			if (status == HostStatus::OK)
@@ -94,6 +102,7 @@ namespace ClusterSimulator
 	private:
 		int slot_running_{};
 		int score_{};
+		ms expected_time_of_completion{};
 
 		static int id_gen_;
 		static std::random_device rd_;

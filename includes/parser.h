@@ -7,8 +7,8 @@ namespace ClusterSimulator
 	class Cluster;
 	namespace Parser
 	{
-		Scenario parse_scenario(const std::string& file_path, int limit = -1);
-		Cluster parse_cluster(const std::string& file_path);
+		void parse_scenario(Scenario* scenario, const std::string& file_path, int limit = -1);
+		void parse_cluster(Cluster* cluster, const std::string& file_path);
 	}
  
 }

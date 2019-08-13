@@ -10,6 +10,13 @@ namespace ClusterSimulator
 	std::mt19937 Host::gen_(rd_());
 	std::uniform_int_distribution<> Host::dist_(1, MAX_RAND_NUM);
 
+	std::chrono::milliseconds Host::get_expected_run_time(const Job& job) const noexcept
+	{
+		int original_factor = cluster->simulation->find_host(job.get_dedicated_host_name()).cpu_factor;
+		double ratio = static_cast<double>(cpu_factor) / original_factor;
+		return std::chrono::duration_cast<std::chrono::milliseconds>(job.run_time * ratio);
+	}
+
 	void Host::execute_job(const Job& job)
 	{
 		if (slot_running_ + job.slot_required > max_slot)
@@ -20,6 +27,8 @@ namespace ClusterSimulator
 		num_current_running_slots += job.slot_required;
 		num_current_jobs++;
 	}
+
+	
 
 	void Host::exit_job(const Job& job)
 	{
@@ -32,6 +41,13 @@ namespace ClusterSimulator
 		info.slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
 		num_current_jobs --;
+	}
+
+	void Host::try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept
+	{
+		const ms expected_completion_time = cluster->simulation->get_current_time() + run_time;
+		if (expected_completion_time > expected_time_of_completion)
+			expected_time_of_completion = expected_completion_time;
 	}
 }
 

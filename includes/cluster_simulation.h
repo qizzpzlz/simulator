@@ -113,7 +113,7 @@ namespace ClusterSimulator
 			// start_time
 				job.start_time.time_since_epoch().count() <<
 			// finish_time
-				(job.start_time + job.run_time).time_since_epoch().count() <<
+				job.finish_time.time_since_epoch().count() <<
 			// FINISH_ISO_WEEK
 			// project_name
 			// queue_name
@@ -148,7 +148,7 @@ namespace ClusterSimulator
 			// job_pend_time
 				job.total_pending_duration.count() <<
 			// job_run_time
-				job.run_time.count() <<
+				(job.finish_time - job.start_time).count() <<
 			// job_turnaround_time
 			// job_mem_usage
 				job.mem_usage <<

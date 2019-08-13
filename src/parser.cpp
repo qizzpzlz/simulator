@@ -8,11 +8,10 @@
 
 namespace ClusterSimulator::Parser
 {
-		Scenario parse_scenario(const std::string& file_path, int limit)
+		void parse_scenario(Scenario* scenario, const std::string& file_path, int limit)
 		{
 			using namespace json11;
 
-			Scenario scenario;
 			std::ifstream fin;
 			fin.open(file_path);
 
@@ -38,7 +37,7 @@ namespace ClusterSimulator::Parser
 				{
 					flag = true;
 					initial_timestamp = ms{ std::chrono::seconds{json["event_timestamp"].int_value()} };
-					scenario.initial_time_point = ms();
+					scenario->initial_time_point = ms();
 				}
 
 				entry.timestamp = ms(ms{ std::chrono::seconds{ json["event_timestamp"].int_value() } } - initial_timestamp);
@@ -78,21 +77,17 @@ namespace ClusterSimulator::Parser
 					entry.event_detail.host_status = status;
 				}
 
-				scenario.add_scenario_entry(entry);
+				scenario->add_scenario_entry(entry);
 
 				if (count++ == limit)
 					break;
 			}
 
-			std::cout << "Successfully parsed " << scenario.count() << " scenario entries." << std::endl;
-
-			return scenario;
+			std::cout << "Successfully parsed " << scenario->count() << " scenario entries." << std::endl;
 		}
 
-		Cluster parse_cluster(const std::string& file_path)
+		void parse_cluster(Cluster* cluster, const std::string& file_path)
 		{
-			ClusterSimulator::Cluster cluster;
-
 			using namespace json11;
 			std::ifstream fin;
 			fin.open(file_path);
@@ -131,13 +126,11 @@ namespace ClusterSimulator::Parser
 					detail["MAX_MEM"].int_value(),
 					detail["MAX_SWP"].int_value(),
 					detail["MAX_TMP"].int_value(),
-					status);
+					status, *cluster);
 
-				cluster.add_node(host);
+				cluster->add_node(host);
 			}
 
-			std::cout << "Successfully parsed a cluster with " << cluster.count() << " hosts." << std::endl;
-
-			return cluster;
+			std::cout << "Successfully parsed a cluster with " << cluster->count() << " hosts." << std::endl;
 		}
 }

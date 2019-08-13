@@ -24,6 +24,8 @@ namespace ClusterSimulator
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
 		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) }
 	{
+		cluster.simulation = this;
+
 		// TODO: set default queue
 
 		current_time_ = scenario.initial_time_point;

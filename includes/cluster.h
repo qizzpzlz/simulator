@@ -7,6 +7,8 @@ namespace ClusterSimulator
 	class Cluster
 	{
 	public:
+		const ClusterSimulation* simulation;
+
 		auto begin() { return nodes_.begin(); }
 		auto end() { return nodes_.end(); }
 		auto begin() const { return nodes_.cbegin(); }

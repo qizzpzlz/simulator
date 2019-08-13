@@ -105,8 +105,8 @@ namespace ClusterSimulator
 		// Retrive all pending jobs to the primary job list.
 		clean_pending_jobs();
 
-		// TODO: policy
-		//std::sort(jobs_.begin(), jobs_.end(), compare_job_function);
+		if (compare_job_function_)
+			std::sort(jobs_.begin(), jobs_.end(), compare_job_function_);
 	}
 
 	/**
@@ -192,21 +192,28 @@ namespace ClusterSimulator
 			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
 				,name, job.id, best_host.name);
 
+
+			const auto run_time = best_host.get_expected_run_time(job);
+			best_host.try_update_expected_time_of_completion(run_time);
+
 			// TODO: host.register()
 			best_host.execute_job(job);
 			
 			// TODO: Host.set_start_time()
 			const ms start_time = simulation_->get_current_time();
 			job.start_time = start_time;
+			job.finish_time = start_time + run_time;
 
-			simulation_->after_delay(job.run_time, [&best_host, job]
+			// Reserve finish event
+			simulation_->after_delay(run_time, [&best_host, job]
 			{
 				best_host.exit_job(job);
 
 				std::stringstream ss(job.get_exit_host_status());
 				ss >> Utils::enum_from_string<HostStatus>(best_host.status);
-				ClusterSimulation::log(LogLevel::info, "Job #{0} is finished in Host {1}. (run time: {2}ms)"
-					, job.id, best_host.name, job.run_time.count());
+				ClusterSimulation::log(LogLevel::info, 
+					"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
+					,job.id, best_host.name, (job.finish_time - job.start_time).count(), job.run_time.count());
 
 				ClusterSimulation::log_jobmart(job);
 			});

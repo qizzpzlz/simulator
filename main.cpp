@@ -1,4 +1,4 @@
-#include "includes/Parser.h"
+#include "includes/parser.h"
 #include "includes/scenario.h"
 #include "includes/cluster.h"
 #include "includes/cluster_simulation.h"
@@ -34,13 +34,13 @@ int main()
 	// Parse the given scenario and the cluster from json files.
 	if (!host_path.empty() && !scenario_path.empty())
 	{
-		scenario = ClusterSimulator::Parser::parse_scenario(scenario_path);
-		cluster = ClusterSimulator::Parser::parse_cluster(host_path);
+		ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path);
+		ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
 	}
 	else
 	{
-		scenario = ClusterSimulator::Parser::parse_scenario(SCENARIO_PATH + SCENARIO_FILE, 5000);
-		cluster = ClusterSimulator::Parser::parse_cluster(SCENARIO_PATH + HOSTS_FILE);
+		ClusterSimulator::Parser::parse_scenario(&scenario, SCENARIO_PATH + SCENARIO_FILE, 5000);
+		ClusterSimulator::Parser::parse_cluster(&cluster, SCENARIO_PATH + HOSTS_FILE);
 	}
 
 	// Start simulation

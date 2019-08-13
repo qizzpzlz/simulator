@@ -14,6 +14,7 @@ namespace ClusterSimulator
 	class ClusterSimulation;
 	class Cluster;
 	class Limit;
+	class QueueAlgorithm;
 
 	class Queue
 	{
@@ -124,6 +125,9 @@ namespace ClusterSimulator
 			return true;
 		}
 
+		void set_algorithm(const QueueAlgorithm& algorithm) noexcept;
+		QueueAlgorithm* current_algorithm;
+
 	private:
 		using HostReference = Host*;
 		using HostList = std::vector<HostReference>;
@@ -136,7 +140,7 @@ namespace ClusterSimulator
 
 		void clean_pending_jobs();
 
-		void set_compare_host_function_(const std::function<bool(const HostReference, const HostReference)> compare_host) noexcept
+		void set_compare_host_function_(const std::function<bool(const HostReference, const HostReference)>& compare_host) noexcept
 		{
 			compare_host_function_ = compare_host;
 		}
@@ -177,6 +181,8 @@ namespace ClusterSimulator
 				return a->score() < b->score();
 			}
 		};
+
+		std::function<bool(const Job&, const Job&)> compare_job_function_;
 
 		// Static fields
 		static int id_gen_;
