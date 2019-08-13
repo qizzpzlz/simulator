@@ -1,5 +1,6 @@
 #include "../includes/queue.h"
 #include "../includes/scenario.h"
+#include "queue_algorithm.h"
 
 namespace ClusterSimulator
 {
@@ -29,6 +30,10 @@ namespace ClusterSimulator
 		std::vector<Queue> queues;
 		for (const auto& name : unique_queues_)
 			queues.emplace_back(simulation, name);
+
+		// Test code
+		for (auto i = 0; i < queues.size(); i++)
+			queues[i].set_algorithm(QAlgorithms.MCT);
 
 		return queues;
 	}

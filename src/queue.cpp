@@ -33,6 +33,16 @@ namespace ClusterSimulator
 
 	Queue::~Queue() = default;
 
+	void Queue::set_algorithm(const QueueAlgorithm* const algorithm) noexcept
+	{
+		current_algorithm = algorithm;
+
+		if (algorithm->get_host_comparer())
+			set_compare_host_function_(algorithm->get_host_comparer());
+		else
+			set_compare_host_function_(nullptr);
+	}
+
 
 	/**
 	 * Adds a job to this queue.
@@ -88,12 +98,14 @@ namespace ClusterSimulator
 	/**
 	 * Sorts eligible hosts.
 	 */
-	void Queue::sort(Queue::HostList::iterator first, Queue::HostList::iterator end) const
+	void Queue::sort(Queue::HostList::iterator first, Queue::HostList::iterator end, const Job& job) const
 	{
 		for (auto i{ first }; i != end; i++)
 			(*i)->set_rand_score();
 
-		std::sort(first, end, compare_host_function_);
+		using namespace std::placeholders;
+		auto f = std::bind(compare_host_function_, _1, _2, job);
+		std::sort(first, end, f);
 	}
 
 	/**
@@ -105,8 +117,8 @@ namespace ClusterSimulator
 		// Retrive all pending jobs to the primary job list.
 		clean_pending_jobs();
 
-		if (compare_job_function_)
-			std::sort(jobs_.begin(), jobs_.end(), compare_job_function_);
+		//if (current_algorithm && current_algorithm->get_job_comparer())
+		//	std::sort(jobs_.begin(), jobs_.end(), current_algorithm->get_job_comparer());
 	}
 
 	/**
@@ -170,7 +182,7 @@ namespace ClusterSimulator
 
 			// TODO: Why would we sort hosts? 
 			// Can we just get the host with the maximum priority?
-			sort(eligible_hosts.begin(), eligible_hosts.end());
+			sort(eligible_hosts.begin(), eligible_hosts.end(), job);
 
 			// Find best available host
 			Host& best_host{ *eligible_hosts.back() };

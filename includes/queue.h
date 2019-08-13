@@ -7,6 +7,7 @@
 #include "job.h"
 #include "host.h"
 #include "user.h"
+#include "queue_algorithm.h"
 //#include "../includes/limit.h"
 
 namespace ClusterSimulator
@@ -125,8 +126,8 @@ namespace ClusterSimulator
 			return true;
 		}
 
-		void set_algorithm(const QueueAlgorithm& algorithm) noexcept;
-		QueueAlgorithm* current_algorithm;
+		void set_algorithm(const QueueAlgorithm* const algorithm) noexcept;
+		const QueueAlgorithm* current_algorithm{ nullptr };
 
 	private:
 		using HostReference = Host*;
@@ -134,15 +135,15 @@ namespace ClusterSimulator
 
 		HostList match(const Job& job);
 
-		void sort(HostList::iterator first, HostList::iterator last) const;
+		void sort(HostList::iterator first, HostList::iterator last, const Job& job) const;
 
 		void policy();
 
 		void clean_pending_jobs();
 
-		void set_compare_host_function_(const std::function<bool(const HostReference, const HostReference)>& compare_host) noexcept
+		void set_compare_host_function_(QueueAlgorithm::HostComparer compare_host_function) noexcept
 		{
-			compare_host_function_ = compare_host;
+			compare_host_function_ = compare_host_function;
 		}
 
 		std::map<const Host* const, HostInfo> dispatched_hosts_;
@@ -174,15 +175,16 @@ namespace ClusterSimulator
 		// Restrict host
 		// Restrict job size
 
-		std::function<bool(const HostReference, const HostReference)> compare_host_function_
+		QueueAlgorithm::HostComparer compare_host_function_
 		{
-			[](const HostReference a, const HostReference b)
+			[](const Host* a, const Host* b, const Job&)
 			{	
 				return a->score() < b->score();
 			}
 		};
 
-		std::function<bool(const Job&, const Job&)> compare_job_function_;
+		//QueueAlgorithm::
+		//QueueAlgorithm::JobComparer compare_job_function_;
 
 		// Static fields
 		static int id_gen_;

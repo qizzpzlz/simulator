@@ -1,11 +1,13 @@
 #pragma once
 #include <utility>
+#include <functional>
 #include <algorithm>
 #include "queue.h"
 #include "host.h"
 
 namespace ClusterSimulator
 {
+	// TODO: As Template
 	class QueueAlgorithm
 	{
 	public:
@@ -19,6 +21,7 @@ namespace ClusterSimulator
 		HostSorter get_host_sorter() const noexcept { return host_sorter_; }
 		JobComparer get_job_comparer() const noexcept { return job_comparer_; }
 
+	protected:
 		QueueAlgorithm(HostComparer&& host_comparer, JobComparer&& job_comparer)
 			: host_comparer_{host_comparer}, job_comparer_{job_comparer} {}
 
@@ -32,7 +35,6 @@ namespace ClusterSimulator
 			, job_comparer_{[](const Job& a, const Job& b) { return false; }}
 			{}
 
-	protected:
 		HostComparer host_comparer_;
 		HostSorter host_sorter_;
 		JobComparer job_comparer_;
@@ -41,10 +43,10 @@ namespace ClusterSimulator
 	/**
 	 * Implementation of OLB Algorithm
 	 */
-	class OLB : public QueueAlgorithm
+	class OLBAlgorithm : public QueueAlgorithm
 	{
 	public:
-		OLB() : QueueAlgorithm(
+		OLBAlgorithm() : QueueAlgorithm(
 			[](const Host* a, const Host* b, const Job&)
 			{
 				return a->remaining_slots() < b->remaining_slots();
@@ -54,21 +56,22 @@ namespace ClusterSimulator
 	/**
 	 * Implementation of Minimum Completion Time Algorithm
 	 */
-	class MCT: public QueueAlgorithm
+	class MCTAlgorithm: public QueueAlgorithm
 	{
 	public:
-		MCT() : QueueAlgorithm(
+		MCTAlgorithm() : QueueAlgorithm(
 			[](const Host* a, const Host* b, const Job& job)
 			{
 				return get_completion_time(*a, job) < get_completion_time(*b, job);
 			}) {}
-	public:
-		static auto get_completion_time(const Host& host, const Job& job) { return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job); }
+
+		static ms get_completion_time(const Host& host, const Job& job) { return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job); }
 	};
 
-	class MinMin: public QueueAlgorithm
+	class MinMinAlgorithm: public QueueAlgorithm
 	{
-		MinMin() : QueueAlgorithm(
+	public:
+		MinMinAlgorithm() : QueueAlgorithm(
 			[](std::vector<Host*>& hosts, const std::vector<Job>& jobs)
 			{
 				// M jobs, N hosts
@@ -81,7 +84,7 @@ namespace ClusterSimulator
 				{
 					for (size_t j = 0; j < hosts.size(); j++)
 					{
-						times[i][j] = MCT::get_completion_time(*hosts[j], jobs[i]);  // Ready time omitted
+						times[i][j] = MCTAlgorithm::get_completion_time(*hosts[j], jobs[i]);  // Ready time omitted
 					}
 				}
 
@@ -108,6 +111,16 @@ namespace ClusterSimulator
 
 			}) {}
 	};
+
+	class QueueAlgorithms
+	{
+	public:
+		inline static const QueueAlgorithm* const OLB = new OLBAlgorithm();
+		inline static const QueueAlgorithm* const MCT = new MCTAlgorithm();
+		inline static const QueueAlgorithm* const MinMin = new MinMinAlgorithm();
+	};
+
+	inline extern QueueAlgorithms QAlgorithms{};
 
 }
 
