@@ -73,10 +73,47 @@ namespace ClusterSimulator
 		Scenario& scenario_;
 		std::vector<Queue> all_queues_{};
 		
-		// Stats
+			// Stats
 		int num_submitted_jobs_{ 0 };
 		int num_successful_jobs_{ 0 };
 		int num_failed_jobs_{ 0 };
+
+		class Dispatcher
+		{
+			ClusterSimulation* simulation;
+			int counter_;
+		
+		public:
+			explicit Dispatcher(ClusterSimulation* simulation) : simulation{simulation} {} 
+			void operator()()
+			{
+				bool flag{true};
+				for (auto& q : simulation->all_queues_)
+					flag &= q.dispatch();
+				if (flag) // pending jobs exist
+					simulation->after_delay(simulation->dispatch_frequency, simulation->dispatch_action_);
+				else
+					simulation->next_dispatch_reserved = false;
+				
+				if (++counter_ % 10 == 0)
+				{
+					int total_using_slots = 0;
+					for (const auto& q : simulation->all_queues_)
+						total_using_slots += q.using_job_slots();
+					simulation->using_slot_record_.emplace_back(
+						slot_record_entry{simulation->get_current_time(), total_using_slots});
+				}
+			}	
+		};
+
+		Dispatcher dispatcher_;
+		struct slot_record_entry
+		{
+			ms time_stamp;
+			int value;
+		};
+		std::vector<slot_record_entry> using_slot_record_;
+
 
 #pragma region logger
 	private:

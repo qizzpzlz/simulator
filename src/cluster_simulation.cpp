@@ -22,7 +22,8 @@ namespace ClusterSimulator
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
-		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) }
+		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) },
+		dispatcher_{ this }
 	{
 		cluster.simulation = this;
 
@@ -31,16 +32,16 @@ namespace ClusterSimulator
 		current_time_ = scenario.initial_time_point;
 		std::sort(all_queues_.begin(), all_queues_.end());
 
-		dispatch_action_ = [this]
-		{
-			bool flag{ true };
-			for (auto& q : this->all_queues_)
-				flag &= q.dispatch();
-			if (flag) // pending jobs exist
-				this->after_delay(this->dispatch_frequency, this->dispatch_action_);
-			else
-				this->next_dispatch_reserved = false;
-		};
+		// dispatch_action_ = [this]
+		// {
+		// 	bool flag{ true };
+		// 	for (auto& q : this->all_queues_)
+		// 		flag &= q.dispatch();
+		// 	if (flag) // pending jobs exist
+		// 		this->after_delay(this->dispatch_frequency, this->dispatch_action_);
+		// 	else
+		// 		this->next_dispatch_reserved = false;
+		// };
 
 		initialise_tp();
 		reserve_dispatch_event();
@@ -225,7 +226,7 @@ namespace ClusterSimulator
 
 		after_delay(
 			Utils::get_time_left_until_next_period(current_time_, dispatch_frequency),
-			dispatch_action_);
+			std::ref(dispatcher_));
 
 		next_dispatch_reserved = true;
 	}
