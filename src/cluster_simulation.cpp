@@ -19,6 +19,7 @@ namespace ClusterSimulator
 {
 	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "log_output.txt");
 	std::ofstream ClusterSimulation::jobmart_file_;
+	std::ofstream performance_("performance_.txt");
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
@@ -204,6 +205,14 @@ namespace ClusterSimulator
 
 
 		log(LogLevel::info, ss.str());
+
+		performance_<< "MakeSpan\n" <<
+			"### Simulated duration: " << total_simulation_time << "\n" <<
+			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<	
+			std::endl;
+
+		for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
+		
 	}
 
 	void ClusterSimulation::next()

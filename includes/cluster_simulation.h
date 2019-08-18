@@ -95,7 +95,7 @@ namespace ClusterSimulator
 				else
 					simulation->next_dispatch_reserved = false;
 				
-				if (++counter_ % 10 == 0)
+				if (++counter_ % 10 == 0) 
 				{
 					int total_using_slots = 0;
 					for (const auto& q : simulation->all_queues_)
@@ -113,6 +113,7 @@ namespace ClusterSimulator
 			int value;
 		};
 		std::vector<slot_record_entry> using_slot_record_;
+
 
 
 #pragma region logger
