@@ -11,6 +11,7 @@
 #include "../dependencies/spdlog/logger.h"
 #include "../dependencies/spdlog/common.h"
 #include "../dependencies/bprinter/include/bprinter/table_printer.h"
+#include <map>
 
 using LogLevel = spdlog::level::level_enum;
 namespace ClusterSimulator
@@ -38,11 +39,26 @@ namespace ClusterSimulator
 			bool operator<(const EventItem& a) const { return a.time < this->time; }
 		};
 		std::chrono::milliseconds dispatch_frequency{ 1000 };
+		std::chrono::milliseconds logging_frequency{ 1000 };
 
+		
+		
 	private:
 		Action dispatch_action_;
 		ms current_time_;
 		std::priority_queue<EventItem> events_{};
+		Action log_action_;
+		int counter_{0};
+		//std::chrono::milliseconds logging_frequency{ 1000 };
+		// struct slot_record_entry
+		// {
+		// 	ms time_stamp;
+		// 	int value;
+		// };
+		// std::vector<slot_record_entry> using_slot_record_;
+
+		std::map<ms, int> using_slot_record_;
+		
 
 		void next();
 
@@ -81,10 +97,10 @@ namespace ClusterSimulator
 		class Dispatcher
 		{
 			ClusterSimulation* simulation;
-			int counter_;
+			//int counter_;
 		
 		public:
-			explicit Dispatcher(ClusterSimulation* simulation) : simulation{simulation}, counter_{0}{} 
+			explicit Dispatcher(ClusterSimulation* simulation) : simulation{simulation}{} 
 			void operator()()
 			{
 				bool flag{true};
@@ -95,24 +111,24 @@ namespace ClusterSimulator
 				else
 					simulation->next_dispatch_reserved = false;
 			
-				if (++counter_ % 10 == 0) 
-				{
-					int total_using_slots = 0;
-					for (const auto& q : simulation->all_queues_)
-						total_using_slots += q.using_job_slots();
-					simulation->using_slot_record_.emplace_back(
-						slot_record_entry{simulation->get_current_time(), total_using_slots});
-				}
+				// if (++counter_ % 10 == 0) 
+				// {
+				// 	int total_using_slots = 0;
+				// 	for (const auto& q : simulation->all_queues_)
+				// 		total_using_slots += q.using_job_slots();
+				// 	simulation->using_slot_record_.emplace_back(
+				// 		slot_record_entry{simulation->get_current_time(), total_using_slots});
+				// }
 			}	
 		};
 
 		Dispatcher dispatcher_;
-		struct slot_record_entry
-		{
-			ms time_stamp;
-			int value;
-		};
-		std::vector<slot_record_entry> using_slot_record_;
+		// struct slot_record_entry
+		// {
+		// 	ms time_stamp;
+		// 	int value;
+		// };
+		// std::vector<slot_record_entry> using_slot_record_;
 		
 
 

@@ -33,6 +33,28 @@ namespace ClusterSimulator
 		current_time_ = scenario.initial_time_point;
 		std::sort(all_queues_.begin(), all_queues_.end());
 
+		log_action_ = [this]
+		{
+			int total_using_slots = 0;
+			if (++counter_ % 1 == 0) 
+			{
+				for (const auto& q : this->all_queues_)
+					total_using_slots += q.using_job_slots();
+					using_slot_record_.insert_or_assign(this->get_current_time(), total_using_slots);
+				//this->using_slot_record_.emplace_back(slot_record_entry{this->get_current_time(), total_using_slots});
+				//this->after_delay(this->logging_frequency, this->log_action_);
+			}
+		};
+
+		//after_delay(logging_frequency, log_action_);
+
+		// if (flag_log)
+		// {
+		// 	performance_<< "Mmms\n" << "\n" ;
+		// 	after_delay(logging_frequency, log_action_);
+		// }
+
+
 		// dispatch_action_ = [this]
 		// {
 		// 	bool flag{ true };
@@ -152,7 +174,6 @@ namespace ClusterSimulator
 		const auto entry = scenario_.pop();
 
 		events_.push(EventItem(entry, *this));
-
 		//events_.push()
 		while (true)
 		{
@@ -167,16 +188,20 @@ namespace ClusterSimulator
 				{
 					next();
 					next_event = events_.top();
+					log_action_();
 				}
-
 				events_.push(EventItem(next_entry, *this));
 			}
 			else
 			{
 				while (!events_.empty())
+				{
 					next();
-				break;
+					log_action_();
+				}
+				break;	
 			}
+			
 		}
 		return true;
 	}
@@ -217,8 +242,12 @@ namespace ClusterSimulator
 		
 		
 		performance_ << " end : "<< using_slot_record_.size() << "\n";
-		for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
-		
+		// for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
+		// 
+		for(auto it = using_slot_record_.begin(); it !=using_slot_record_.end(); it++)
+		{
+			 performance_ << " time : "<< it->first.time_since_epoch().count() << ", value : "<<  it->second << "\n";
+		}
 	}
 
 	void ClusterSimulation::next()

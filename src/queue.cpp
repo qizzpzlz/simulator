@@ -244,7 +244,7 @@ namespace ClusterSimulator
 			
 				// ClusterSimulation::log(LogLevel::info, "--job {0}: {1} = slot_dis {2}, queue name :{3}"
 				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
-				ClusterSimulation::log(LogLevel::info, "-- cnt : {0}, queue name :{1}" , using_job_slots(), name);
+				//ClusterSimulation::log(LogLevel::info, "-- cnt : {0}, queue name :{1}" , using_job_slots(), name);
 
 				
 				ClusterSimulation::log_jobmart(job);
