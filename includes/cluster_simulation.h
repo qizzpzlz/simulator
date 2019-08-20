@@ -84,7 +84,7 @@ namespace ClusterSimulator
 			int counter_;
 		
 		public:
-			explicit Dispatcher(ClusterSimulation* simulation) : simulation{simulation} {} 
+			explicit Dispatcher(ClusterSimulation* simulation) : simulation{simulation}, counter_{0}{} 
 			void operator()()
 			{
 				bool flag{true};
@@ -94,7 +94,7 @@ namespace ClusterSimulator
 					simulation->after_delay(simulation->dispatch_frequency, simulation->dispatch_action_);
 				else
 					simulation->next_dispatch_reserved = false;
-				
+			
 				if (++counter_ % 10 == 0) 
 				{
 					int total_using_slots = 0;
@@ -113,7 +113,7 @@ namespace ClusterSimulator
 			int value;
 		};
 		std::vector<slot_record_entry> using_slot_record_;
-
+		
 
 
 #pragma region logger

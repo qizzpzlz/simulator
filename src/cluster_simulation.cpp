@@ -44,6 +44,10 @@ namespace ClusterSimulator
 		// 		this->next_dispatch_reserved = false;
 		// };
 
+		//set algoritms
+		for(auto& q : this->all_queues_)
+			q.set_algorithm(QueueAlgorithms::OLB);
+		
 		initialise_tp();
 		reserve_dispatch_event();
 		std::cout << "Simulation start!" << std::endl;
@@ -210,7 +214,9 @@ namespace ClusterSimulator
 			"### Simulated duration: " << total_simulation_time << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<	
 			std::endl;
-
+		
+		
+		performance_ << " end : "<< using_slot_record_.size() << "\n";
 		for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
 		
 	}

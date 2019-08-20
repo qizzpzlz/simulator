@@ -126,13 +126,14 @@ namespace ClusterSimulator
 	 * Jobs that couldn't be dispatched this time are
 	 * pending until the next dispatch.
 	 */
+	
 	bool Queue::dispatch()
 	{
 		// Returns true if any jobs are dispatched this time.
 		bool flag{ false };
 
 		// 1. Bring back all pending jobs.
-		// 2. Sort all jobs using policy.
+		// 2. Sort all jobs using policy.지그
 		policy();
 
 		// For each job in the current queue
@@ -195,9 +196,20 @@ namespace ClusterSimulator
 			// Register the best host to the dispatched hosts list.
 			auto search = dispatched_hosts_.find(&best_host);
 			if (search != dispatched_hosts_.end())
-				dispatched_hosts_.insert(std::make_pair(&best_host, HostInfo{job.slot_required}));
-			else
+			{
 				dispatched_hosts_[&best_host].slot_dispatched += job.slot_required;
+				// ClusterSimulation::log(LogLevel::info, "else ++job {0}: {1} = slot_dis {2}, queue name :{3}"
+				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
+				// ClusterSimulation::log(LogLevel::info, "++ cnt : {0}, queue name : {1}" , using_job_slots(), name);	
+		
+			}
+			else
+			{
+				dispatched_hosts_.insert(std::make_pair(&best_host, HostInfo{job.slot_required}));
+				// ClusterSimulation::log(LogLevel::info, "if ++job {0}: {1} = slot_dis {2}, queue name :{3}"
+				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
+			}
+				
 
 			flag = true;
 			
@@ -217,19 +229,28 @@ namespace ClusterSimulator
 			job.finish_time = start_time + run_time;
 
 			// Reserve finish event
-			simulation_->after_delay(run_time, [&best_host, job]
+			simulation_->after_delay(run_time,  [&best_host, job, this]
 			{
+				//ClusterSimulation::log(LogLevel::info, "oo cnt : {0}, queue name: {1}" , using_job_slots(), name);
 				best_host.exit_job(job);
-
+				
 				std::stringstream ss(job.get_exit_host_status());
 				ss >> Utils::enum_from_string<HostStatus>(best_host.status);
 				ClusterSimulation::log(LogLevel::info, 
 					"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
 					,job.id, best_host.name, (job.finish_time - job.start_time).count(), job.run_time.count());
+				
+				dispatched_hosts_[&best_host].slot_dispatched -= job.slot_required;
+			
+				// ClusterSimulation::log(LogLevel::info, "--job {0}: {1} = slot_dis {2}, queue name :{3}"
+				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
+				ClusterSimulation::log(LogLevel::info, "-- cnt : {0}, queue name :{1}" , using_job_slots(), name);
 
+				
 				ClusterSimulation::log_jobmart(job);
 			});
 
+			
 			jobs_.pop_back();
 		}
 		// Returns true if there exists any pending jobs
@@ -257,7 +278,14 @@ namespace ClusterSimulator
 		for (auto& item : dispatched_hosts_)
 		{
 			sum += item.second.slot_dispatched;
+		// 	ClusterSimulation::log(LogLevel::info, "using_job_slot :{0}, queue name: {1}. item.slot {2}, item.host {3}"
+		// 		,sum, name, item.second.slot_dispatched, item.first->name);
+		// 
 		}
+		
+		// ClusterSimulation::log(LogLevel::info, "using_job_slot :{0}, queue name: {1}"
+		// 		,sum, name);
+
 		return sum;
 	}
 
