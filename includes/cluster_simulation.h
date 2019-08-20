@@ -48,7 +48,7 @@ namespace ClusterSimulator
 		ms current_time_;
 		std::priority_queue<EventItem> events_{};
 		Action log_action_;
-		int counter_{0};
+		//int counter_{0};
 		//std::chrono::milliseconds logging_frequency{ 1000 };
 		// struct slot_record_entry
 		// {
