@@ -19,10 +19,12 @@ namespace ClusterSimulator
 {
 	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "log_output.txt");
 	std::ofstream ClusterSimulation::jobmart_file_;
+	std::ofstream performance_("performance_.txt");
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
-		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) }
+		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) },
+		dispatcher_{ this }
 	{
 		cluster.simulation = this;
 
@@ -31,16 +33,16 @@ namespace ClusterSimulator
 		current_time_ = scenario.initial_time_point;
 		std::sort(all_queues_.begin(), all_queues_.end());
 
-		dispatch_action_ = [this]
-		{
-			bool flag{ true };
-			for (auto& q : this->all_queues_)
-				flag &= q.dispatch();
-			if (flag) // pending jobs exist
-				this->after_delay(this->dispatch_frequency, this->dispatch_action_);
-			else
-				this->next_dispatch_reserved = false;
-		};
+		// dispatch_action_ = [this]
+		// {
+		// 	bool flag{ true };
+		// 	for (auto& q : this->all_queues_)
+		// 		flag &= q.dispatch();
+		// 	if (flag) // pending jobs exist
+		// 		this->after_delay(this->dispatch_frequency, this->dispatch_action_);
+		// 	else
+		// 		this->next_dispatch_reserved = false;
+		// };
 
 		initialise_tp();
 		reserve_dispatch_event();
@@ -203,6 +205,14 @@ namespace ClusterSimulator
 
 
 		log(LogLevel::info, ss.str());
+
+		performance_<< "MakeSpan\n" <<
+			"### Simulated duration: " << total_simulation_time << "\n" <<
+			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<	
+			std::endl;
+
+		for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
+		
 	}
 
 	void ClusterSimulation::next()
@@ -225,7 +235,7 @@ namespace ClusterSimulator
 
 		after_delay(
 			Utils::get_time_left_until_next_period(current_time_, dispatch_frequency),
-			dispatch_action_);
+			std::ref(dispatcher_));
 
 		next_dispatch_reserved = true;
 	}

@@ -146,7 +146,7 @@ namespace ClusterSimulator
 			compare_host_function_ = compare_host_function;
 		}
 
-		std::map<const Host* const, HostInfo> dispatched_hosts_;
+		std::map<const Host*, HostInfo> dispatched_hosts_;
 
 		// characteristics
 		bool is_default_{};
