@@ -39,7 +39,7 @@ namespace ClusterSimulator
 			bool operator<(const EventItem& a) const { return a.time < this->time; }
 		};
 		std::chrono::milliseconds dispatch_frequency{ 1000 };
-		std::chrono::milliseconds logging_frequency{ 1000 };
+		std::chrono::milliseconds logging_frequency{ 100000 };
 
 		
 		

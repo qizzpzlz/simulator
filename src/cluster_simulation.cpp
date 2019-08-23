@@ -42,13 +42,13 @@ namespace ClusterSimulator
 			using_slot_record_.insert_or_assign(this->get_current_time(), total_using_slots);
 			//this->using_slot_record_.emplace_back(slot_record_entry{this->get_current_time(), total_using_slots});
 			//this->after_delay(this->logging_frequency, this->log_action_);
-			// if (!scenario_.is_empty() || total_using_slots!=0)
-			// 	this->after_delay(this->logging_frequency, this->log_action_);
+			if (!scenario_.is_empty()|| total_using_slots!=0)
+				this->after_delay(this->logging_frequency, this->log_action_);
 			
 			
 		};
 
-		//after_delay(logging_frequency, log_action_);
+		after_delay(logging_frequency, log_action_);
 		
 		//after_delay(logging_frequency, log_action_);
 		// while (true)
@@ -87,7 +87,7 @@ namespace ClusterSimulator
 
 		//set algoritms
 		for(auto& q : this->all_queues_)
-			q.set_algorithm(QueueAlgorithms::OLB);
+			q.set_algorithm(QueueAlgorithms::MCT);
 		
 		initialise_tp();
 		reserve_dispatch_event();
@@ -207,7 +207,7 @@ namespace ClusterSimulator
 				{
 					next();
 					next_event = events_.top();
-					log_action_();
+					//log_action_();
 				}
 				events_.push(EventItem(next_entry, *this));
 			}
@@ -215,7 +215,7 @@ namespace ClusterSimulator
 			{
 				while (!events_.empty())
 					next();
-					log_action_();
+					//log_action_();
 				break;	
 			}
 			
