@@ -46,10 +46,11 @@ namespace ClusterSimulator
 		};
 		after_delay(logging_frequency, log_action_, 2);
 	
+		
 
 		//set algoritms
 		for(auto& q : this->all_queues_)
-			q.set_algorithm(QueueAlgorithms::MCT);
+			q.set_algorithm(QueueAlgorithms::OLB);
 
 		reserve_dispatch_event();
 
@@ -201,6 +202,7 @@ namespace ClusterSimulator
 			"### Available hosts: " << num_total_available_hosts << "\n" <<
 			"### Number of applications: " << num_total_applications << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<
+			"#### Queue algorithm: " << all_queues_.front().current_algorithm->get_name() << "\n" <<
 			//"### Number of successful jobs: " << num_successful_jobs_ << "\n" <<
 			"#### Dispatch frequency: " << dispatch_frequency.count() << " ms\n" <<
 			"#### Logging frequency: " << logging_frequency.count() << " ms\n" <<

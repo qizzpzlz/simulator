@@ -45,6 +45,8 @@ namespace ClusterSimulator
 		const std::string& get_application_name() const { return application_name_; }
 		const std::string& get_dedicated_host_name() const { return dedicated_host_name_; }
 		const std::string& get_exit_host_status() const { return exit_host_status_; }
+		const std::string& get_run_host_name() const { return *run_host_name_; }
+		void set_run_host_name(const std::string& run_host_name) { run_host_name_ = &run_host_name; }
 		void set_pending(ms time) noexcept
 		{
 			state = JobState::PEND;
@@ -58,6 +60,7 @@ namespace ClusterSimulator
 		std::string application_name_;
 		std::string dedicated_host_name_;
 		std::string exit_host_status_;
+		const std::string* run_host_name_;
 
 		ms pend_start_time_{};
 
