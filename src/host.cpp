@@ -13,7 +13,7 @@ namespace ClusterSimulator
 	std::chrono::milliseconds Host::get_expected_run_time(const Job& job) const noexcept
 	{
 		int original_factor = cluster->simulation->find_host(job.get_dedicated_host_name()).cpu_factor;
-		double ratio = static_cast<double>(cpu_factor) / original_factor;
+		double ratio = original_factor / static_cast<double>(cpu_factor);
 		return std::chrono::duration_cast<std::chrono::milliseconds>(job.run_time * ratio);
 	}
 

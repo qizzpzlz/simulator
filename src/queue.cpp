@@ -164,29 +164,40 @@ namespace ClusterSimulator
 				jobs_.pop_back();
 				continue;
 			}
+			Host* best_host;
 
-			// Get all avilable hosts for the current job.
-			Queue::HostList eligible_hosts{ match(job) };
-			
-			// If there is no eligible host for this job,
-			// pend the job.
-			if (eligible_hosts.empty())
+			if (current_algorithm != nullptr)
 			{
-				ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pend start time: {1}ms)"
-								, job.id, job.run_time.count());
-				job.set_pending(simulation_->get_current_time());
-				pending_jobs_.push_back(job);
+				// Get all avilable hosts for the current job.
+				Queue::HostList eligible_hosts{ match(job) };
+				
+				// If there is no eligible host for this job,
+				// pend the job.
+				if (eligible_hosts.empty())
+				{
+					ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pend start time: {1}ms)"
+									, job.id, job.run_time.count());
+					job.set_pending(simulation_->get_current_time());
+					pending_jobs_.push_back(job);
 
-				jobs_.pop_back();
-				continue;
+					jobs_.pop_back();
+					continue;
+				}
+
+				// TODO: Why would we sort hosts? 
+				// Can we just get the host with the maximum priority?
+				sort(eligible_hosts.begin(), eligible_hosts.end(), job);
+
+				best_host = eligible_hosts.back();
 			}
-
-			// TODO: Why would we sort hosts? 
-			// Can we just get the host with the maximum priority?
-			sort(eligible_hosts.begin(), eligible_hosts.end(), job);
+			else
+			{
+				best_host = &simulation_->get_cluster().find_node(job.get_dedicated_host_name())->second;
+			}
+			
 
 			// Find best available host
-			Host& best_host{ *eligible_hosts.back() };
+			// Host& best_host{ *eligible_hosts.back() };
 			
 			//limits
 			//if(cpu_limit != -1 && total_cpu_time > cpu_limit)
@@ -194,10 +205,10 @@ namespace ClusterSimulator
 				//CPU_LIMIT ..?? 
 			
 			// Register the best host to the dispatched hosts list.
-			auto search = dispatched_hosts_.find(&best_host);
+			auto search = dispatched_hosts_.find(best_host);
 			if (search != dispatched_hosts_.end())
 			{
-				dispatched_hosts_[&best_host].slot_dispatched += job.slot_required;
+				dispatched_hosts_[best_host].slot_dispatched += job.slot_required;
 				// ClusterSimulation::log(LogLevel::info, "else ++job {0}: {1} = slot_dis {2}, queue name :{3}"
 				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
 				// ClusterSimulation::log(LogLevel::info, "++ cnt : {0}, queue name : {1}" , using_job_slots(), name);	
@@ -205,7 +216,7 @@ namespace ClusterSimulator
 			}
 			else
 			{
-				dispatched_hosts_.insert(std::make_pair(&best_host, HostInfo{job.slot_required}));
+				dispatched_hosts_.insert(std::make_pair(best_host, HostInfo{job.slot_required}));
 				// ClusterSimulation::log(LogLevel::info, "if ++job {0}: {1} = slot_dis {2}, queue name :{3}"
 				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
 			}
@@ -214,14 +225,14 @@ namespace ClusterSimulator
 			flag = true;
 			
 			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
-				,name, job.id, best_host.name);
+				,name, job.id, best_host->get_name());
 
 
-			const auto run_time = best_host.get_expected_run_time(job);
-			best_host.try_update_expected_time_of_completion(run_time);
+			const auto run_time = best_host->get_expected_run_time(job);
+			best_host->try_update_expected_time_of_completion(run_time);
 
 			// TODO: host.register()
-			best_host.execute_job(job);
+			best_host->execute_job(job);
 			
 			// TODO: Host.set_start_time()
 			const ms start_time = simulation_->get_current_time();
@@ -229,18 +240,18 @@ namespace ClusterSimulator
 			job.finish_time = start_time + run_time;
 
 			// Reserve finish event
-			simulation_->after_delay(run_time,  [&best_host, job, this]
+			simulation_->after_delay(run_time,  [best_host, job, this] () mutable -> void
 			{
 				//ClusterSimulation::log(LogLevel::info, "oo cnt : {0}, queue name: {1}" , using_job_slots(), name);
-				best_host.exit_job(job);
-				
+				best_host->exit_job(job);
+				job.set_run_host_name(best_host->get_name());
 				std::stringstream ss(job.get_exit_host_status());
-				ss >> Utils::enum_from_string<HostStatus>(best_host.status);
+				ss >> Utils::enum_from_string<HostStatus>(best_host->status);
 				ClusterSimulation::log(LogLevel::info, 
 					"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
-					,job.id, best_host.name, (job.finish_time - job.start_time).count(), job.run_time.count());
+					,job.id, best_host->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());
 				
-				dispatched_hosts_[&best_host].slot_dispatched -= job.slot_required;
+				dispatched_hosts_[best_host].slot_dispatched -= job.slot_required;
 			
 				// ClusterSimulation::log(LogLevel::info, "--job {0}: {1} = slot_dis {2}, queue name :{3}"
 				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);

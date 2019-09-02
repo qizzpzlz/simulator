@@ -19,7 +19,7 @@ namespace ClusterSimulator
 		//void add_node(const Host& node) { nodes_.push_back(node); }
 		void add_node(const Host& node) 
 		{ 
-			nodes_.insert({node.name, node}); 
+			nodes_.insert({node.get_name(), node}); 
 			total_slot_number += node.max_slot;
 		}
 		auto find_node(const std::string& name) const noexcept { return nodes_.find(name); }

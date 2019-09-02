@@ -169,7 +169,8 @@ namespace ClusterSimulator
 			// res_req
 			// submission_host
 			// exec_hostname
-				job.get_dedicated_host_name() <<
+				// job.get_dedicated_host_name() <<
+				job.get_run_host_name() <<
 			// exec_hosttype
 			// exec_hostmodel
 			// exec_hostgroup

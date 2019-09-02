@@ -20,6 +20,7 @@ namespace ClusterSimulator
 		HostComparer get_host_comparer() const noexcept { return host_comparer_; }
 		HostSorter get_host_sorter() const noexcept { return host_sorter_; }
 		JobComparer get_job_comparer() const noexcept { return job_comparer_; }
+		virtual const std::string& get_name() const noexcept = 0;
 
 	protected:
 		QueueAlgorithm(HostComparer&& host_comparer, JobComparer&& job_comparer)
@@ -45,12 +46,14 @@ namespace ClusterSimulator
 	 */
 	class OLBAlgorithm : public QueueAlgorithm
 	{
+		inline static const std::string name{"OLB"};
 	public:
 		OLBAlgorithm() : QueueAlgorithm(
 			[](const Host* a, const Host* b, const Job&)
 			{
 				return a->remaining_slots() < b->remaining_slots();
 			}) {}
+		const std::string& get_name() const noexcept override { return name; }
 	};
 
 	/**
@@ -58,18 +61,22 @@ namespace ClusterSimulator
 	 */
 	class MCTAlgorithm: public QueueAlgorithm
 	{
+		static inline const std::string name{"MCT"};
+
 	public:
 		MCTAlgorithm() : QueueAlgorithm(
 			[](const Host* a, const Host* b, const Job& job)
 			{
-				return get_completion_time(*a, job) > get_completion_time(*b, job);
+				return get_completion_time(*a, job) < get_completion_time(*b, job);
 			}) {}
 
+		const std::string& get_name() const noexcept override { return name; }
 		static ms get_completion_time(const Host& host, const Job& job) { return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job); }
 	};
 
 	class MinMinAlgorithm: public QueueAlgorithm
 	{
+		inline static const std::string name{"MinMin"};
 	public:
 		MinMinAlgorithm() : QueueAlgorithm(
 			[](std::vector<Host*>& hosts, const std::vector<Job>& jobs)
@@ -110,6 +117,8 @@ namespace ClusterSimulator
 				
 
 			}) {}
+
+			const std::string& get_name() const noexcept override { return name; }
 	};
 
 	class QueueAlgorithms

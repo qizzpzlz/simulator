@@ -29,7 +29,6 @@ namespace ClusterSimulator
 	class Host
 	{
 	public:
-		std::string name;
 		// Speed of the host's CPU relative to other hosts in the cluster.
 		int cpu_factor;
 		// Number of CPUs you have specified for your host.
@@ -52,6 +51,7 @@ namespace ClusterSimulator
 		int num_current_running_slots{ 0 };
 		bool is_available_at_least_once{ false };
 
+		const std::string& get_name() const noexcept{ return name_; }
 		constexpr int score() const noexcept { return score_; }
 		constexpr int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
 		constexpr bool is_executable(const Job& job) const noexcept
@@ -82,7 +82,7 @@ namespace ClusterSimulator
 		// Initialise Host from status data.
 		Host(const std::string name, int cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
 			int max_tmp, HostStatus status, const Cluster& cluster)
-			: name(name),
+			: name_(name),
 			  cpu_factor(cpu_factor),
 			  ncpus(ncpus),
 			  nprocs(nprocs),
@@ -100,6 +100,7 @@ namespace ClusterSimulator
 		}
 
 	private:
+		std::string name_;
 		int slot_running_{};
 		int score_{};
 		ms expected_time_of_completion{};
