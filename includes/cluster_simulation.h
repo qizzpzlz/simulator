@@ -45,7 +45,7 @@ namespace ClusterSimulator
 			}
 		};
 		std::chrono::milliseconds dispatch_frequency{ 1000 };
-		std::chrono::milliseconds logging_frequency{ 30000000000000 };
+		std::chrono::milliseconds logging_frequency{ 10000 };
 
 		
 		
@@ -64,7 +64,7 @@ namespace ClusterSimulator
 		// std::vector<slot_record_entry> using_slot_record_;
 
 		std::map<ms, int> using_slot_record_;
-		
+		ms latest_finish_time_;
 
 		void next();
 
@@ -89,6 +89,8 @@ namespace ClusterSimulator
 		void reserve_dispatch_event();
 
 		void print_summary() const;
+
+		constexpr void update_latest_finish_time(ms time) noexcept { latest_finish_time_ = time; }
 
 	private:
 		Cluster& cluster_;

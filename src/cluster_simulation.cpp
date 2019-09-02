@@ -50,7 +50,7 @@ namespace ClusterSimulator
 
 		//set algoritms
 		for(auto& q : this->all_queues_)
-			q.set_algorithm(QueueAlgorithms::OLB);
+			q.set_algorithm(QueueAlgorithms::MCT);
 
 		reserve_dispatch_event();
 
@@ -181,7 +181,7 @@ namespace ClusterSimulator
 
 	void ClusterSimulation::print_summary() const
 	{
-		auto total_simulation_time = current_time_.time_since_epoch().count();
+		auto total_simulation_time = latest_finish_time_.time_since_epoch().count();
 		//double total_cpu_power{ 0.0 };
 		int num_total_available_hosts{ 0 };
 		int num_total_applications{ scenario_.num_unique_apps() };
@@ -194,6 +194,12 @@ namespace ClusterSimulator
 			//total_cpu_power += 
 		}
 
+		std::string algorithm_name;
+		if (const auto algorithm = all_queues_.front().current_algorithm; algorithm != nullptr)
+			algorithm_name = algorithm->get_name();
+		else
+			algorithm_name = "Scenario";
+
 		std::stringstream ss;
 
 		ss << "\n" <<
@@ -202,7 +208,7 @@ namespace ClusterSimulator
 			"### Available hosts: " << num_total_available_hosts << "\n" <<
 			"### Number of applications: " << num_total_applications << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<
-			"#### Queue algorithm: " << all_queues_.front().current_algorithm->get_name() << "\n" <<
+			"#### Queue algorithm: " << algorithm_name << "\n" <<
 			//"### Number of successful jobs: " << num_successful_jobs_ << "\n" <<
 			"#### Dispatch frequency: " << dispatch_frequency.count() << " ms\n" <<
 			"#### Logging frequency: " << logging_frequency.count() << " ms\n" <<
@@ -220,10 +226,8 @@ namespace ClusterSimulator
 		performance_ << " end : "<< using_slot_record_.size() << "\n";
 		// for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
 		
-		for(auto it = using_slot_record_.begin(); it !=using_slot_record_.end(); it++)
-		{
-			 performance_ << " time : "<< it->first.time_since_epoch().count() << ", value : "<<  it->second << "\n";
-		}
+		for (auto [time, count] : using_slot_record_)
+			performance_ << " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
 	}
 
 	void ClusterSimulation::next()
@@ -231,10 +235,14 @@ namespace ClusterSimulator
 		const auto event_item = events_.top();
 		events_.pop(); 
 
-		if (current_time_ != event_item.time && event_item.priority < 2)
+		if (current_time_ != event_item.time /*&& event_item.priority < 2*/)
 		{
 			current_time_ = event_item.time;
-			log(LogLevel::info, "Current Time: {0}", current_time_.time_since_epoch().count());
+			if (event_item.priority < 2)
+			{
+				log(LogLevel::info, "Current Time: {0}", current_time_.time_since_epoch().count());
+				update_latest_finish_time(current_time_);
+			}
 		}
 		event_item.action();
 

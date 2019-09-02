@@ -188,7 +188,7 @@ namespace ClusterSimulator
 				// Can we just get the host with the maximum priority?
 				sort(eligible_hosts.begin(), eligible_hosts.end(), job);
 
-				best_host = eligible_hosts.back();
+				best_host = eligible_hosts.front();
 			}
 			else
 			{
