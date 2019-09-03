@@ -2,11 +2,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-with open('performance_100000.txt') as f:
-	lines = f.readlines()
-	time = [line.split()[2].split(",")[0] for line in lines]
-	value = [line.split()[5] for line in lines]
-
+time =[]
+value =[]
+with open('performance_1000.txt') as f:
+	#lines = f.readlines()
+	for line in f.readlines():
+		li = line.lstrip()
+		#lin in li for lin in li.startswith("#")
+		#if not (lin in li for lin in li.startswith("#")):
+		if li.startswith("time"):
+			time.append(line.split()[2].split(",")[0])
+			value.append(line.split()[5])
+			
 # for x in time: 
 # 	x = x.split(",")[0]
 	
