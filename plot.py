@@ -10,15 +10,30 @@ with open('performance_100000.txt') as f:
 # for x in time: 
 # 	x = x.split(",")[0]
 	
-fig = plt.figure(figsize=(200, 20))
+fig, ax = plt.subplots()
 
-print(time)
-print(value)
+
+# print(time)
+# print(value)
 
 x = list(map(int, time))
 y = list(map(int, value))
 
-plt.scatter(x, y, s=3)
+ax.plot(x,y)
+
+#plt.scatter(x, y, s=3)
+
+ymax = max(y)
+xpos = y.index(ymax)
+xmax = x[xpos]
+
+text= "x={:.3f}, y={:.3f}".format(xmax, ymax)
+bbox_props = dict(boxstyle="square, pad=0.4", ec="k", lw=1, fc="yellow")
+arrowprops=dict(arrowstyle="->", color= 'red', lw= 2)
+kw = dict(xycoords='data',textcoords="axes fraction",
+          arrowprops=arrowprops, bbox=bbox_props, ha="right", va="center")
+ax.annotate(text, xy=(xmax, ymax), xytext=(0.6,1), **kw)
+
 
 #print(data)
 plt.show()
