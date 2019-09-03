@@ -17,7 +17,7 @@ with open('performance_1000.txt') as f:
 # for x in time: 
 # 	x = x.split(",")[0]
 	
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(2)
 
 
 # print(time)
@@ -26,20 +26,35 @@ fig, ax = plt.subplots()
 x = list(map(int, time))
 y = list(map(int, value))
 
-ax.plot(x,y)
+max_value = max(y)
+max_index = y.index(max_value)
+corr_time = x[max_index]
+print(max_index, max_value, corr_time)
+
+max_x = x[max_index-5:max_index+5]
+max_y = y[max_index-5:max_index+5]
+
+print(x)
+
+ax[0].plot(x,y)
+ax[1].plot(max_x, max_y)
 
 #plt.scatter(x, y, s=3)
 
-ymax = max(y)
-xpos = y.index(ymax)
-xmax = x[xpos]
+# ymax = max(y)
+# xpos = y.index(ymax)
+# xmax = x[xpos]
 
-text= "x={:.3f}, y={:.3f}".format(xmax, ymax)
-bbox_props = dict(boxstyle="square, pad=0.4", ec="k", lw=1, fc="yellow")
-arrowprops=dict(arrowstyle="->", color= 'red', lw= 2)
-kw = dict(xycoords='data',textcoords="axes fraction",
-          arrowprops=arrowprops, bbox=bbox_props, ha="right", va="center")
-ax.annotate(text, xy=(xmax, ymax), xytext=(0.6,1), **kw)
+# text= "x={:.3f}, y={:.3f}".format(xmax, ymax)
+# bbox_props = dict(boxstyle="square, pad=0.4", ec="k", lw=1, fc="yellow")
+# arrowprops=dict(arrowstyle="->", color= 'red', lw= 2)
+# kw = dict(xycoords='data',textcoords="axes fraction",
+#           arrowprops=arrowprops, bbox=bbox_props, ha="right", va="center")
+# ax[0].annotate(text, xy=(xmax, ymax), xytext=(0.6,1), **kw)
+
+# ax.annotate('local max', xy=(xmax, ymax), xytext=(xmax, ymax+50),
+#             arrowprops=dict(facecolor='red'),
+#             )
 
 
 #print(data)
