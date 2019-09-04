@@ -291,6 +291,7 @@ namespace ClusterSimulator
 		return sum;
 	}
 
+
 	int Queue::id_gen_ = 0;
 }
 
