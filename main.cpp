@@ -11,8 +11,9 @@ const std::string SCENARIO_PATH = "../scenarios/";
 #else
 const std::string SCENARIO_PATH = "scenarios/";
 #endif
-const std::string HOSTS_FILE = "hosts_final.json";
-const std::string SCENARIO_FILE = "sliced_10000_Scenario_From_1000000_1000000.json";
+const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
+const std::string SCENARIO_FILE = "scenario.json";
+const int NUM_SCENARIO_LINES_LIMIT = 10000;
 
 int main()
 {
@@ -39,7 +40,7 @@ int main()
 	}
 	else
 	{
-		ClusterSimulator::Parser::parse_scenario(&scenario, SCENARIO_PATH + SCENARIO_FILE, 5000);
+		ClusterSimulator::Parser::parse_scenario(&scenario, SCENARIO_PATH + SCENARIO_FILE, NUM_SCENARIO_LINES_LIMIT);
 		ClusterSimulator::Parser::parse_cluster(&cluster, SCENARIO_PATH + HOSTS_FILE);
 	}
 

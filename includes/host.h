@@ -80,9 +80,10 @@ namespace ClusterSimulator
 		void try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept;
 
 		// Initialise Host from status data.
-		Host(const std::string name, int cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
-			int max_tmp, HostStatus status, const Cluster& cluster)
+		Host(const std::string& name, int cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
+			int max_tmp, const std::string& host_group, HostStatus status, const Cluster& cluster)
 			: name_(name),
+			  host_group_(host_group),
 			  cpu_factor(cpu_factor),
 			  ncpus(ncpus),
 			  nprocs(nprocs),
@@ -101,6 +102,7 @@ namespace ClusterSimulator
 
 	private:
 		std::string name_;
+		std::string host_group_;
 		int slot_running_{};
 		int score_{};
 		ms expected_time_of_completion{};

@@ -126,6 +126,7 @@ namespace ClusterSimulator::Parser
 					detail["MAX_MEM"].int_value(),
 					detail["MAX_SWP"].int_value(),
 					detail["MAX_TMP"].int_value(),
+					detail["HOST_GROUP"].string_value(),
 					status, *cluster);
 
 				cluster->add_node(host);

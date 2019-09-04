@@ -28,12 +28,12 @@ namespace ClusterSimulator
 
 		explicit QueueAlgorithm(HostComparer&& host_comparer) 
 			: host_comparer_{host_comparer}
-			, job_comparer_{[](const Job& a, const Job& b) { return false; }}
+			, job_comparer_{[](const Job&, const Job&) { return false; }}
 			{}
 
 		explicit QueueAlgorithm(HostSorter&& host_sorter)
 			: host_sorter_{host_sorter}
-			, job_comparer_{[](const Job& a, const Job& b) { return false; }}
+			, job_comparer_{[](const Job&, const Job&) { return false; }}
 			{}
 
 		HostComparer host_comparer_;
@@ -110,7 +110,7 @@ namespace ClusterSimulator
 
 				// Find the job with earliest completion time
 				auto min_iter = std::min_element(min_completion_times_for_jobs.cbegin(), min_completion_times_for_jobs.cend());
-				const Job& min_job = jobs[min_iter - min_completion_times_for_jobs.cbegin()];
+				//const Job& min_job = jobs[min_iter - min_completion_times_for_jobs.cbegin()];
 
 				// We don't assign the job to the corresponding host here.
 				// Instead we sort the hosts
@@ -128,9 +128,6 @@ namespace ClusterSimulator
 		inline static const QueueAlgorithm* const MCT = new MCTAlgorithm();
 		inline static const QueueAlgorithm* const MinMin = new MinMinAlgorithm();
 	};
-
-	inline extern QueueAlgorithms QAlgorithms{};
-
 }
 
 

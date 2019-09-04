@@ -168,6 +168,10 @@ namespace ClusterSimulator
 
 	bool ClusterSimulation::run()
 	{
+		const int total_count{scenario_.count()};
+		int previous_counter{0};
+		if constexpr(!console_output)
+			std::cout << "Remaining scenarios:  ";
 		while (true)
 		{
 			if (!scenario_.is_empty())
@@ -175,6 +179,13 @@ namespace ClusterSimulator
 				std::vector<ScenarioEntry> next_entries;
 				ms next_arrival_time;
 				std::tie(next_entries, next_arrival_time) = scenario_.pop_all_latest();
+				if constexpr(!console_output)
+				{
+					std::cout << 
+						std::string(std::to_string(previous_counter).length(), '\b')
+						<< scenario_.count();
+					previous_counter = scenario_.count();
+				}
 
 				auto next_event_time = events_.top().time;
 				while (next_event_time <= next_arrival_time)
@@ -235,9 +246,13 @@ namespace ClusterSimulator
 			std::endl;
 
 
-		log(LogLevel::info, ss.str());
+		if constexpr(console_output)
+			log(LogLevel::info, ss.str());
+		else
+			std::cout << ss.str();
+		
 
-		 performance_<< "MakeSpan\n" <<
+		performance_<< "MakeSpan\n" <<
 			"### Simulated duration: " << total_simulation_time << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<	
 			std::endl;
