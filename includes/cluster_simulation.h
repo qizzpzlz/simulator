@@ -48,12 +48,14 @@ namespace ClusterSimulator
 		};
 		std::chrono::milliseconds dispatch_frequency{ 1000 };
 		std::chrono::milliseconds logging_frequency{ 10000 };
-		
+		std::chrono::milliseconds counting_frequency{ 10000 };
+	
 	private:
 		Action dispatch_action_;
 		ms current_time_;
 		std::priority_queue<EventItem> events_{};
 		Action log_action_;
+		Action count_new_jobs_;
 		//int counter_{0};
 		//std::chrono::milliseconds logging_frequency{ 1000 };
 		// struct slot_record_entry
@@ -62,7 +64,7 @@ namespace ClusterSimulator
 		// 	int value;
 		// };
 		// std::vector<slot_record_entry> using_slot_record_;
-
+		std::map<ms, int> job_submit_record_;
 		std::map<ms, int> using_slot_record_;
 		ms latest_finish_time_;
 
@@ -99,6 +101,7 @@ namespace ClusterSimulator
 		
 		// Stats
 		int num_submitted_jobs_{ 0 };
+		int newly_submitted_jobs_{ 0 };
 		int num_successful_jobs_{ 0 };
 		int num_failed_jobs_{ 0 };
 
