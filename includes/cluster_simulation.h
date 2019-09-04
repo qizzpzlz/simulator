@@ -22,6 +22,8 @@ namespace ClusterSimulator
 
 	class ClusterSimulation
 	{
+		constexpr static bool console_output = false;
+
 	public:
 		using Action = std::function<void()>;
 		struct EventItem
@@ -46,8 +48,6 @@ namespace ClusterSimulator
 		};
 		std::chrono::milliseconds dispatch_frequency{ 1000 };
 		std::chrono::milliseconds logging_frequency{ 10000 };
-
-		
 		
 	private:
 		Action dispatch_action_;
@@ -135,14 +135,16 @@ namespace ClusterSimulator
 		template<typename... Args>
 		static void log(LogLevel level, const char* fmt, const Args&... args)
 		{
-			spdlog::log(level, fmt, args...);
+			if constexpr(console_output)
+				spdlog::log(level, fmt, args...);
 			file_logger->log(level, fmt, args...);
 		}
 
 		template<typename T>
 		static void log(LogLevel level, const T& msg)
 		{
-			spdlog::log(level, msg);
+			if constexpr(console_output)
+				spdlog::log(level, msg);
 			file_logger->log(level, msg);
 		}
 
