@@ -20,6 +20,7 @@ namespace ClusterSimulator
 	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "log_output.txt");
 	std::ofstream ClusterSimulation::jobmart_file_;
 	std::ofstream performance_("performance_.txt");
+	std::ofstream job_submit_("job_submit_.txt");
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
@@ -44,8 +45,25 @@ namespace ClusterSimulator
 			if (!scenario_.is_empty() || total_using_slots != 0)
 				this->after_delay(this->logging_frequency, this->log_action_, 2);
 		};
-		after_delay(logging_frequency, log_action_, 2);
-	
+		after_delay(logging_frequency, log_action_, 2);	
+		
+		count_new_jobs_ = [this]
+		{
+			// int total_new_jobs= 0;
+			
+			// total_new_jobs += newly_submitted_jobs_;
+
+			job_submit_record_.insert_or_assign(this->get_current_time(), newly_submitted_jobs_);
+			log(LogLevel::info, "total_new_jobs: {0}", newly_submitted_jobs_);
+			newly_submitted_jobs_ = 0;
+
+			// if (!scenario_.is_empty())
+			//if (!scenario_.is_empty() || newly_submitted_jobs_ !=0)
+			if (!scenario_.is_empty())
+				this->after_delay(this->counting_frequency, this->count_new_jobs_, 3);
+			//log(LogLevel::info, "total_new_jobs: {0}", newly_submitted_jobs_);
+		};
+		after_delay(counting_frequency, count_new_jobs_, 3);	
 		
 
 		//set algoritms
@@ -100,6 +118,8 @@ namespace ClusterSimulator
 				simulation.reserve_dispatch_event();
 				
 				simulation.num_submitted_jobs_++;
+				simulation.newly_submitted_jobs_++;
+				//log(LogLevel::info, "newly_submitted_jobs{0}", simulation.newly_submitted_jobs_);
 			};
 		}
 		else if (entry.type == ScenarioEntry::ScenarioEntryType::CHANGE_STATUS)
@@ -217,7 +237,7 @@ namespace ClusterSimulator
 
 		log(LogLevel::info, ss.str());
 
-		performance_<< "MakeSpan\n" <<
+		 performance_<< "MakeSpan\n" <<
 			"### Simulated duration: " << total_simulation_time << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<	
 			std::endl;
@@ -228,6 +248,9 @@ namespace ClusterSimulator
 		
 		for (auto [time, count] : using_slot_record_)
 			performance_ << " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
+		
+		for (auto [time, count] : job_submit_record_)
+			job_submit_<< " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
 	}
 
 	void ClusterSimulation::next()
