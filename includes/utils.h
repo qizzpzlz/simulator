@@ -2,9 +2,10 @@
 
 namespace Utils
 {
-    constexpr std::chrono::milliseconds get_time_left_until_next_period(
-        const std::chrono::time_point<std::chrono::milliseconds> current,
-        const std::chrono::milliseconds frequency)
+    using std::chrono::milliseconds;
+    using ms = std::chrono::time_point<milliseconds>;
+
+    constexpr milliseconds get_time_left_until_next_period(const ms current, const milliseconds frequency)
     {
         const double current_d{ static_cast<double>(current.time_since_epoch().count()) };
         const long long frequency_d{ frequency.count() };
@@ -14,7 +15,18 @@ namespace Utils
         //if (dividend_i == static_cast<double>(dividend_i))
         //    return std::chrono::milliseconds(1);
 
-		return std::chrono::milliseconds{ (dividend_i/* + (dividend > 0 ? 1 : 0)*/) * frequency_d -
+		return milliseconds{ (dividend_i/* + (dividend > 0 ? 1 : 0)*/) * frequency_d -
 			current.time_since_epoch().count() };
     }
+
+    struct ms_hash
+    {
+        std::size_t operator()(const ms& h) const
+        {
+            using std::size_t;
+            using std::hash;
+
+            return hash<int64_t>{}(h.time_since_epoch().count());
+        }
+    };
 }

@@ -152,7 +152,7 @@ namespace ClusterSimulator
 			}
 
 			// Check qjob_limit here.
-			if(qjob_limit != -1 && using_job_slots() > qjob_limit )
+			if(qjob_limit != -1 && using_job_slots > qjob_limit )
 			{
 				ClusterSimulation::log(LogLevel::info, "Reached qjob_limit");
 				job.set_pending(simulation_->get_current_time());
@@ -186,9 +186,13 @@ namespace ClusterSimulator
 
 				// TODO: Why would we sort hosts? 
 				// Can we just get the host with the maximum priority?
-				sort(eligible_hosts.begin(), eligible_hosts.end(), job);
+				// sort(eligible_hosts.begin(), eligible_hosts.end(), job);
 
-				best_host = eligible_hosts.front();
+				// best_host = eligible_hosts.front();
+				using namespace std::placeholders;
+				auto f = std::bind(compare_host_function_, _1, _2, job);
+				auto it = std::min_element(eligible_hosts.begin(), eligible_hosts.end(), f);
+				best_host = *it;
 			}
 			else
 			{
@@ -205,23 +209,24 @@ namespace ClusterSimulator
 				//CPU_LIMIT ..?? 
 			
 			// Register the best host to the dispatched hosts list.
-			auto search = dispatched_hosts_.find(best_host);
-			if (search != dispatched_hosts_.end())
-			{
-				dispatched_hosts_[best_host].slot_dispatched += job.slot_required;
-				// ClusterSimulation::log(LogLevel::info, "else ++job {0}: {1} = slot_dis {2}, queue name :{3}"
-				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
-				// ClusterSimulation::log(LogLevel::info, "++ cnt : {0}, queue name : {1}" , using_job_slots(), name);	
+			// auto search = dispatched_hosts_.find(best_host);
+			// if (search != dispatched_hosts_.end())
+			// {
+			// 	dispatched_hosts_[best_host].slot_dispatched += job.slot_required;
+			// 	// ClusterSimulation::log(LogLevel::info, "else ++job {0}: {1} = slot_dis {2}, queue name :{3}"
+			// 	// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
+			// 	// ClusterSimulation::log(LogLevel::info, "++ cnt : {0}, queue name : {1}" , using_job_slots(), name);	
 		
-			}
-			else
-			{
-				dispatched_hosts_.insert(std::make_pair(best_host, HostInfo{job.slot_required}));
-				// ClusterSimulation::log(LogLevel::info, "if ++job {0}: {1} = slot_dis {2}, queue name :{3}"
-				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
-			}
-				
+			// }
+			// else
+			// {
+			// 	dispatched_hosts_.insert(std::make_pair(best_host, HostInfo{job.slot_required}));
+			// 	// ClusterSimulation::log(LogLevel::info, "if ++job {0}: {1} = slot_dis {2}, queue name :{3}"
+			// 	// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
+			// }
 
+			simulation_->num_dispatched_slots += job.slot_required;
+			using_job_slots += job.slot_required;
 			flag = true;
 			
 			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
@@ -251,13 +256,15 @@ namespace ClusterSimulator
 					"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
 					,job.id, best_host->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());
 				
-				dispatched_hosts_[best_host].slot_dispatched -= job.slot_required;
+				// dispatched_hosts_[best_host].slot_dispatched -= job.slot_required;
+				this->simulation_->num_dispatched_slots -= job.slot_required;
+				this->using_job_slots -= job.slot_required;
 			
 				// ClusterSimulation::log(LogLevel::info, "--job {0}: {1} = slot_dis {2}, queue name :{3}"
 				// ,job.id, job.slot_required, dispatched_hosts_[&best_host].slot_dispatched, name);
 				//ClusterSimulation::log(LogLevel::info, "-- cnt : {0}, queue name :{1}" , using_job_slots(), name);
 
-				
+				this->simulation_->log_using_slots();
 				ClusterSimulation::log_jobmart(job);
 			});
 
@@ -278,18 +285,19 @@ namespace ClusterSimulator
 		{
 			Job& pending_job = pending_jobs_.back();
 			pending_job.update_total_pending_duration(simulation_->get_current_time());
-			jobs_.push_back(pending_job);
+			if (pending_job.total_pending_duration < std::chrono::microseconds(1000000))
+				jobs_.push_back(pending_job);
 			pending_jobs_.pop_back();
 		}
 	}
 
-	int Queue::using_job_slots() const noexcept
-	{
-		int sum{0};
-		for (const auto& item : dispatched_hosts_)
-			sum += item.second.slot_dispatched;
-		return sum;
-	}
+	// int Queue::using_job_slots() const noexcept
+	// {
+	// 	int sum{0};
+	// 	for (const auto& item : dispatched_hosts_)
+	// 		sum += item.second.slot_dispatched;
+	// 	return sum;
+	// }
 
 
 	int Queue::id_gen_ = 0;

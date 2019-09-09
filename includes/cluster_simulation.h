@@ -7,6 +7,7 @@
 #include <queue>
 #include <ctime>
 #include "queue.h"
+#include "utils.h"
 #include "../dependencies/spdlog/spdlog.h"
 #include "../dependencies/spdlog/logger.h"
 #include "../dependencies/spdlog/common.h"
@@ -22,7 +23,7 @@ namespace ClusterSimulator
 
 	class ClusterSimulation
 	{
-		constexpr static bool console_output = false;
+		constexpr static bool console_output = true;
 
 	public:
 		using Action = std::function<void()>;
@@ -56,24 +57,19 @@ namespace ClusterSimulator
 		std::priority_queue<EventItem> events_{};
 		Action log_action_;
 		Action count_new_jobs_;
-		//int counter_{0};
-		//std::chrono::milliseconds logging_frequency{ 1000 };
-		// struct slot_record_entry
-		// {
-		// 	ms time_stamp;
-		// 	int value;
-		// };
-		// std::vector<slot_record_entry> using_slot_record_;
-		std::map<ms, int> job_submit_record_;
-		std::map<ms, int> using_slot_record_;
+		// std::map<ms, int> job_submit_record_;
+		// std::map<ms, int> using_slot_record_;
+		std::unordered_map<ms, int, Utils::ms_hash> job_submit_record_;
+		std::unordered_map<ms, int, Utils::ms_hash> using_slot_record_;
 		ms latest_finish_time_;
 
 		void next();
 
 	public:
-		bool next_dispatch_reserved{ false };
-
 		ClusterSimulation(Scenario& scenario, Cluster& cluster);
+
+		bool next_dispatch_reserved{ false };
+		long num_dispatched_slots{ 0 };
 
 		ms get_current_time() const { return current_time_; }
 
@@ -121,6 +117,8 @@ namespace ClusterSimulator
 											simulation->dispatch_action_, 1);
 				else
 					simulation->next_dispatch_reserved = false;
+
+				simulation->log_using_slots();
 			}	
 		};
 
@@ -231,6 +229,19 @@ namespace ClusterSimulator
 			// depend_cond
 				
 			bprinter::endl();
+		}
+
+		void log_using_slots() 
+		{ 
+			// auto it = using_slot_record_.find(get_current_time());
+			using_slot_record_.insert_or_assign(this->get_current_time(), num_dispatched_slots); 
+			// if (it != using_slot_record_.end())
+			// 	it->second = num_dispatched_slots;
+			// else
+			// {
+			// 	using_slot_record_.insert_or_assign()
+			// }
+			
 		}
 	};
 #pragma endregion

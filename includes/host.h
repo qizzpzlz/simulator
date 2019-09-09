@@ -107,6 +107,8 @@ namespace ClusterSimulator
 		int score_{};
 		ms expected_time_of_completion{};
 
+		// double max_procs;
+
 		static int id_gen_;
 		static std::random_device rd_;
 		static std::mt19937 gen_;

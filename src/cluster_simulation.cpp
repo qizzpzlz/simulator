@@ -1,6 +1,5 @@
 #include <iostream>
 #include <sstream>
-#include "../includes/utils.h"
 #include "../includes/queue.h"
 #include "../includes/cluster.h"
 #include "../includes/scenario.h"
@@ -36,16 +35,16 @@ namespace ClusterSimulator
 
 		log_action_ = [this]
 		{
-			int total_using_slots = 0;
-			for (const auto& q : this->all_queues_)
-				total_using_slots += q.using_job_slots();
+			// int total_using_slots = 0;
+			// for (const auto& q : this->all_queues_)
+			// 	total_using_slots += q.using_job_slots();
 
-			using_slot_record_.insert_or_assign(this->get_current_time(), total_using_slots);
+			using_slot_record_.insert_or_assign(this->get_current_time(), num_dispatched_slots);
 
-			if (!scenario_.is_empty() || total_using_slots != 0)
-				this->after_delay(this->logging_frequency, this->log_action_, 2);
+			// if (!scenario_.is_empty() || num_dispatched_slots != 0)
+			// 	this->after_delay(this->logging_frequency, this->log_action_, 2);
 		};
-		after_delay(logging_frequency, log_action_, 2);	
+		// after_delay(logging_frequency, log_action_, 2);	
 		
 		count_new_jobs_ = [this]
 		{

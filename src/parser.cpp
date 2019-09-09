@@ -113,7 +113,7 @@ namespace ClusterSimulator::Parser
 				const Json& detail = pair.second;
 
 				HostStatus status;
-				std::stringstream ss(detail["STATUS"].string_value());
+				std::stringstream ss(detail["HOST_STATUS"].string_value());
 				ss >> Utils::enum_from_string<HostStatus>(status);
 
 				Host host(pair.first,

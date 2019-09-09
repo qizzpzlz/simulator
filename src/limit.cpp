@@ -17,10 +17,11 @@ namespace ClusterSimulator
 	    const auto search = entries_.find(&host);
         if (search == entries_.end()) return true;
 
-		Queue::HostInfo info;
-		if (!queue.try_get_dispatched_host_info(host, &info)) return true;
+      Queue::HostInfo info;
+      // if (!queue.try_get_dispatched_host_info(host, &info)) return true;
+      throw std::runtime_error("");
 
-		return info.slot_dispatched + job.slot_required <= search->second;
+      return info.slot_dispatched + job.slot_required <= search->second;
     }
 
 	bool ExclusiveLimit::is_eligible(const Queue& queue, const Host& host, const Job& job) const

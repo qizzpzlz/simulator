@@ -65,7 +65,8 @@ namespace ClusterSimulator
 
 		std::vector<Limit*> limits;
 
-		int using_job_slots() const noexcept;
+		int using_job_slots;
+		// int using_job_slots() const noexcept;
 
 		//The number you specify is multiplied by the value of lsb.params MBD_SLEEP_TIME (60 seconds by default).
 		int job_accept_interval;
@@ -112,19 +113,19 @@ namespace ClusterSimulator
 		bool dispatch();
 		void enqueue(Job&& job);
 
-		bool try_get_dispatched_host_info(const Host& host, HostInfo* out_info) const noexcept
-		{
-			const auto search = dispatched_hosts_.find(&host);
-			if (search == dispatched_hosts_.end())
-			{
-				out_info = nullptr;
-				return false;
-			}
+		// bool try_get_dispatched_host_info(const Host& host, HostInfo* out_info) const noexcept
+		// {
+		// 	const auto search = dispatched_hosts_.find(&host);
+		// 	if (search == dispatched_hosts_.end())
+		// 	{
+		// 		out_info = nullptr;
+		// 		return false;
+		// 	}
 
-			*out_info = search->second;	// HostInfo is copy-assigned here!
+		// 	*out_info = search->second;	// HostInfo is copy-assigned here!
 
-			return true;
-		}
+		// 	return true;
+		// }
 
 		void set_algorithm(const QueueAlgorithm* const algorithm) noexcept;
 		const QueueAlgorithm* current_algorithm{ nullptr };
@@ -146,7 +147,7 @@ namespace ClusterSimulator
 			compare_host_function_ = compare_host_function;
 		}
 
-		std::map<const Host*, HostInfo> dispatched_hosts_;
+		// std::map<const Host*, HostInfo> dispatched_hosts_;
 
 		// characteristics
 		bool is_default_{};

@@ -13,7 +13,7 @@ const std::string SCENARIO_PATH = "scenarios/";
 #endif
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = 10000;
+const int NUM_SCENARIO_LINES_LIMIT = -1;
 
 int main()
 {
