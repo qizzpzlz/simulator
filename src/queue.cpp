@@ -158,7 +158,7 @@ namespace ClusterSimulator
 				job.set_pending(simulation_->get_current_time());
 				pending_jobs_.push_back(job);
 				ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
-								, job.id, job.total_pending_duration);
+								, job.id, job.total_pending_duration.count());
 				
 
 				jobs_.pop_back();
@@ -176,7 +176,7 @@ namespace ClusterSimulator
 				if (eligible_hosts.empty())
 				{
 					ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
-									, job.id, job.total_pending_duration);
+									, job.id, job.total_pending_duration.count());
 					job.set_pending(simulation_->get_current_time());
 					pending_jobs_.push_back(job);
 
