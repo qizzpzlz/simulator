@@ -265,8 +265,14 @@ namespace ClusterSimulator
 		performance_ << " end : "<< using_slot_record_.size() << "\n";
 		// for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
 		
-		for (auto [time, count] : using_slot_record_)
+		std::vector<std::pair<ms ,int>> records(using_slot_record_.begin(), using_slot_record_.end());
+		std::sort(records.begin(), records.end());
+
+		for (auto [time, count] : records)
 			performance_ << " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
+
+		records = std::vector<std::pair<ms, int>>(job_submit_record_.begin(), job_submit_record_.end());
+		std::sort(records.begin(), records.end());
 		
 		for (auto [time, count] : job_submit_record_)
 			job_submit_<< " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
