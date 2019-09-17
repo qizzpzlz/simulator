@@ -66,8 +66,8 @@ namespace ClusterSimulator
 		
 
 		//set algoritms
-		for(auto& q : this->all_queues_)
-			q.set_algorithm(QueueAlgorithms::MCT);
+		// for(auto& q : this->all_queues_)
+		// 	q.set_algorithm(QueueAlgorithms::MCT);
 
 		reserve_dispatch_event();
 
@@ -131,6 +131,11 @@ namespace ClusterSimulator
 				Host& host = simulation.get_cluster().find_node(entry.event_detail.host_name)->second;
 
 				host.set_status(entry.event_detail.host_status);
+				host.cpu_factor = entry.event_detail.cpu_factor;
+				host.ncpus = entry.event_detail.ncpus;
+				host.nprocs = entry.event_detail.nprocs;
+				host.ncores = entry.event_detail.ncores;
+				host.nthreads = entry.event_detail.nthreads;
 
 				Utils::enum_const_ref_holder<HostStatus> test = Utils::enum_to_string<HostStatus>(host.status);
 				std::stringstream ss;

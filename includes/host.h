@@ -30,7 +30,7 @@ namespace ClusterSimulator
 	{
 	public:
 		// Speed of the host's CPU relative to other hosts in the cluster.
-		int cpu_factor;
+		double cpu_factor;
 		// Number of CPUs you have specified for your host.
 		int ncpus;
 		// Number of physical processors.
@@ -80,7 +80,7 @@ namespace ClusterSimulator
 		void try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept;
 
 		// Initialise Host from status data.
-		Host(const std::string& name, int cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
+		Host(const std::string& name, double cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
 			int max_tmp, const std::string& host_group, HostStatus status, const Cluster& cluster)
 			: name_(name),
 			  host_group_(host_group),

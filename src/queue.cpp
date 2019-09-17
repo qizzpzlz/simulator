@@ -157,8 +157,8 @@ namespace ClusterSimulator
 				ClusterSimulation::log(LogLevel::info, "Reached qjob_limit");
 				job.set_pending(simulation_->get_current_time());
 				pending_jobs_.push_back(job);
-				ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pend start time: {1}ms)"
-								, job.id, job.run_time.count());
+				ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+								, job.id, job.total_pending_duration);
 				
 
 				jobs_.pop_back();
@@ -175,8 +175,8 @@ namespace ClusterSimulator
 				// pend the job.
 				if (eligible_hosts.empty())
 				{
-					ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pend start time: {1}ms)"
-									, job.id, job.run_time.count());
+					ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+									, job.id, job.total_pending_duration);
 					job.set_pending(simulation_->get_current_time());
 					pending_jobs_.push_back(job);
 
@@ -232,6 +232,8 @@ namespace ClusterSimulator
 			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
 				,name, job.id, best_host->get_name());
 
+			if (job.id == 4158604)
+				ClusterSimulation::log(LogLevel::debug, "");
 
 			const auto run_time = best_host->get_expected_run_time(job);
 			best_host->try_update_expected_time_of_completion(run_time);

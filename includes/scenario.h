@@ -47,6 +47,12 @@ namespace ClusterSimulator
 			std::string job_exit_status;
 			int job_exit_code;
 			double job_non_cpu_time;
+
+			double cpu_factor;
+			int ncpus;
+			int nprocs;
+			int ncores;
+			int nthreads;
 		};
 
 

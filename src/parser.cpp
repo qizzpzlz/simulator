@@ -75,6 +75,11 @@ namespace ClusterSimulator::Parser
 					std::stringstream ss(details["host_status"].string_value());
 					ss >> Utils::enum_from_string<HostStatus>(status);
 					entry.event_detail.host_status = status;
+					entry.event_detail.cpu_factor = details["NCPUS"].number_value();
+					entry.event_detail.ncpus = details["NCPUS"].int_value();
+					entry.event_detail.nprocs = details["NPROCS"].int_value();
+					entry.event_detail.ncores = details["NCORES"].int_value();
+					entry.event_detail.nthreads = details["NTHREADS"].int_value();
 				}
 
 				scenario->add_scenario_entry(entry);
@@ -117,7 +122,7 @@ namespace ClusterSimulator::Parser
 				ss >> Utils::enum_from_string<HostStatus>(status);
 
 				Host host(pair.first,
-					detail["CPU_FACTOR"].int_value(),
+					detail["CPU_FACTOR"].number_value(),
 					detail["NCPUS"].int_value(),
 					detail["NPROCS"].int_value(),
 					detail["NCORES"].int_value(),
