@@ -2,47 +2,49 @@
 #include "includes/scenario.h"
 #include "includes/cluster.h"
 #include "includes/cluster_simulation.h"
-#include "spdlog/spdlog.h"
-#include <fstream>
+#include "argparse.hpp"
 
-//#if defined 
-#if defined _WIN32
-const std::string SCENARIO_PATH = "../scenarios/";
-#else
-const std::string SCENARIO_PATH = "scenarios/";
-#endif
+
+const std::string SCENARIO_DIR_PATH = "scenarios/";
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
 const int NUM_SCENARIO_LINES_LIMIT = -1;
 
-int main()
+int main(int argc, char *argv[])
 {
-	// Temporary CLI for input files
-	std::string scenario_path;
-	std::string host_path;
-	// int lines;
-	// std::cout << "##Cluster Simulator" << std::endl;
-	// std::cout << "Path to scenario file: ";
-	// std::cin >> scenario_path;
-	// std::cout << "Input the number of lines to read: ";
-	// std::cin >> lines;
-	// std::cout << "Path to host file: ";
-	// std::cin >> host_path;
+
+	argparse::ArgumentParser program("cluster-simulator");
+	program
+		.add_argument("-p", "--path")
+		.required()
+		.help("specify the path to scenario directory.")
+		.default_value(SCENARIO_DIR_PATH);
+	program.add_argument("-c", "--count")
+		.help("number of items to read in the given scenario.")
+		.default_value(-1);
+
+	try
+	{
+		program.parse_args(argc, argv);
+	}
+	catch (const std::runtime_error& err)
+	{
+		std::cout << err.what() << std::endl;
+		program.print_help();
+		exit(0);
+	}
+
+	const auto scenario_dir_path{ program.get<std::string>("--path") };
+	const std::string scenario_path{ scenario_dir_path + SCENARIO_FILE };
+	const std::string host_path{ scenario_dir_path + HOSTS_FILE };
 	
 	ClusterSimulator::Scenario scenario;
 	ClusterSimulator::Cluster cluster;
 		
 	// Parse the given scenario and the cluster from json files.
-	if (!host_path.empty() && !scenario_path.empty())
-	{
-		ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path);
-		ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
-	}
-	else
-	{
-		ClusterSimulator::Parser::parse_scenario(&scenario, SCENARIO_PATH + SCENARIO_FILE, NUM_SCENARIO_LINES_LIMIT);
-		ClusterSimulator::Parser::parse_cluster(&cluster, SCENARIO_PATH + HOSTS_FILE);
-	}
+	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, 100);
+	ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
+
 
 	// Start simulation
 	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster };
@@ -50,23 +52,6 @@ int main()
 
 	// Print summary
 	simulation.print_summary();
-
-
-
-	//std::string current_working_dir(NPath);
-	//std::cout << current_working_dir;	ClusterSimulator::ParseScenario(SCENARIO_PATH + "lines.json");
-
-	//ClusterSimulator::ParseCluster(SCENARIO_PATH + HOSTS_FILE);
-	//ClusterSimulator::parse_scenario(SCENARIO_PATH + SCENARIO_FILE);
-
-	//test
-	//double simulationTime = 7200;
-	//int nodeNum = 8;
-	//RandomAlgorithm algorithm{};
-
-	//Simulation simulation{algorithm, simulationTime, nodeNum};
-
-	//simulation.simulate();
 
 	ClusterSimulator::ClusterSimulation::jobmart_file_.close();
 }

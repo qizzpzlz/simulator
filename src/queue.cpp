@@ -114,26 +114,24 @@ namespace ClusterSimulator
 	 */
 	void Queue::policy()
 	{	
-		// Retrive all pending jobs to the primary job list.
-		clean_pending_jobs();
-
 		//if (current_algorithm && current_algorithm->get_job_comparer())
 		//	std::sort(jobs_.begin(), jobs_.end(), current_algorithm->get_job_comparer());
 	}
 
 	/**
 	 * Dispatchs all jobs in this queue.
-	 * Jobs that couldn't be dispatched this time are
+	 * Jobs that could not be dispatched this time are
 	 * pending until the next dispatch.
 	 */
-	
 	bool Queue::dispatch()
 	{
 		// Returns true if any jobs are dispatched this time.
 		bool flag{ false };
 
 		// 1. Bring back all pending jobs.
-		// 2. Sort all jobs using policy.지그
+		clean_pending_jobs();
+
+		// 2. Sort all jobs using policy.
 		policy();
 
 		// For each job in the current queue
@@ -231,9 +229,6 @@ namespace ClusterSimulator
 			
 			ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
 				,name, job.id, best_host->get_name());
-
-			if (job.id == 4158604)
-				ClusterSimulation::log(LogLevel::debug, "");
 
 			const auto run_time = best_host->get_expected_run_time(job);
 			best_host->try_update_expected_time_of_completion(run_time);

@@ -35,11 +35,11 @@ namespace ClusterSimulator
 	{
 		slot_running_ -= job.slot_required;
 
-		Queue::HostInfo info;
+		//Queue::HostInfo info;
 		// if (!job.queue_managing_this_job->try_get_dispatched_host_info(*this, &info))
 		// 	throw std::runtime_error("Queue managing a job does not have information about the host of the job.");
 
-		info.slot_dispatched -= job.slot_required;
+		//info.slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
 		num_current_jobs --;
 	}
