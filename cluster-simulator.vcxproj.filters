@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\dependencies\json11.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\dependencies\spdlog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\cluster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\cluster_simulation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\enum_converter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\host.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\job.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\limit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\src\scenario.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\cluster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\cluster_simulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\enum_converter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\host.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\job.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\limit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\queue_algorithm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\scenario.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\user.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\includes\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\OneDrive\Documents\HPIC\Scheduler\test\simulator\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{EB387573-41C4-381D-AF6B-1DB736D69E62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{E154256F-393C-31A4-A42F-51C1FD66CB9D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

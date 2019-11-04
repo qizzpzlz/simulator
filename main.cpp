@@ -3,7 +3,8 @@
 #include "includes/cluster.h"
 #include "includes/cluster_simulation.h"
 #include "argparse.hpp"
-
+#include <string>
+#include <sstream>
 
 const std::string SCENARIO_DIR_PATH = "scenarios/";
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
@@ -45,14 +46,13 @@ int main(int argc, char *argv[])
 	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, 100);
 	ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
 
-
 	// Start simulation
-	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster };
+	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster, *ClusterSimulator::QueueAlgorithms::OLB};
 	simulation.run();
 
 	// Print summary
 	simulation.print_summary();
 
-	ClusterSimulator::ClusterSimulation::jobmart_file_.close();
+	//ClusterSimulator::ClusterSimulation::jobmart_file_.close();
 }
 

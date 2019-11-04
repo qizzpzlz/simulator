@@ -130,22 +130,14 @@ namespace ClusterSimulator
 		void set_algorithm(const QueueAlgorithm* const algorithm) noexcept;
 		const QueueAlgorithm* current_algorithm{ nullptr };
 
+		std::vector<Host*> match(const Job& job);
+
 	private:
-		using HostReference = Host*;
-		using HostList = std::vector<HostReference>;
-
-		HostList match(const Job& job);
-
-		void sort(HostList::iterator first, HostList::iterator last, const Job& job) const;
+		void sort(std::vector<Host*>::iterator first, std::vector<Host*>::iterator last, const Job& job) const;
 
 		void policy();
 
 		void clean_pending_jobs();
-
-		void set_compare_host_function_(QueueAlgorithm::HostComparer compare_host_function) noexcept
-		{
-			compare_host_function_ = compare_host_function;
-		}
 
 		// std::map<const Host*, HostInfo> dispatched_hosts_;
 
@@ -176,13 +168,6 @@ namespace ClusterSimulator
 		// Restrict host
 		// Restrict job size
 
-		QueueAlgorithm::HostComparer compare_host_function_
-		{
-			[](const Host* a, const Host* b, const Job&)
-			{	
-				return a->score() < b->score();
-			}
-		};
 
 		//QueueAlgorithm::
 		//QueueAlgorithm::JobComparer compare_job_function_;

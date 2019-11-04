@@ -41,8 +41,10 @@ namespace ClusterSimulator
 	std::vector<Queue> Scenario::generate_queues(ClusterSimulation& simulation) const
 	{
 		std::vector<Queue> queues;
-		for (const auto& name : unique_queues_)
-			queues.emplace_back(simulation, name);
+		//for (const auto& name : unique_queues_)
+		//	queues.emplace_back(simulation, name);
+		//
+		queues.emplace_back(simulation, "default");
 
 		return queues;
 	}

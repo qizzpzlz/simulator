@@ -1,4 +1,5 @@
 #pragma once
+//#include "queue.h"
 #include <string>
 #include <chrono>
 #include <memory>
@@ -10,11 +11,10 @@ namespace ClusterSimulator
 	{
 		PEND, RUN, DONE, EXIT, PSUSP, USUSP, SSUSP, POST_DONE, POST_ERR, UNKWN, WAIT, ZOMBI
 	};
-	class Queue;
-	//enum class HostStatus;
 
 	using ms = std::chrono::time_point<std::chrono::milliseconds>;
-
+	class Host;
+	
 	class Job
 	{
 	public:
@@ -22,7 +22,6 @@ namespace ClusterSimulator
 		// The actual number of slots used for job execution.
 		int slot_required;
 		std::chrono::milliseconds run_time;
-		//std::shared_ptr<const Queue> queue_managing_this_job;
 		Queue* queue_managing_this_job;
 		bool is_multi_host;
 		long mem_required;
@@ -55,6 +54,11 @@ namespace ClusterSimulator
 
 		long mem_usage;
 		double cpu_time;
+
+		/**
+		 * Gets the list of Hosts eligible to run this job.
+		 */
+		std::vector<Host*> get_eligible_hosts() const;
 
 	private:
 		std::string application_name_;

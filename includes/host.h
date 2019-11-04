@@ -44,12 +44,13 @@ namespace ClusterSimulator
 		int max_tmp;
 		int id{ id_gen_++ };
 
-		const Cluster* cluster;
-
 		HostStatus status;
 		int num_current_jobs{ 0 };
 		int num_current_running_slots{ 0 };
 		bool is_available_at_least_once{ false };
+
+		ClusterSimulation* simulation;
+		const Cluster* cluster;
 
 		const std::string& get_name() const noexcept{ return name_; }
 		constexpr int score() const noexcept { return score_; }
@@ -64,11 +65,11 @@ namespace ClusterSimulator
 		}
 		std::chrono::milliseconds get_expected_run_time(const Job& job) const noexcept;
 		ms get_expected_time_of_all_completion() const noexcept { return expected_time_of_completion; }
-
+		ms get_expected_completion_time(const Job& job) const { return get_expected_time_of_all_completion() + get_expected_run_time(job); }
 
 		/* Status mutator methods */
 
-		void execute_job(const Job& job);
+		void execute_job(Job& job);
 		void exit_job(const Job& job);
 		void set_status(HostStatus value) noexcept
 		{

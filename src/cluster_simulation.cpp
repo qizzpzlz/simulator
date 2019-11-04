@@ -22,8 +22,10 @@ namespace ClusterSimulator
 	std::ofstream job_submit_("job_submit_.txt");
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
-	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
-		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) },
+	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm)
+		: cluster_{ cluster },
+		scenario_{ scenario },
+		all_queues_{ scenario.generate_queues(*this) },
 		dispatcher_{ this }
 	{
 		cluster.simulation = this;
@@ -66,8 +68,8 @@ namespace ClusterSimulator
 		
 
 		//set algoritms
-		// for(auto& q : this->all_queues_)
-		// 	q.set_algorithm(QueueAlgorithms::MCT);
+		for(auto& q : this->all_queues_)
+			q.set_algorithm(&algorithm);
 
 		reserve_dispatch_event();
 
@@ -265,17 +267,17 @@ namespace ClusterSimulator
 		performance_ << " end : "<< using_slot_record_.size() << "\n";
 		// for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
 		
-		std::vector<std::pair<ms ,int>> records(using_slot_record_.begin(), using_slot_record_.end());
-		std::sort(records.begin(), records.end());
+		//std::vector<std::pair<ms ,int>> records(using_slot_record_.begin(), using_slot_record_.end());
+		//std::sort(records.begin(), records.end());
 
-		for (auto [time, count] : records)
-			performance_ << " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
+		//for (auto [time, count] : records)
+		//	performance_ << " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
 
-		records = std::vector<std::pair<ms, int>>(job_submit_record_.begin(), job_submit_record_.end());
-		std::sort(records.begin(), records.end());
-		
-		for (auto [time, count] : job_submit_record_)
-			job_submit_<< " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
+		//records = std::vector<std::pair<ms, int>>(job_submit_record_.begin(), job_submit_record_.end());
+		//std::sort(records.begin(), records.end());
+		//
+		//for (auto [time, count] : job_submit_record_)
+		//	job_submit_<< " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
 	}
 
 	void ClusterSimulation::next()
