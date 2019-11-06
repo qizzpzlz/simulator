@@ -3,9 +3,10 @@
 #include "includes/cluster.h"
 #include "includes/cluster_simulation.h"
 #include "argparse.hpp"
+#include <fstream>
 
 
-const std::string SCENARIO_DIR_PATH = "scenarios/";
+const std::string SCENARIO_DIR_PATH = "../scenarios/";
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
 const int NUM_SCENARIO_LINES_LIMIT = -1;
