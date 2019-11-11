@@ -1,3 +1,10 @@
+# Getting Started
+```bash
+cmake ./
+make
+bin/cluster-simulator
+```
+
 # Simulator Manual
 
 ## `class QueueAlgorithm`
