@@ -3,9 +3,11 @@
 #include <string>
 #include <chrono>
 #include <memory>
+#include <vector>
 
 namespace ClusterSimulator
 {
+	class Queue;
 	struct ScenarioEntry;
 	enum class JobState
 	{
