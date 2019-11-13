@@ -52,7 +52,6 @@ namespace ClusterSimulator
 		std::chrono::milliseconds counting_frequency{ 10000 };
 	
 	private:
-		Action dispatch_action_;
 		ms current_time_;
 		std::priority_queue<EventItem> events_{};
 		Action log_action_;
@@ -114,7 +113,7 @@ namespace ClusterSimulator
 					flag &= q.dispatch();
 				if (flag) // pending jobs exist
 					simulation->after_delay(simulation->dispatch_frequency, 
-											simulation->dispatch_action_, 1);
+											std::ref(simulation->dispatcher_), 1);
 				else
 					simulation->next_dispatch_reserved = false;
 

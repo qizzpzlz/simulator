@@ -351,9 +351,8 @@ CMakeCache.txt
 cmake_install.cmake
 
 # Output files
-cluster-simulator
+logs/*.txt
 *.a
-*.txt
 
 # scenarios
 scenarios/

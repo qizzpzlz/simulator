@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
 		.default_value(SCENARIO_DIR_PATH);
 	program.add_argument("-c", "--count")
 		.help("number of items to read in the given scenario.")
-		.default_value(-1);
+		.default_value(NUM_SCENARIO_LINES_LIMIT)
+		.action([](const std::string& value) { return std::stoi(value); });
 
 	try
 	{
@@ -49,6 +50,9 @@ int main(int argc, char *argv[])
 
 	// Start simulation
 	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster };
+
+	
+
 	simulation.run();
 
 	// Print summary
