@@ -29,8 +29,6 @@ namespace ClusterSimulator::Parser
 			{
 				Json json = Json::parse(line, err);
 				const Json& details = json["event_detail"];
-				if (details["exec_hostname"].string_value().empty())
-					continue;
 
 				ScenarioEntry entry;
 				if (!flag)

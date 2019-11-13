@@ -42,6 +42,7 @@ namespace ClusterSimulator
 		job.state = JobState::RUN;
 
 		// Reserve finish event
+		
 		simulation->after_delay(run_time,  [this, job] () mutable -> void
 		{
 			//ClusterSimulation::log(LogLevel::info, "oo cnt : {0}, queue name: {1}" , using_job_slots(), name);

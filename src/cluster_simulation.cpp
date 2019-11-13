@@ -33,7 +33,13 @@ namespace ClusterSimulator
 		// TODO: set default queue
 
 		current_time_ = scenario.initial_time_point;
-		std::sort(all_queues_.begin(), all_queues_.end());
+		// std::sort(all_queues_.begin(), all_queues_.end());
+		all_queues_[0].set_algorithm(&algorithm);
+		
+		for (auto& [name, host] : cluster)
+		{
+			host.simulation = this;
+		}
 
 		log_action_ = [this]
 		{
@@ -75,6 +81,9 @@ namespace ClusterSimulator
 
 	Queue& ClusterSimulation::find_queue(const std::string& name)
 	{
+		if (name == "-" || name.empty())
+			return all_queues_[0];
+
 		auto it = all_queues_.begin();
 		it = std::find_if(it, all_queues_.end(),
 		             [&name](Queue& queue) { return queue.name == name; });
@@ -103,9 +112,6 @@ namespace ClusterSimulator
 		{
 			action = [&simulation, entry]
 			{
-				if (entry.event_detail.queue_name == "-" || entry.event_detail.queue_name.empty())
-					return;
-
 				Queue& queue = simulation.find_queue(entry.event_detail.queue_name);
 			
 				queue.enqueue(Job{ entry, queue, simulation.get_current_time() });

@@ -32,11 +32,13 @@ namespace ClusterSimulator
 			for (auto& job : jobs)
 			{
 				auto hosts = job.get_eligible_hosts();
-				std::min_element(hosts.begin(), hosts.end(), 
+				if (hosts.empty()) continue;
+				auto best_host = *std::min_element(hosts.begin(), hosts.end(), 
 					[](const Host* a, const Host* b)
 					{
 						return a->remaining_slots() < b->remaining_slots();
 					});
+				best_host->execute_job(job);
 			}
 		}
 	};

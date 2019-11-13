@@ -44,12 +44,6 @@ namespace ClusterSimulator
 	 */
 	void Queue::enqueue(Job&& job)
 	{
-		const std::string& job_name{ job.get_dedicated_host_name() };
-
-		// TODO
-		if (job_name == "-" || job_name.empty())
-			return;
-
 		jobs_.push_back(job);
 
 		ClusterSimulation::log(LogLevel::info, 
@@ -125,13 +119,6 @@ namespace ClusterSimulator
 
 		// 2. Sort all jobs using policy.
 		policy();
-
-		
-		for (auto it = jobs_.begin(); it != jobs_.end(); ++it)
-		{
-			if (it->is_multi_host)
-				it = jobs_.erase(it);
-		}
 
 		if (current_algorithm == nullptr)
 			for (auto it = jobs_.begin(); it != jobs_.end(); ++it)
