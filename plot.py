@@ -4,7 +4,7 @@ import pandas as pd
 
 time =[]
 value =[]
-with open('performance_1000.txt') as f:
+with open('performance_.txt') as f:
 	#lines = f.readlines()
 	for line in f.readlines():
 		li = line.lstrip()

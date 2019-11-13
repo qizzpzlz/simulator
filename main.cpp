@@ -6,7 +6,7 @@
 #include <fstream>
 
 
-const std::string SCENARIO_DIR_PATH = "../scenarios/";
+const std::string SCENARIO_DIR_PATH = "scenarios/";
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
 const int NUM_SCENARIO_LINES_LIMIT = -1;
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	ClusterSimulator::Cluster cluster;
 		
 	// Parse the given scenario and the cluster from json files.
-	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, 100);
+	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
 	ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
 
 
