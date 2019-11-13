@@ -16,10 +16,10 @@
 
 namespace ClusterSimulator
 {
-	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "log_output.txt");
+	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "logs/log_output.txt");
 	std::ofstream ClusterSimulation::jobmart_file_;
-	std::ofstream performance_("performance_.txt");
-	std::ofstream job_submit_("job_submit_.txt");
+	std::ofstream performance_("logs/performance_.txt");
+	std::ofstream job_submit_("logs/job_submit_.txt");
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm)
@@ -64,12 +64,7 @@ namespace ClusterSimulator
 				this->after_delay(this->counting_frequency, this->count_new_jobs_, 3);
 			//log(LogLevel::info, "total_new_jobs: {0}", newly_submitted_jobs_);
 		};
-		after_delay(counting_frequency, count_new_jobs_, 3);	
-		
-
-		//set algoritms
-		for(auto& q : this->all_queues_)
-			q.set_algorithm(&algorithm);
+		after_delay(counting_frequency, count_new_jobs_, 3);
 
 		reserve_dispatch_event();
 
@@ -316,7 +311,7 @@ namespace ClusterSimulator
 	 */
 	void ClusterSimulation::initialise_tp()
 	{
-		jobmart_file_.open("jobmart_raw_replica.txt");
+		jobmart_file_.open("logs/jobmart_raw_replica.txt");
 		//tp_.AddColumn("submit_time_gmt", 10);
 		//tp_.AddColumn("start_time_gmt", 10);
 		//tp_.AddColumn("finish_time_gmt", 10);

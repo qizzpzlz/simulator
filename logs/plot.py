@@ -29,12 +29,12 @@ y = list(map(int, value))
 max_value = max(y)
 max_index = y.index(max_value)
 corr_time = x[max_index]
-print(max_index, max_value, corr_time)
+# print(max_index, max_value, corr_time)
 
 max_x = x[max_index-5:max_index+5]
 max_y = y[max_index-5:max_index+5]
 
-print(x)
+# print(x)
 
 ax[0].plot(x,y)
 ax[1].plot(max_x, max_y)

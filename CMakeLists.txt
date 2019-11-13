@@ -27,10 +27,15 @@ target_link_libraries(spdlog PUBLIC Threads::Threads)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/bprinter dependencies)
 
+add_library(argparse INTERFACE)
+target_sources(argparse INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/argparse.hpp)
+target_include_directories(argparse INTERFACE dependencies/)
+
 file(GLOB SRC_FILES
 	./*.cpp
 	src/*.cpp
 	dependencies/*.cpp
+	# dependencies/*.hpp
 	./*.h
 	includes/*.h
 	dependencies/*.h)
@@ -41,13 +46,12 @@ add_executable (cluster-simulator ${SRC_FILES})
 # Link external libraries to the executable.
 target_link_libraries(cluster-simulator spdlog)
 target_link_libraries(cluster-simulator bprinter)
+target_link_libraries(cluster-simulator argparse)
 
 target_include_directories(cluster-simulator PUBLIC src/)
 target_include_directories(cluster-simulator PUBLIC dependencies/)
 target_include_directories(cluster-simulator PUBLIC dependencies/bprinter)
 target_include_directories(cluster-simulator PUBLIC includes/)
 target_include_directories(cluster-simulator PUBLIC scenarios/)
-
-
 
 # TODO: Add tests and install targets if needed.

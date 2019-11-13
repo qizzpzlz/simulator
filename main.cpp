@@ -3,8 +3,8 @@
 #include "includes/cluster.h"
 #include "includes/cluster_simulation.h"
 #include "argparse.hpp"
-#include <string>
-#include <sstream>
+#include <fstream>
+
 
 const std::string SCENARIO_DIR_PATH = "scenarios/";
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
 		.default_value(SCENARIO_DIR_PATH);
 	program.add_argument("-c", "--count")
 		.help("number of items to read in the given scenario.")
-		.default_value(-1);
+		.default_value(NUM_SCENARIO_LINES_LIMIT)
+		.action([](const std::string& value) { return std::stoi(value); });
 
 	try
 	{
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
 	ClusterSimulator::Cluster cluster;
 		
 	// Parse the given scenario and the cluster from json files.
-	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, 100);
+	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
 	ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
 
 	// Start simulation
