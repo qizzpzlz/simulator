@@ -8,7 +8,7 @@
 #include "../includes/cluster_simulation.h"
 #include "../dependencies/spdlog/spdlog.h"
 
-//#include "spdlog/spdlog.h"
+#include <omp.h>
 
 namespace ClusterSimulator
 {
@@ -44,7 +44,7 @@ namespace ClusterSimulator
 	 */
 	void Queue::enqueue(Job&& job)
 	{
-		jobs_.push_back(job);
+		jobs_.push_back(std::make_shared<Job>(job));
 
 		ClusterSimulation::log(LogLevel::info, 
 			"Job #{0} is added to Queue {1}.", job.id, this->name);
@@ -55,16 +55,22 @@ namespace ClusterSimulator
 	 */
 	std::vector<Host*> Queue::match(const Job& job)
 	{	
-		// Currently cluster == candHostGroupList
-		// To-Do : get_cluster --> Queue.get_host_group_list
-		Cluster& cand_host_list{ simulation_->get_cluster() };
+		std::vector<Host>& cand_host_list{ simulation_->get_cluster().vector() };
 
 		// TODO: Reuse host vector instead of allocating memory each time.
 		std::vector<Host*> eligible_host_list{};
 
-		for (auto & [name, host] : cand_host_list)
-		{	
-			if(host.is_executable(job))
+		int max = omp_get_max_threads();
+		std::vector <std::vector<Host* >> hosts(max);
+
+		int i;
+		#pragma omp parallel for
+		for (i = 0; i < cand_host_list.size(); ++i)
+		{
+			auto tid = omp_get_thread_num();
+
+			Host& host = cand_host_list[i];
+			if (host.is_executable(job))
 			{
 				bool flag{ false };
 				for (auto& limit : limits)
@@ -77,34 +83,15 @@ namespace ClusterSimulator
 				}
 				if (flag) continue;
 
-				eligible_host_list.push_back(&host);
+				//eligible_host_list.push_back(&host);
+				hosts[tid].push_back(&host);
 			}
 		}
 
+		for (auto& vec : hosts)
+			eligible_host_list.insert(eligible_host_list.end(), vec.begin(), vec.end());
+
 		return eligible_host_list;
-	}
-
-	/**
-	 * Sorts eligible hosts.
-	 */
-	void Queue::sort(std::vector<Host*>::iterator first, std::vector<Host*>::iterator end, const Job& job) const
-	{
-		//for (auto i{ first }; i != end; ++i)
-		//	(*i)->set_rand_score();
-
-		//using namespace std::placeholders;
-		//auto f = std::bind(compare_host_function_, _1, _2, job);
-		//std::sort(first, end, f);
-	}
-
-	/**
-	 * Determines dispatch order of jobs in this queue.
-	 * Currently there is no explicit policy.
-	 */
-	void Queue::policy()
-	{	
-		//if (current_algorithm && current_algorithm->get_job_comparer())
-		//	std::sort(jobs_.begin(), jobs_.end(), current_algorithm->get_job_comparer());
 	}
 
 	/**
@@ -114,33 +101,24 @@ namespace ClusterSimulator
 	 */
 	bool Queue::dispatch()
 	{
-		// 1. Bring back all pending jobs.
+		// Bring back all pending jobs.
 		clean_pending_jobs();
 
-		// 2. Sort all jobs using policy.
-		policy();
-
-		if (current_algorithm == nullptr)
-			for (auto it = jobs_.begin(); it != jobs_.end(); ++it)
-				simulation_->
-					get_cluster().find_node(it->get_dedicated_host_name())
-					->second.execute_job(*it);
-		else
+		current_algorithm->run(jobs_);
+		while (!jobs_.empty())
 		{
-			current_algorithm->run(jobs_);
-			while (!jobs_.empty())
-			{
-				Job& job{ jobs_.back() };
-				if (job.state != JobState::RUN)
-				{
-					job.set_pending(simulation_->get_current_time());
-					pending_jobs_.push_back(job);
-					ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
-						,job.id, job.total_pending_duration.count());
-				}
+			std::shared_ptr<Job>& job{jobs_.back()};
 
-				jobs_.pop_back();
+			// Set pending for not assigned jobs
+			if (job->state != JobState::RUN)
+			{
+				job->set_pending(simulation_->get_current_time());
+				pending_jobs_.push_back(job);
+				ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+				                       ,job->id, job->total_pending_duration.count());
 			}
+
+			jobs_.pop_back();
 		}
 
 
@@ -154,24 +132,22 @@ namespace ClusterSimulator
 	 */
 	void Queue::clean_pending_jobs()
 	{
-		while(!pending_jobs_.empty())
+		for (auto& job : pending_jobs_)
 		{
-			Job& pending_job = pending_jobs_.back();
-			pending_job.update_total_pending_duration(simulation_->get_current_time());
-			if (pending_job.total_pending_duration < std::chrono::microseconds(1000000))
-				jobs_.push_back(pending_job);
-			pending_jobs_.pop_back();
+			job->update_total_pending_duration(simulation_->get_current_time());
+			if (job->total_pending_duration < std::chrono::hours(2))
+				jobs_.push_back(job);
+			else
+			{
+				simulation_->increment_failed_jobs();
+				ClusterSimulation::log(LogLevel::warn, "Job #{0} is discarded. (exceeds the maximum pending duration. slot_req: {1})"
+					,job->id, job->slot_required);
+			}
+			jobs_.push_back(job);
 		}
+
+		pending_jobs_.clear();
 	}
-
-	// int Queue::using_job_slots() const noexcept
-	// {
-	// 	int sum{0};
-	// 	for (const auto& item : dispatched_hosts_)
-	// 		sum += item.second.slot_dispatched;
-	// 	return sum;
-	// }
-
 
 	int Queue::id_gen_ = 0;
 }

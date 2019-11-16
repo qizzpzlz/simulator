@@ -4,16 +4,18 @@
 #include "includes/cluster_simulation.h"
 #include "argparse.hpp"
 #include <fstream>
+#include <filesystem>
 
-
-const std::string SCENARIO_DIR_PATH = "scenarios/";
+const std::string SCENARIO_DIR_PATH = "../scenarios/";
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
 const int NUM_SCENARIO_LINES_LIMIT = -1;
+const std::string LOG_DIR = "logs/";
+
+namespace fs = std::filesystem;
 
 int main(int argc, char *argv[])
 {
-
 	argparse::ArgumentParser program("cluster-simulator");
 	program
 		.add_argument("-p", "--path")
@@ -39,6 +41,9 @@ int main(int argc, char *argv[])
 	const auto scenario_dir_path{ program.get<std::string>("--path") };
 	const std::string scenario_path{ scenario_dir_path + SCENARIO_FILE };
 	const std::string host_path{ scenario_dir_path + HOSTS_FILE };
+
+	// Create logs directory
+	fs::create_directory(fs::path{ LOG_DIR });
 	
 	ClusterSimulator::Scenario scenario;
 	ClusterSimulator::Cluster cluster;
@@ -54,6 +59,6 @@ int main(int argc, char *argv[])
 	// Print summary
 	simulation.print_summary();
 
-	//ClusterSimulator::ClusterSimulation::jobmart_file_.close();
+	ClusterSimulator::ClusterSimulation::jobmart_file_.close();
 }
 

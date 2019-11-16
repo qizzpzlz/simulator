@@ -119,7 +119,7 @@ namespace ClusterSimulator::Parser
 				std::stringstream ss(detail["HOST_STATUS"].string_value());
 				ss >> Utils::enum_from_string<HostStatus>(status);
 
-				Host host(pair.first,
+				cluster->add_node(Host(pair.first,
 					detail["CPU_FACTOR"].number_value(),
 					detail["NCPUS"].int_value(),
 					detail["NPROCS"].int_value(),
@@ -130,9 +130,7 @@ namespace ClusterSimulator::Parser
 					detail["MAX_SWP"].int_value(),
 					detail["MAX_TMP"].int_value(),
 					detail["HOST_GROUP"].string_value(),
-					status, *cluster);
-
-				cluster->add_node(host);
+					status, *cluster));
 			}
 
 			std::cout << "Successfully parsed a cluster with " << cluster->count() << " hosts." << std::endl;

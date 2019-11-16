@@ -108,6 +108,7 @@ namespace ClusterSimulator
 		// Gets priority of this queue. Higher values have higher priority.
 		int get_priority() const { return priority; }
 		int count() const { return jobs_.size(); }
+		auto get_num_pending_jobs() const { return pending_jobs_.size(); }
 		bool is_default() const { return is_default_; }
 
 		bool dispatch();
@@ -147,11 +148,11 @@ namespace ClusterSimulator
 
 		// fields
 		ClusterSimulation* simulation_;
-		std::vector<Job> jobs_;
+		std::vector<std::shared_ptr<Job>> jobs_;
         // TODO: maybe unnecessary
-        std::vector<Job> pending_jobs_;
-		std::vector<Job> running_jobs_;
-		std::vector<Job> suspended_jobs_;
+        std::vector<std::shared_ptr<Job>> pending_jobs_;
+		std::vector<std::shared_ptr<Job>> running_jobs_;
+		std::vector<std::shared_ptr<Job>> suspended_jobs_;
 
 		// Queue limits
 		int job_limit_{};

@@ -24,7 +24,8 @@ namespace ClusterSimulator
 		job.queue_managing_this_job->using_job_slots += job.slot_required;
 		ClusterSimulation::log(LogLevel::info, "Job #{0} is executed in Host {1}"
 				,job.id, this->get_name());
-		const auto run_time{ get_expected_run_time(job) };
+		
+		const auto run_time{ std::chrono::duration_cast<std::chrono::milliseconds>(get_expected_run_time(job) * 0.75) };
 		try_update_expected_time_of_completion(run_time);
 		
 		if (slot_running_ + job.slot_required > max_slot)
@@ -42,37 +43,34 @@ namespace ClusterSimulator
 		job.state = JobState::RUN;
 
 		// Reserve finish event
-		
 		simulation->after_delay(run_time,  [this, job] () mutable -> void
 		{
-			//ClusterSimulation::log(LogLevel::info, "oo cnt : {0}, queue name: {1}" , using_job_slots(), name);
 			this->exit_job(job);
-			std::stringstream ss(job.get_exit_host_status());
-			ss >> Utils::enum_from_string<HostStatus>(this->status);
-			ClusterSimulation::log(LogLevel::info, 
-				"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
-				,job.id, this->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());
 			
-			// dispatched_hosts_[best_host].slot_dispatched -= job.slot_required;
 			this->simulation->num_dispatched_slots -= job.slot_required;
+			this->simulation->update_pending_duration(job.total_pending_duration);
 			job.queue_managing_this_job->using_job_slots -= job.slot_required;
 		
 			this->simulation->log_using_slots();
 			ClusterSimulation::log_jobmart(job);
 		});
+
+		cluster->update();
 	}
 
 	void Host::exit_job(const Job& job)
 	{
 		slot_running_ -= job.slot_required;
-
-		//Queue::HostInfo info;
-		// if (!job.queue_managing_this_job->try_get_dispatched_host_info(*this, &info))
-		// 	throw std::runtime_error("Queue managing a job does not have information about the host of the job.");
-
-		//info.slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
 		num_current_jobs --;
+
+		std::stringstream ss(job.get_exit_host_status());
+		ss >> Utils::enum_from_string<HostStatus>(this->status);
+		ClusterSimulation::log(LogLevel::info,
+			"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
+			, job.id, this->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());
+
+		cluster->update();
 	}
 
 	void Host::try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept

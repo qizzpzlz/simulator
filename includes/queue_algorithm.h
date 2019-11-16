@@ -13,9 +13,7 @@ namespace ClusterSimulator
 	public:
 		virtual const std::string& get_name() const noexcept = 0;
 		
-		virtual void run(std::vector<Job>& jobs) const = 0;
-
-		
+		virtual void run(std::vector<std::shared_ptr<Job>>& jobs) const = 0;
 	};
 
 	/**
@@ -27,18 +25,18 @@ namespace ClusterSimulator
 	public:
 		const std::string& get_name() const noexcept override { return name; }
 
-		void run(std::vector<Job>& jobs) const override
+		void run(std::vector<std::shared_ptr<Job>>& jobs) const override
 		{
 			for (auto& job : jobs)
 			{
-				auto hosts = job.get_eligible_hosts();
+				auto hosts = job->get_eligible_hosts();
 				if (hosts.empty()) continue;
 				auto best_host = *std::min_element(hosts.begin(), hosts.end(), 
 					[](const Host* a, const Host* b)
 					{
-						return a->remaining_slots() < b->remaining_slots();
+						return a->remaining_slots() > b->remaining_slots();
 					});
-				best_host->execute_job(job);
+				best_host->execute_job(*job);
 			}
 		}
 	};

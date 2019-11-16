@@ -348,6 +348,7 @@ build/
 CMakeFiles/
 Makefile
 CMakeCache.txt
+CMakeSettings.json
 cmake_install.cmake
 
 # Output files

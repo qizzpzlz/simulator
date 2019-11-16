@@ -51,7 +51,9 @@ namespace ClusterSimulator
 		void set_pending(ms time) noexcept
 		{
 			state = JobState::PEND;
-			pend_start_time_ = time;
+
+			if (pend_start_time_ == ms{})
+				pend_start_time_ = time;
 		}
 
 		long mem_usage;
