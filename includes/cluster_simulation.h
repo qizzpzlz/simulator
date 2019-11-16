@@ -24,7 +24,7 @@ namespace ClusterSimulator
 	class ClusterSimulation
 	{
 		constexpr static bool console_output = false;
-		constexpr static bool console_warning_output = true;
+		constexpr static bool console_warning_output = false;
 		constexpr static bool log_file_output = false;
 		constexpr static bool jobmart_file_output = false;
 		constexpr static bool slots_file_output = true;
