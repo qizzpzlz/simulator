@@ -9,6 +9,10 @@ namespace ClusterSimulator
 		entries_.push(entry);
 		unique_queues_.insert(entry.event_detail.queue_name);
 		unique_apps_.insert(entry.event_detail.application_name);
+
+		if (entry.type == ScenarioEntry::ScenarioEntryType::SUBMISSION && 
+			entry.event_detail.mem_req > max_mem_required)
+			max_mem_required = entry.event_detail.mem_req;
 	}
 
 	const ScenarioEntry Scenario::pop()

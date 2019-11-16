@@ -35,6 +35,9 @@ namespace ClusterSimulator
 
 	void Queue::set_algorithm(const QueueAlgorithm* const algorithm) noexcept
 	{
+		if (algorithm == nullptr)
+			throw std::runtime_error("Cannot set null algorithm.");
+		
 		current_algorithm = algorithm;
 	}
 
@@ -121,7 +124,6 @@ namespace ClusterSimulator
 			jobs_.pop_back();
 		}
 
-
 		// Returns true if there exists any pending jobs
 		return !pending_jobs_.empty();
 	}
@@ -135,7 +137,7 @@ namespace ClusterSimulator
 		for (auto& job : pending_jobs_)
 		{
 			job->update_total_pending_duration(simulation_->get_current_time());
-			if (job->total_pending_duration < std::chrono::hours(2))
+			if (job->total_pending_duration < std::chrono::hours(1))
 				jobs_.push_back(job);
 			else
 			{
@@ -143,7 +145,7 @@ namespace ClusterSimulator
 				ClusterSimulation::log(LogLevel::warn, "Job #{0} is discarded. (exceeds the maximum pending duration. slot_req: {1})"
 					,job->id, job->slot_required);
 			}
-			jobs_.push_back(job);
+			//jobs_.push_back(job);
 		}
 
 		pending_jobs_.clear();

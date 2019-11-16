@@ -78,8 +78,9 @@ namespace ClusterSimulator
 	class Scenario
 	{
 	public:
-		//std::chrono::time_point<std::chrono::seconds> initial_time_point;
 		ms initial_time_point;
+		long max_mem_required{ 0 };
+		
 		void add_scenario_entry(const ScenarioEntry& entry);
 		int count() const { return entries_.size(); }
 		int num_unique_apps() const { return unique_apps_.size(); }
