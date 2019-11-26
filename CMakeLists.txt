@@ -43,6 +43,12 @@ file(GLOB SRC_FILES
 # Add source to this project's executable.
 add_executable (cluster-simulator ${SRC_FILES})
 
+# OpenMP
+find_package(OpenMp)
+if (OpenMP_CXX_FOUND)
+	target_link_libraries(cluster-simulator OpenMP::OpenMP_CXX)
+endif()
+
 # Link external libraries to the executable.
 target_link_libraries(cluster-simulator spdlog)
 target_link_libraries(cluster-simulator bprinter)

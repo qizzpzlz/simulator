@@ -18,8 +18,16 @@ namespace ClusterSimulator
 		return std::chrono::duration_cast<std::chrono::milliseconds>(job.run_time / cpu_factor);
 	}
 
-	void Host::execute_job(const Job& job)
+	void Host::execute_job(Job& job)
 	{
+		simulation->num_dispatched_slots += job.slot_required;
+		job.queue_managing_this_job->using_job_slots += job.slot_required;
+		ClusterSimulation::log(LogLevel::info, "Job #{0} is executed in Host {1}"
+			, job.id, this->get_name());
+
+		const auto run_time{ std::chrono::duration_cast<std::chrono::milliseconds>(get_expected_run_time(job) * 0.75) };
+		try_update_expected_time_of_completion(run_time);
+
 		if (slot_running_ + job.slot_required > max_slot)
 			ClusterSimulation::log(LogLevel::err, 
 				"Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
@@ -27,6 +35,27 @@ namespace ClusterSimulator
 		slot_running_ += job.slot_required;
 		num_current_running_slots += job.slot_required;
 		num_current_jobs++;
+
+		const ms start_time{ simulation->get_current_time() };
+		job.start_time = start_time;
+		job.finish_time = start_time + run_time;
+		job.set_run_host_name(name_);
+		job.state = JobState::RUN;
+
+		// Reserve finish event
+		simulation->after_delay(run_time, [this, job]() mutable -> void
+			{
+				this->exit_job(job);
+
+				this->simulation->num_dispatched_slots -= job.slot_required;
+				this->simulation->update_pending_duration(job.total_pending_duration);
+				job.queue_managing_this_job->using_job_slots -= job.slot_required;
+
+				this->simulation->log_using_slots();
+				ClusterSimulation::log_jobmart(job);
+			});
+
+		cluster->update();
 	}
 
 	
@@ -41,7 +70,15 @@ namespace ClusterSimulator
 
 		//info.slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
-		num_current_jobs --;
+		num_current_jobs--;
+
+		std::stringstream ss(job.get_exit_host_status());
+		ss >> Utils::enum_from_string<HostStatus>(this->status);
+		ClusterSimulation::log(LogLevel::info,
+			"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
+			, job.id, this->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());
+
+		cluster->update();
 	}
 
 	void Host::try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept

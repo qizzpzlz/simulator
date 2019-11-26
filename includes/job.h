@@ -1,18 +1,18 @@
 #pragma once
 #include <string>
 #include <chrono>
-#include <memory>
+#include <vector>
 
 namespace ClusterSimulator
 {
-	struct ScenarioEntry;
 	enum class JobState
 	{
 		PEND, RUN, DONE, EXIT, PSUSP, USUSP, SSUSP, POST_DONE, POST_ERR, UNKWN, WAIT, ZOMBI
 	};
+	
+	struct ScenarioEntry;
 	class Queue;
-	//enum class HostStatus;
-
+	class Host;
 	using ms = std::chrono::time_point<std::chrono::milliseconds>;
 
 	class Job
@@ -50,11 +50,17 @@ namespace ClusterSimulator
 		void set_pending(ms time) noexcept
 		{
 			state = JobState::PEND;
-			pend_start_time_ = time;
+			if (pend_start_time_ == ms{})
+				pend_start_time_ = time;
 		}
 
 		long mem_usage;
 		double cpu_time;
+
+		/**
+		 * Gets the list of Hosts eligible to run this job.
+		 */
+		std::vector<Host*> get_eligible_hosts() const;
 
 	private:
 		std::string application_name_;

@@ -16,15 +16,18 @@
 
 namespace ClusterSimulator
 {
-	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger = spdlog::basic_logger_mt("file_logger", "logs/log_output.txt");
+	std::shared_ptr<spdlog::logger> ClusterSimulation::file_logger;
 	std::ofstream ClusterSimulation::jobmart_file_;
 	std::ofstream performance_("logs/performance_.txt");
+	std::ofstream pending_jobs_file("logs/pending.txt");
 	std::ofstream job_submit_("logs/job_submit_.txt");
 	bprinter::TablePrinter ClusterSimulation::tp_{ &jobmart_file_ };
 
-	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster)
-		: cluster_{ cluster }, scenario_{ scenario }, all_queues_{ scenario.generate_queues(*this) },
-		dispatcher_{ this }
+	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm)
+		: cluster_{ cluster }
+		, scenario_{ scenario }
+		, all_queues_{ scenario.generate_queues(*this) }
+		, dispatcher_{ this }
 	{
 		cluster.simulation = this;
 
@@ -33,51 +36,34 @@ namespace ClusterSimulator
 		current_time_ = scenario.initial_time_point;
 		std::sort(all_queues_.begin(), all_queues_.end());
 
-		log_action_ = [this]
-		{
-			// int total_using_slots = 0;
-			// for (const auto& q : this->all_queues_)
-			// 	total_using_slots += q.using_job_slots();
-
-			using_slot_record_.insert_or_assign(this->get_current_time(), num_dispatched_slots);
-
-			// if (!scenario_.is_empty() || num_dispatched_slots != 0)
-			// 	this->after_delay(this->logging_frequency, this->log_action_, 2);
-		};
-		// after_delay(logging_frequency, log_action_, 2);	
-		
 		count_new_jobs_ = [this]
 		{
-			// int total_new_jobs= 0;
-			
-			// total_new_jobs += newly_submitted_jobs_;
-
 			job_submit_record_.insert_or_assign(this->get_current_time(), newly_submitted_jobs_);
-			log(LogLevel::info, "total_new_jobs: {0}", newly_submitted_jobs_);
-			newly_submitted_jobs_ = 0;
 
-			// if (!scenario_.is_empty())
-			//if (!scenario_.is_empty() || newly_submitted_jobs_ !=0)
+			if (newly_submitted_jobs_ > 0)
+			{
+				log(LogLevel::info, "total_new_jobs: {0}", newly_submitted_jobs_);
+				newly_submitted_jobs_ = 0;
+			}
+
 			if (!scenario_.is_empty())
 				this->after_delay(this->counting_frequency, this->count_new_jobs_, 3);
-			//log(LogLevel::info, "total_new_jobs: {0}", newly_submitted_jobs_);
 		};
 		after_delay(counting_frequency, count_new_jobs_, 3);	
 		
-
 		//set algoritms
 		for(auto& q : this->all_queues_)
 		{
-			q.set_algorithm(QueueAlgorithms::OLB);
-			std::cout << q.name << " 's algorithm is set to " << QueueAlgorithms::OLB->get_name() << std::endl;
+			q.set_algorithm(&algorithm);
+			std::cout << q.name << " 's algorithm is set to " << algorithm.get_name() << std::endl;
 		}
 
 
 		reserve_dispatch_event();
 
+		file_logger = spdlog::basic_logger_mt("file_logger", "logs/log_output.txt");
 		file_logger->set_pattern("[%l] %v");
 		initialise_tp();
-		std::cout << "Simulation start!" << std::endl;
 	}
 
 	Queue& ClusterSimulation::find_queue(const std::string& name)
@@ -176,10 +162,12 @@ namespace ClusterSimulator
 
 	bool ClusterSimulation::run()
 	{
+		std::cout << "Simulation start!" << std::endl;
+
 		const int total_count{scenario_.count()};
 		int previous_counter{0};
 		if constexpr(!console_output)
-			std::cout << "Remaining scenarios:  ";
+			std::cout << std::endl;
 		while (true)
 		{
 			if (!scenario_.is_empty())
@@ -189,10 +177,7 @@ namespace ClusterSimulator
 				std::tie(next_entries, next_arrival_time) = scenario_.pop_all_latest();
 				if constexpr(!console_output)
 				{
-					std::cout << 
-						std::string(std::to_string(previous_counter).length(), '\b')
-						<< scenario_.count();
-					previous_counter = scenario_.count();
+					std::cout << "\33[2K\r" << "Remaining scenarios: " << scenario_.count();
 				}
 
 				auto next_event_time = events_.top().time;
@@ -243,10 +228,12 @@ namespace ClusterSimulator
 
 		ss << "\n" <<
 			"## Simulation Summary" << "\n" <<
-			"### Simulated duration: " << total_simulation_time << "\n" <<
+			"### Simulated duration (MakeSpan): " << total_simulation_time << "\n" <<
 			"### Available hosts: " << num_total_available_hosts << "\n" <<
 			"### Number of applications: " << num_total_applications << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<
+			"### Number of failed jobs: " << num_failed_jobs_ << "\n" <<
+			"### Total pending duration: " << total_pending_duration_.count() << " ms" << "\n" <<
 			"#### Queue algorithm: " << algorithm_name << "\n" <<
 			//"### Number of successful jobs: " << num_successful_jobs_ << "\n" <<
 			"#### Dispatch frequency: " << dispatch_frequency.count() << " ms\n" <<
@@ -280,6 +267,9 @@ namespace ClusterSimulator
 		
 		for (auto [time, count] : job_submit_record_)
 			job_submit_<< " time : "<< time.time_since_epoch().count() << ", value : "<< count << "\n";
+
+		for (auto [time, count] : pending_record_)
+			pending_jobs_file << time.time_since_epoch().count() << ", " << count << "\n";
 	}
 
 	void ClusterSimulation::next()
@@ -318,6 +308,9 @@ namespace ClusterSimulator
 	 */
 	void ClusterSimulation::initialise_tp()
 	{
+		if constexpr (!jobmart_file_output)
+			return;
+
 		jobmart_file_.open("logs/jobmart_raw_replica.txt");
 		//tp_.AddColumn("submit_time_gmt", 10);
 		//tp_.AddColumn("start_time_gmt", 10);

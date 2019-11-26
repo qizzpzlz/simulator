@@ -43,13 +43,14 @@ namespace ClusterSimulator
 		int max_swp;
 		int max_tmp;
 		int id{ id_gen_++ };
-
-		const Cluster* cluster;
-
 		HostStatus status;
+
 		int num_current_jobs{ 0 };
 		int num_current_running_slots{ 0 };
 		bool is_available_at_least_once{ false };
+
+		ClusterSimulation* simulation;
+		Cluster* cluster;
 
 		const std::string& get_name() const noexcept{ return name_; }
 		constexpr int score() const noexcept { return score_; }
@@ -68,7 +69,7 @@ namespace ClusterSimulator
 
 		/* Status mutator methods */
 
-		void execute_job(const Job& job);
+		void execute_job(Job& job);
 		void exit_job(const Job& job);
 		void set_status(HostStatus value) noexcept
 		{
@@ -81,7 +82,7 @@ namespace ClusterSimulator
 
 		// Initialise Host from status data.
 		Host(const std::string& name, double cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
-			int max_tmp, const std::string& host_group, HostStatus status, const Cluster& cluster)
+			int max_tmp, const std::string& host_group, HostStatus status, Cluster& cluster)
 			: name_(name),
 			  host_group_(host_group),
 			  cpu_factor(cpu_factor),

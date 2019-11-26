@@ -108,6 +108,7 @@ namespace ClusterSimulator
 		// Gets priority of this queue. Higher values have higher priority.
 		int get_priority() const { return priority; }
 		int count() const { return jobs_.size(); }
+		auto get_num_pending_jobs() const { return pending_jobs_.size(); }
 		bool is_default() const { return is_default_; }
 
 		bool dispatch();
@@ -130,11 +131,11 @@ namespace ClusterSimulator
 		void set_algorithm(const QueueAlgorithm* const algorithm) noexcept;
 		const QueueAlgorithm* current_algorithm{ nullptr };
 
+		std::vector<Host*> match(const Job& job);
+
 	private:
 		using HostReference = Host*;
 		using HostList = std::vector<HostReference>;
-
-		HostList match(const Job& job);
 
 		void sort(HostList::iterator first, HostList::iterator last, const Job& job) const;
 
@@ -142,24 +143,17 @@ namespace ClusterSimulator
 
 		void clean_pending_jobs();
 
-		void set_compare_host_function_(QueueAlgorithm::HostComparer compare_host_function) noexcept
-		{
-			compare_host_function_ = compare_host_function;
-		}
-
-		// std::map<const Host*, HostInfo> dispatched_hosts_;
-
 		// characteristics
 		bool is_default_{};
 		int default_host_specification_{};
 
 		// fields
 		ClusterSimulation* simulation_;
-		std::vector<Job> jobs_;
+		std::vector<std::shared_ptr<Job>> jobs_;
         // TODO: maybe unnecessary
-        std::vector<Job> pending_jobs_;
-		std::vector<Job> running_jobs_;
-		std::vector<Job> suspended_jobs_;
+        std::vector<std::shared_ptr<Job>> pending_jobs_;
+		std::vector<std::shared_ptr<Job>> running_jobs_;
+		std::vector<std::shared_ptr<Job>> suspended_jobs_;
 
 		// Queue limits
 		int job_limit_{};
@@ -176,29 +170,10 @@ namespace ClusterSimulator
 		// Restrict host
 		// Restrict job size
 
-		QueueAlgorithm::HostComparer compare_host_function_
-		{
-			[](const Host* a, const Host* b, const Job&)
-			{	
-				return a->score() < b->score();
-			}
-		};
-
-		//QueueAlgorithm::
-		//QueueAlgorithm::JobComparer compare_job_function_;
 
 		// Static fields
 		static int id_gen_;
 		static const int DEFAULT_PRIORITY = 40;
-		
-		class CompareJob
-		{
-		public:
-			bool operator() (const Job& a, const Job& b)
-			{
-				return a.priority > b.priority;
-			}
-		};
 
 		class StaticQueueData
 		{

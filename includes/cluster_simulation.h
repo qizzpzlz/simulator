@@ -24,6 +24,10 @@ namespace ClusterSimulator
 	class ClusterSimulation
 	{
 		constexpr static bool console_output = true;
+		constexpr static bool console_warning_output = true;
+		constexpr static bool log_file_output = true;
+		constexpr static bool jobmart_file_output = true;
+		constexpr static bool slots_file_output = true;
 
 	public:
 		using Action = std::function<void()>;
@@ -56,19 +60,19 @@ namespace ClusterSimulator
 		std::priority_queue<EventItem> events_{};
 		Action log_action_;
 		Action count_new_jobs_;
-		// std::map<ms, int> job_submit_record_;
-		// std::map<ms, int> using_slot_record_;
-		std::unordered_map<ms, int, Utils::ms_hash> job_submit_record_;
-		std::unordered_map<ms, int, Utils::ms_hash> using_slot_record_;
+
+		std::unordered_map<ms, std::size_t, Utils::ms_hash> job_submit_record_;
+		std::unordered_map < ms, std::size_t , Utils::ms_hash > using_slot_record_;
+		std::vector<std::pair<ms, std::size_t>> pending_record_;
 		ms latest_finish_time_;
 
 		void next();
 
 	public:
-		ClusterSimulation(Scenario& scenario, Cluster& cluster);
+		ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm);
 
 		bool next_dispatch_reserved{ false };
-		long num_dispatched_slots{ 0 };
+		std::size_t num_dispatched_slots{ 0 };
 
 		ms get_current_time() const { return current_time_; }
 
@@ -88,6 +92,8 @@ namespace ClusterSimulator
 		void print_summary() const;
 
 		constexpr void update_latest_finish_time(ms time) noexcept { latest_finish_time_ = time; }
+		constexpr void increment_failed_jobs() noexcept { ++num_failed_jobs_; }
+		constexpr void update_pending_duration(std::chrono::milliseconds duration) { total_pending_duration_ += duration; }
 
 	private:
 		Cluster& cluster_;
@@ -95,29 +101,53 @@ namespace ClusterSimulator
 		std::vector<Queue> all_queues_{};
 		
 		// Stats
-		int num_submitted_jobs_{ 0 };
-		int newly_submitted_jobs_{ 0 };
-		int num_successful_jobs_{ 0 };
-		int num_failed_jobs_{ 0 };
+		std::size_t num_submitted_jobs_{ 0 };
+		std::size_t newly_submitted_jobs_{ 0 };
+		std::size_t num_successful_jobs_{ 0 };
+		std::size_t num_failed_jobs_{ 0 };
+		std::size_t num_pending_jobs_{ 0 };
+		std::chrono::milliseconds total_pending_duration_{};
 
 		class Dispatcher
 		{
-			ClusterSimulation* simulation;
+			ClusterSimulation* simulation_;
+			std::size_t latest_cluster_version_{ };
 
 		public:
-			explicit Dispatcher(ClusterSimulation* simulation) : simulation{simulation}{} 
-			void operator()() const
+			explicit Dispatcher(ClusterSimulation* simulation) : simulation_{simulation}{} 
+			void operator()()
 			{
-				bool flag{true};
-				for (auto& q : simulation->all_queues_)
-					flag &= q.dispatch();
-				if (flag) // pending jobs exist
-					simulation->after_delay(simulation->dispatch_frequency, 
-											std::ref(simulation->dispatcher_), 1);
-				else
-					simulation->next_dispatch_reserved = false;
+				auto version{ simulation_->cluster_.get_version() };
+				if (version == latest_cluster_version_)
+				{
+					simulation_->after_delay(simulation_->dispatch_frequency,
+						std::ref(simulation_->dispatcher_), 1);
+					return;
+				}
+				latest_cluster_version_ = version;
 
-				simulation->log_using_slots();
+				bool flag{ true };
+				for (auto& q : simulation_->all_queues_)
+					flag &= q.dispatch();
+				if (flag)
+				{
+					// pending jobs exist
+					simulation_->after_delay(simulation_->dispatch_frequency,
+						std::ref(simulation_->dispatcher_), 1);
+
+					size_t num{ 0 };
+					for (const auto& q : simulation_->all_queues_)
+						num += q.get_num_pending_jobs();
+					simulation_->num_pending_jobs_ = num;
+				}
+				else
+				{
+					simulation_->next_dispatch_reserved = false;
+					latest_cluster_version_ = 0;
+				}
+
+
+				simulation_->log_using_slots();
 			}	
 		};
 
@@ -135,21 +165,30 @@ namespace ClusterSimulator
 		template<typename... Args>
 		static void log(LogLevel level, const char* fmt, const Args&... args)
 		{
-			if constexpr(console_output)
+			if constexpr (console_output)
 				spdlog::log(level, fmt, args...);
-			file_logger->log(level, fmt, args...);
+			else if constexpr (console_warning_output)
+				if (level > LogLevel::info)
+					spdlog::log(level, fmt, args...);
+			if constexpr (log_file_output)
+				file_logger->log(level, fmt, args...);
 		}
 
 		template<typename T>
 		static void log(LogLevel level, const T& msg)
 		{
-			if constexpr(console_output)
+			if constexpr (console_output)
 				spdlog::log(level, msg);
-			file_logger->log(level, msg);
+			else if (level > LogLevel::info)
+				spdlog::log(level, msg);
+			if constexpr (log_file_output)
+				file_logger->log(level, msg);
 		}
 
 		static void log_jobmart(const Job& job)
 		{
+			if constexpr (!jobmart_file_output)
+				return;
 
 			tp_ <<
 			// cluster_name
@@ -232,15 +271,10 @@ namespace ClusterSimulator
 
 		void log_using_slots() 
 		{ 
-			// auto it = using_slot_record_.find(get_current_time());
-			using_slot_record_.insert_or_assign(this->get_current_time(), num_dispatched_slots); 
-			// if (it != using_slot_record_.end())
-			// 	it->second = num_dispatched_slots;
-			// else
-			// {
-			// 	using_slot_record_.insert_or_assign()
-			// }
-			
+			if constexpr (!slots_file_output) return;
+
+			using_slot_record_.insert_or_assign(get_current_time(), num_dispatched_slots);
+			pending_record_.emplace_back(get_current_time(), num_pending_jobs_);
 		}
 	};
 #pragma endregion

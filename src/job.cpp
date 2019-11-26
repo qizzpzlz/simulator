@@ -22,5 +22,10 @@ namespace ClusterSimulator
 		mem_usage{ entry.event_detail.job_mem_usage },
 		cpu_time{ entry.event_detail.job_cpu_time } 
 	{ }
+
+	std::vector<Host*> Job::get_eligible_hosts() const
+	{
+		return queue_managing_this_job->match(*this);
+	}
 }
 
