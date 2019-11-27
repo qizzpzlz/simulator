@@ -29,7 +29,7 @@ namespace ClusterSimulator
 		, all_queues_{ scenario.generate_queues(*this) }
 		, dispatcher_{ this }
 	{
-		cluster.simulation = this;
+		cluster.set_simulation(this);
 
 		// TODO: set default queue
 
@@ -78,14 +78,14 @@ namespace ClusterSimulator
 		return *it;
 	}
 
-	const Host& ClusterSimulation::find_host(const std::string& name) const
-	{
-		auto it = cluster_.find_node(name);
-		if (it == cluster_.end())
-			throw std::out_of_range("Can't find a host of name " + name + " in this cluster.");
+	//const Host& ClusterSimulation::find_host(const std::string& name) const
+	//{
+	//	auto it = cluster_.find_node(name);
+	//	if (it == cluster_.end())
+	//		throw std::out_of_range("Can't find a host of name " + name + " in this cluster.");
 
-		return it->second;
-	}
+	//	return it->second;
+	//}
 
 	ClusterSimulation::EventItem::EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation)
 	{
@@ -115,23 +115,23 @@ namespace ClusterSimulator
 		{
 			action = [&simulation, &entry]
 			{
-				if (entry.event_detail.host_name.empty())
-					return;
+				//if (entry.event_detail.host_name.empty())
+				//	return;
 
-				Host& host = simulation.get_cluster().find_node(entry.event_detail.host_name)->second;
+				//Host& host = simulation.get_cluster().find_node(entry.event_detail.host_name)->second;
 
-				host.set_status(entry.event_detail.host_status);
-				host.cpu_factor = entry.event_detail.cpu_factor;
-				host.ncpus = entry.event_detail.ncpus;
-				host.nprocs = entry.event_detail.nprocs;
-				host.ncores = entry.event_detail.ncores;
-				host.nthreads = entry.event_detail.nthreads;
+				//host.set_status(entry.event_detail.host_status);
+				//host.cpu_factor = entry.event_detail.cpu_factor;
+				//host.ncpus = entry.event_detail.ncpus;
+				//host.nprocs = entry.event_detail.nprocs;
+				//host.ncores = entry.event_detail.ncores;
+				//host.nthreads = entry.event_detail.nthreads;
 
-				Utils::enum_const_ref_holder<HostStatus> test = Utils::enum_to_string<HostStatus>(host.status);
-				std::stringstream ss;
-				ss << test;
+				//Utils::enum_const_ref_holder<HostStatus> test = Utils::enum_to_string<HostStatus>(host.status);
+				//std::stringstream ss;
+				//ss << test;
 
-				log(LogLevel::info, "Host {0}'s status is changed to {1}", host.id, ss.str());
+				//log(LogLevel::info, "Host {0}'s status is changed to {1}", host.id, ss.str());
 			};
 		}
 		else
@@ -209,7 +209,8 @@ namespace ClusterSimulator
 		//double total_cpu_power{ 0.0 };
 		int num_total_available_hosts{ 0 };
 		int num_total_applications{ scenario_.num_unique_apps() };
-		for (const auto& [name, host] : cluster_)
+		//for (const auto& [name, host] : cluster_)
+		for (auto& host : cluster_)
 		{
 			if (!host.is_available_at_least_once)
 				continue;

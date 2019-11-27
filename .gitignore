@@ -355,4 +355,4 @@ logs/*.txt
 *.a
 
 # scenarios
-scenarios/
+scenarios/*.json

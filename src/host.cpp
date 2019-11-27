@@ -10,22 +10,27 @@ namespace ClusterSimulator
 	std::mt19937 Host::gen_(rd_());
 	std::uniform_int_distribution<> Host::dist_(1, MAX_RAND_NUM);
 
-	std::chrono::milliseconds Host::get_expected_run_time(const Job& job) const noexcept
+	using std::chrono::milliseconds;
+
+	milliseconds Host::get_expected_run_time(const Job& job) const noexcept
 	{
 		// int original_factor = cluster->simulation->find_host(job.get_dedicated_host_name()).cpu_factor;
 		// double ratio = original_factor / static_cast<double>(cpu_factor);
 		// return std::chrono::duration_cast<std::chrono::milliseconds>(job.run_time * ratio);
-		return std::chrono::duration_cast<std::chrono::milliseconds>(job.run_time / cpu_factor);
+		return std::chrono::duration_cast<milliseconds>(job.run_time / cpu_factor);
 	}
 
 	void Host::execute_job(Job& job)
 	{
 		simulation->num_dispatched_slots += job.slot_required;
+		if (job.total_pending_duration > milliseconds(0))
+			simulation->update_pending_duration(job.total_pending_duration);
+
 		job.queue_managing_this_job->using_job_slots += job.slot_required;
 		ClusterSimulation::log(LogLevel::info, "Job #{0} is executed in Host {1}"
 			, job.id, this->get_name());
 
-		const auto run_time{ std::chrono::duration_cast<std::chrono::milliseconds>(get_expected_run_time(job) * 0.75) };
+		const auto run_time{ std::chrono::duration_cast<milliseconds>(get_expected_run_time(job) * 0.75) };
 		try_update_expected_time_of_completion(run_time);
 
 		if (slot_running_ + job.slot_required > max_slot)
@@ -48,7 +53,6 @@ namespace ClusterSimulator
 				this->exit_job(job);
 
 				this->simulation->num_dispatched_slots -= job.slot_required;
-				this->simulation->update_pending_duration(job.total_pending_duration);
 				job.queue_managing_this_job->using_job_slots -= job.slot_required;
 
 				this->simulation->log_using_slots();
@@ -81,7 +85,7 @@ namespace ClusterSimulator
 		cluster->update();
 	}
 
-	void Host::try_update_expected_time_of_completion(std::chrono::milliseconds run_time) noexcept
+	void Host::try_update_expected_time_of_completion(milliseconds run_time) noexcept
 	{
 		const ms expected_completion_time = cluster->simulation->get_current_time() + run_time;
 		if (expected_completion_time > expected_time_of_completion)

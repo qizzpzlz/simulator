@@ -2,6 +2,7 @@
 //#include "queue.h"
 //#include "scenario.h"
 #include "cluster.h"
+#include "scenario.h"
 #include <functional>
 #include <chrono>
 #include <queue>
@@ -120,15 +121,21 @@ namespace ClusterSimulator
 				auto version{ simulation_->cluster_.get_version() };
 				if (version == latest_cluster_version_)
 				{
+					if (simulation_->scenario_.count() == 0 && simulation_->num_pending_jobs_ == 0)
+					{
+						simulation_->next_dispatch_reserved = false;
+						return;
+					}
+
 					simulation_->after_delay(simulation_->dispatch_frequency,
 						std::ref(simulation_->dispatcher_), 1);
 					return;
 				}
 				latest_cluster_version_ = version;
 
-				bool flag{ true };
+				bool flag{ false };
 				for (auto& q : simulation_->all_queues_)
-					flag &= q.dispatch();
+					flag |= q.dispatch();
 				if (flag)
 				{
 					// pending jobs exist

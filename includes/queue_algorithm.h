@@ -175,6 +175,36 @@ namespace ClusterSimulator
 		}
 	};
 
+	class MCTAlgorithm : public QueueAlgorithm
+	{
+		inline static const std::string name{ "MCT" };
+		static ms get_completion_time(const Host& host, const Job& job)
+		{
+			return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job);
+		}
+	public:
+		const std::string& get_name() const noexcept override { return name; }
+
+		void run(std::vector<std::shared_ptr<Job>>& jobs) const override
+		{
+			for (auto& job : jobs)
+			{
+				auto hosts = job->get_eligible_hosts();
+				if (hosts.empty()) continue;
+				auto best_host = *std::min_element(hosts.begin(), hosts.end(),
+					[&job](const Host* a, const Host* b)
+					{
+						return get_completion_time(*a, *job) < get_completion_time(*b, *job);
+					});
+				best_host->execute_job(*job);
+			}
+		}
+	};
+
+	class MinMinAlgorithm : public QueueAlgorithm
+	{
+		
+	};
 	class QueueAlgorithms
 	{
 	public:
