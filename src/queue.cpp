@@ -325,7 +325,7 @@ namespace ClusterSimulator
 		// Bring back all pending jobs.
 		clean_pending_jobs();
 
-		current_algorithm->run(jobs_);
+		current_algorithm->run(jobs_, simulation_->get_cluster());
 		while (!jobs_.empty())
 		{
 			std::shared_ptr<Job>& job{ jobs_.back() };

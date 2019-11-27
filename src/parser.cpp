@@ -37,10 +37,14 @@ namespace ClusterSimulator::Parser
 				{
 					flag = true;
 					initial_timestamp = ms{ std::chrono::seconds{json["event_timestamp"].int_value()} };
-					scenario->initial_time_point = ms();
+					scenario->initial_time_point = ms{};
 				}
 
 				entry.timestamp = ms(ms{ std::chrono::seconds{ json["event_timestamp"].int_value() } } - initial_timestamp);
+				if (entry.timestamp < ms{})
+				{
+					throw std::runtime_error("Scenario is not ordered properly.");
+				}
 					
 				if (json["event_action"] == "submission")
 				{
@@ -87,6 +91,9 @@ namespace ClusterSimulator::Parser
 				if (count++ == limit)
 					break;
 			}
+
+			if (scenario->count() == 0)
+				throw std::runtime_error("Can't read the scenario file.");
 
 			std::cout << "Successfully parsed " << scenario->count() << " scenario entries." << std::endl;
 		}

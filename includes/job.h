@@ -28,7 +28,7 @@ namespace ClusterSimulator
 		milliseconds non_cpu_time;		
 		Queue* queue_managing_this_job;
 
-		milliseconds run_time;		// Estimated run time: cpu_time / factor + non_cpu_time
+		//milliseconds run_time;		
 		
 		/* Disabled fields */
 		// bool is_multi_host;
@@ -73,6 +73,7 @@ namespace ClusterSimulator
 		const std::string* run_host_name_;
 
 		ms pend_start_time_{};
+		//ms run_time_;
 
 		//unsigned long id_;
 		//double submitted_time_;

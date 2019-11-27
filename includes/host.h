@@ -85,7 +85,7 @@ namespace ClusterSimulator
 			int max_tmp, const std::string& host_group, HostStatus status, Cluster& cluster)
 			: name_(name),
 			  host_group_(host_group),
-			  cpu_factor(cpu_factor),
+			  cpu_factor(cpu_factor <= 0 ? 30 : cpu_factor),
 			  ncpus(ncpus),
 			  nprocs(nprocs),
 			  ncores(ncores),

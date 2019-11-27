@@ -5,19 +5,17 @@
 
 namespace ClusterSimulator
 {
+	
+
 	int Host::id_gen_ = 0;
 	std::random_device Host::rd_{};
 	std::mt19937 Host::gen_(rd_());
 	std::uniform_int_distribution<> Host::dist_(1, MAX_RAND_NUM);
 
-	using std::chrono::milliseconds;
-
 	milliseconds Host::get_expected_run_time(const Job& job) const noexcept
 	{
-		// int original_factor = cluster->simulation->find_host(job.get_dedicated_host_name()).cpu_factor;
-		// double ratio = original_factor / static_cast<double>(cpu_factor);
-		// return std::chrono::duration_cast<std::chrono::milliseconds>(job.run_time * ratio);
-		return std::chrono::duration_cast<milliseconds>(job.run_time / cpu_factor);
+		// Estimated run time: cpu_time / factor + non_cpu_time
+		return duration_cast<milliseconds>(job.cpu_time / cpu_factor + job.non_cpu_time);
 	}
 
 	void Host::execute_job(Job& job)
@@ -30,7 +28,9 @@ namespace ClusterSimulator
 		ClusterSimulation::log(LogLevel::info, "Job #{0} is executed in Host {1}"
 			, job.id, this->get_name());
 
-		const auto run_time{ std::chrono::duration_cast<milliseconds>(get_expected_run_time(job) * 0.75) };
+		const auto run_time{ duration_cast<milliseconds>(get_expected_run_time(job) * 0.75) };
+		if (run_time < 0ms)
+			throw std::runtime_error("run time can't be negative.");
 		try_update_expected_time_of_completion(run_time);
 
 		if (slot_running_ + job.slot_required > max_slot)
@@ -80,7 +80,8 @@ namespace ClusterSimulator
 		// ss >> Utils::enum_from_string<HostStatus>(this->status);
 		ClusterSimulation::log(LogLevel::info,
 			"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
-			, job.id, this->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());
+			, job.id, this->get_name(), (job.finish_time - job.start_time).count()
+			, job.cpu_time.count() + job.non_cpu_time.count());
 
 		cluster->update();
 	}

@@ -9,7 +9,7 @@ namespace ClusterSimulator
 	    const auto search = entries_.find(&host);
         if (search == entries_.end()) return true;
         
-        return job.run_time <= search->second;
+        return host.get_expected_run_time(job) <= search->second;
     }
 
     bool HjobLimit::is_eligible(const Queue& queue, const Host& host, const Job& job) const

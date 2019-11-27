@@ -13,7 +13,7 @@ const std::string SCENARIO_DIR_PATH = "scenarios/";
 #endif
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = -1;
+const int NUM_SCENARIO_LINES_LIMIT = 50000;
 const std::string LOG_DIR = "logs/";
 
 namespace fs = std::filesystem;
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
 
 	// Start simulation
-	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster, *ClusterSimulator::QueueAlgorithms::OLB };
+	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster, *ClusterSimulator::QueueAlgorithms::MCT };
 
 	
 

@@ -219,14 +219,9 @@ public:
 			std::vector<std::vector<ms>> times(jobs.size());
 			for (size_t i = 0; i < times.size(); i++)
 				times.emplace_back(std::vector<ms>(cluster.count()));
-			
 			for (size_t i = 0; i < jobs.size(); i++)
-			{
-				for (size_t j = 0; j < hosts.size(); j++)
-				{
-					times[i][j] = MCTAlgorithm::get_completion_time(*hosts[j], jobs[i]);  // Ready time omitted
-				}
-			}
+				for (size_t j = 0; j < cluster.count(); j++)
+					times[i][j] = get_completion_time(cluster[j], *jobs[i]);  // Ready time omitted
 
 			std::vector<std::tuple<ms, Host*>> min_completion_times_for_jobs(jobs.size());
 
@@ -235,7 +230,7 @@ public:
 			{
 				auto min_iter = std::min_element(times[i].cbegin(), times[i].cend());
 				size_t index = min_iter - times[i].begin();
-				min_completion_times_for_jobs.emplace_back(std::make_tuple(*min_iter, hosts[index]));
+				min_completion_times_for_jobs.emplace_back(std::make_tuple(*min_iter, &cluster[index]));
 			}
 
 			/*std::sort(min_completion_times_for_jobs.begin(), min_completion_times_for_jobs.end(), 
@@ -253,6 +248,7 @@ public:
 	{
 	public:
 		inline static const QueueAlgorithm* const OLB = new OLBAlgorithm();
+		inline static const QueueAlgorithm* const MCT = new MCTAlgorithm();
 	};
 }
 
