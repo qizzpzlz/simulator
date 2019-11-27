@@ -59,8 +59,8 @@ namespace ClusterSimulator
 		{
 			return status == HostStatus::OK
 				&& job.slot_required <= remaining_slots()
-				&& job.mem_required <= max_mem
-				&& job.num_exec_procs <= nprocs * ncores;
+				&& job.mem_required <= max_mem;
+				// && job.num_exec_procs <= nprocs * ncores;
 				//&& job.swap_usage < max_swp;
 		}
 		std::chrono::milliseconds get_expected_run_time(const Job& job) const noexcept;

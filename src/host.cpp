@@ -76,8 +76,8 @@ namespace ClusterSimulator
 		num_current_running_slots -=  job.slot_required;
 		num_current_jobs--;
 
-		std::stringstream ss(job.get_exit_host_status());
-		ss >> Utils::enum_from_string<HostStatus>(this->status);
+		// std::stringstream ss(job.get_exit_host_status());
+		// ss >> Utils::enum_from_string<HostStatus>(this->status);
 		ClusterSimulation::log(LogLevel::info,
 			"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
 			, job.id, this->get_name(), (job.finish_time - job.start_time).count(), job.run_time.count());

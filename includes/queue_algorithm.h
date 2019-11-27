@@ -138,16 +138,18 @@
 #include <algorithm>
 #include "queue.h"
 #include "host.h"
+#include "cluster.h"
 
 namespace ClusterSimulator
 {
+	class Cluster;
 	// TODO: As Template
 	class QueueAlgorithm
 	{
 	public:
 		virtual const std::string& get_name() const noexcept = 0;
 
-		virtual void run(std::vector<std::shared_ptr<Job>>& jobs) const = 0;
+		virtual void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const = 0;
 	};
 
 	/**
@@ -159,7 +161,7 @@ namespace ClusterSimulator
 	public:
 		const std::string& get_name() const noexcept override { return name; }
 
-		void run(std::vector<std::shared_ptr<Job>>& jobs) const override
+		void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const override
 		{
 			for (auto& job : jobs)
 			{
@@ -185,7 +187,7 @@ namespace ClusterSimulator
 	public:
 		const std::string& get_name() const noexcept override { return name; }
 
-		void run(std::vector<std::shared_ptr<Job>>& jobs) const override
+		void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const override
 		{
 			for (auto& job : jobs)
 			{
@@ -203,7 +205,49 @@ namespace ClusterSimulator
 
 	class MinMinAlgorithm : public QueueAlgorithm
 	{
-		
+		inline static const std::string name{ "MinMin" };
+		const std::string& get_name() const noexcept override { return name; }
+		static ms get_completion_time(const Host& host, const Job& job)
+		{
+			return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job);
+		}
+public:
+		void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const override
+		{
+			// M jobs, N hosts
+			// Prepare a matrix of M * N
+			std::vector<std::vector<ms>> times(jobs.size());
+			for (size_t i = 0; i < times.size(); i++)
+				times.emplace_back(std::vector<ms>(cluster.count()));
+			
+			for (size_t i = 0; i < jobs.size(); i++)
+			{
+				for (size_t j = 0; j < hosts.size(); j++)
+				{
+					times[i][j] = MCTAlgorithm::get_completion_time(*hosts[j], jobs[i]);  // Ready time omitted
+				}
+			}
+
+			std::vector<std::tuple<ms, Host*>> min_completion_times_for_jobs(jobs.size());
+
+			// Find the minimum completion time of task and the host that obtains it
+			for (size_t i = 0; i < jobs.size(); i++)
+			{
+				auto min_iter = std::min_element(times[i].cbegin(), times[i].cend());
+				size_t index = min_iter - times[i].begin();
+				min_completion_times_for_jobs.emplace_back(std::make_tuple(*min_iter, hosts[index]));
+			}
+
+			/*std::sort(min_completion_times_for_jobs.begin(), min_completion_times_for_jobs.end(), 
+				[](std::tuple<ms, Host*>& a, std::tuple<ms, Host*>& b){ return std::get<0>(a) > std::get<0>(b); });*/
+
+			// Find the job with earliest completion time
+			auto min_iter = std::min_element(min_completion_times_for_jobs.cbegin(), min_completion_times_for_jobs.cend());
+			//const Job& min_job = jobs[min_iter - min_completion_times_for_jobs.cbegin()];
+
+			// We don't assign the job to the corresponding host here.
+			// Instead we sort the hosts
+		}
 	};
 	class QueueAlgorithms
 	{

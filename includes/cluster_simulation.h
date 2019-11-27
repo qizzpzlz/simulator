@@ -24,10 +24,10 @@ namespace ClusterSimulator
 
 	class ClusterSimulation
 	{
-		constexpr static bool console_output = true;
-		constexpr static bool console_warning_output = true;
-		constexpr static bool log_file_output = true;
-		constexpr static bool jobmart_file_output = true;
+		constexpr static bool console_output = false;
+		constexpr static bool console_warning_output = false;
+		constexpr static bool log_file_output = false;
+		constexpr static bool jobmart_file_output = false;
 		constexpr static bool slots_file_output = true;
 
 	public:
@@ -225,15 +225,15 @@ namespace ClusterSimulator
 			// exec_hostmodel
 			// exec_hostgroup
 			// num_exec_procs
-				job.num_exec_procs <<
+				// job.num_exec_procs <<
 			// number_of_jobs
 			// num_slots
 				job.slot_required <<
 			// job_exit_status
-				job.get_exit_host_status() <<
+				// job.get_exit_host_status() <<
 			// job_exit_code
 			// application_name
-				job.get_application_name() <<
+				// job.get_application_name() <<
 			// job_id
 				job.id <<
 			// job_array_index
@@ -245,11 +245,11 @@ namespace ClusterSimulator
 				(job.finish_time - job.start_time).count() <<
 			// job_turnaround_time
 			// job_mem_usage
-				job.mem_usage <<
+				// job.mem_usage <<
 			// job_swap_usage
-				job.swap_usage <<
+				// job.swap_usage <<
 			// job_cpu_time
-				job.cpu_time <<
+				// job.cpu_time <<
 			// pend_time
 			// run_time
 			// turnaround_time

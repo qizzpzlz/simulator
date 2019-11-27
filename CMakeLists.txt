@@ -7,7 +7,7 @@ project (cluster-simulator)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 if(NOT MSVC)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -44,7 +44,7 @@ file(GLOB SRC_FILES
 add_executable (cluster-simulator ${SRC_FILES})
 
 # OpenMP
-find_package(OpenMp)
+find_package(OpenMP REQUIRED)
 if (OpenMP_CXX_FOUND)
 	target_link_libraries(cluster-simulator OpenMP::OpenMP_CXX)
 endif()

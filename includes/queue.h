@@ -4,6 +4,7 @@
 #include <string>
 #include <queue>
 #include <functional>
+#include <memory>
 #include "job.h"
 #include "host.h"
 #include "user.h"

@@ -20,7 +20,6 @@ namespace fs = std::filesystem;
 
 int main(int argc, char *argv[])
 {
-
 	argparse::ArgumentParser program("cluster-simulator");
 	program
 		.add_argument("-p", "--path")
