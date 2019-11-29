@@ -13,7 +13,7 @@ const std::string SCENARIO_DIR_PATH = "scenarios/";
 #endif
 const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
 const std::string SCENARIO_FILE = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = 50000;
+const int NUM_SCENARIO_LINES_LIMIT = -1;
 const std::string LOG_DIR = "logs/";
 
 namespace fs = std::filesystem;
@@ -49,17 +49,18 @@ int main(int argc, char *argv[])
 	// Create logs directory
 	fs::create_directory(fs::path{ LOG_DIR });
 
+	using namespace ClusterSimulator;
 	
-	ClusterSimulator::Scenario scenario;
-	ClusterSimulator::Cluster cluster;
+	Scenario scenario;
+	Cluster cluster;
 		
 	// Parse the given scenario and the cluster from json files.
-	ClusterSimulator::Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
-	ClusterSimulator::Parser::parse_cluster(&cluster, host_path);
+	Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
+	Parser::parse_cluster(&cluster, host_path);
 
 
 	// Start simulation
-	ClusterSimulator::ClusterSimulation simulation{ scenario, cluster, *ClusterSimulator::QueueAlgorithms::MCT };
+	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::OLB };
 
 	
 
@@ -68,6 +69,6 @@ int main(int argc, char *argv[])
 	// Print summary
 	simulation.print_summary();
 
-	ClusterSimulator::ClusterSimulation::jobmart_file_.close();
+	ClusterSimulation::jobmart_file_.close();
 }
 

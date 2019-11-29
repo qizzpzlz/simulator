@@ -18,17 +18,19 @@
 using LogLevel = spdlog::level::level_enum;
 namespace ClusterSimulator
 {
-	struct ScenarioEntry;
 	class Scenario;
-	using ms = std::chrono::time_point<std::chrono::milliseconds>;
+	struct ScenarioEntry;
 
 	class ClusterSimulation
 	{
-		constexpr static bool console_output = true;
-		constexpr static bool console_warning_output = false;
-		constexpr static bool log_file_output = false;
-		constexpr static bool jobmart_file_output = false;
-		constexpr static bool slots_file_output = true;
+		inline static const std::string PERFORMANCE_FILE_NAME = "performance.txt";
+		inline static const std::string PENDING_FILE_NAME = "pending.txt";
+		inline static const std::string JOB_SUBMIT_FILE_NAME = "job_submit.txt";
+		static constexpr bool console_output = true;
+		static constexpr bool console_warning_output = false;
+		static constexpr bool log_file_output = false;
+		static constexpr bool jobmart_file_output = false;
+		static constexpr bool slots_file_output = true;
 
 	public:
 		using Action = std::function<void()>;
@@ -162,15 +164,21 @@ namespace ClusterSimulator
 
 #pragma region logger
 	private:
-		static std::shared_ptr<spdlog::logger> file_logger;
-		static bprinter::TablePrinter tp_;
-		static void initialise_tp();
+		std::ofstream jobmart_file_ = []{
+			if constexpr (jobmart_file_output){
+				return std::ofstream()
+			}
+		}
+		
+		std::shared_ptr<spdlog::logger> file_logger;
+		bprinter::TablePrinter tp_;
+		void initialise_tp();
 
 	public:
-		static std::ofstream jobmart_file_;
+
 
 		template<typename... Args>
-		static void log(LogLevel level, const char* fmt, const Args&... args)
+		void log(LogLevel level, const char* fmt, const Args&... args)
 		{
 			if constexpr (console_output)
 				spdlog::log(level, fmt, args...);
@@ -192,7 +200,7 @@ namespace ClusterSimulator
 				file_logger->log(level, msg);
 		}
 
-		static void log_jobmart(const Job& job)
+		void log_jobmart(const Job& job)
 		{
 			if constexpr (!jobmart_file_output)
 				return;

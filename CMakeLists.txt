@@ -61,3 +61,6 @@ target_include_directories(cluster-simulator PUBLIC includes/)
 target_include_directories(cluster-simulator PUBLIC scenarios/)
 
 # TODO: Add tests and install targets if needed.
+
+# Export compile commands for semantic completion.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
