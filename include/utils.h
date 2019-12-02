@@ -55,9 +55,52 @@ namespace Utils
 		return minIndexValue;
 	}
 
-	template <class T>
-	class MemoryPool
+	class PoolAllocator
 	{
-		
+		using T = milliseconds;
+		const size_t per_page;
+		const size_t pool_size = sizeof(T) * per_page;
+		std::vector<T*> pools;
+		size_t next_position;
+
+		void alloc_pool()
+		{
+			next_position = 0;
+			void* temp = operator new(pool_size);
+			pools.push_back(static_cast<T*>(temp));
+		}
+	public:
+		using value_type = T;
+		using size_type = size_t;
+		using difference_type = ptrdiff_t;
+
+		PoolAllocator(size_t pool_size)
+		: per_page{ pool_size }
+		, pool_size{ pool_size * sizeof(T) }
+		{
+			alloc_pool();
+		}
+
+		T* operator()(T const &x)
+		{
+			if (next_position == per_page)
+				alloc_pool();
+
+			T* ret = new(pools.back() + next_position) T(x);
+			++next_position;
+			return ret;
+		}
+
+		~PoolAllocator()
+		{
+			while (!pools.empty())
+			{
+				T* p = pools.back();
+				for (size_t pos = per_page; pos > 0; --pos)
+					p[pos - 1].~T();
+				operator delete(static_cast<void*>(p));
+				pools.pop_back();
+			}
+		}
 	};
 }

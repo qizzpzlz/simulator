@@ -56,14 +56,30 @@ namespace ClusterSimulator
 		int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
 		size_t num_running_jobs() const noexcept { return running_jobs_.size(); }
 
-		bool is_executable(const Job& job) const noexcept
+		/**
+		 * Returns true if this host's hardware spec satisfies
+		 * the requirements imposed by a specified job.
+		 */
+		bool is_compatible(const Job& job) const noexcept
 		{
 			return status == HostStatus::OK
-				&& job.slot_required <= remaining_slots()
-				&& job.mem_required <= max_mem;
-				// && job.num_exec_procs <= nprocs * ncores;
-				//&& job.swap_usage < max_swp;
+				&& job.slot_required <= max_slot
+				&& job.mem_required <= max_mem;	// TODO: Consider run-time memory usages.
+			//	&& job.num_exec_procs <= nprocs * ncores;
+			//	&& job.swap_usage < max_swp;
 		}
+
+		/**
+		 * Returns true if this host is eligible for a specified job.
+		 */
+		bool is_executable(const Job& job) const noexcept
+		{
+			return is_compatible(job)
+				&& job.slot_required <= remaining_slots();
+		}
+
+		milliseconds get_expected_completion_duration(const Job& job) const noexcept;
+
 		milliseconds get_expected_run_time(const Job& job) const noexcept;
 		ms get_expected_time_of_all_completion() const noexcept { return expected_time_of_completion; }
 

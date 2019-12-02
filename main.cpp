@@ -15,7 +15,7 @@ const std::string SCENARIO_DIR_PATH =
 #endif
 constexpr char HOSTS_FILE[] = "hardware_raw_initial_status.json";
 constexpr char SCENARIO_FILE[] = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = 100000;
+const int NUM_SCENARIO_LINES_LIMIT = -1;
 constexpr std::string_view LOG_DIR = "logs/";
 
 namespace fs = std::filesystem;
@@ -60,9 +60,10 @@ int main(int argc, char *argv[])
 	Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
 	Parser::parse_cluster(&cluster, host_path);
 
+	//MinMinAlgorithm minmin(cluster.size());
 
 	// Start simulation
-	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::OLB };
+	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MinMin};
 
 	simulation.run();
 

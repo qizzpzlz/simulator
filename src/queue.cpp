@@ -15,7 +15,7 @@ namespace ClusterSimulator
 	const Queue::StaticQueueData Queue::data{};
 
 	Queue::Queue(ClusterSimulation& simulation) 
-		: name{ "normal" }
+		: name{ "default" }
 		, priority{ DEFAULT_PRIORITY }
 		, is_default_{ true }
 		, simulation_{ &simulation } {}
@@ -323,6 +323,8 @@ namespace ClusterSimulator
 
 		// Bring back all pending jobs.
 		clean_pending_jobs();
+
+		if (jobs_.empty()) return false;
 
 		// Run algorithm.
 		current_algorithm->run(jobs_, simulation_->get_cluster());

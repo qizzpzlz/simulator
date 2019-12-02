@@ -156,7 +156,7 @@ namespace ClusterSimulator
 	};
 
 	/**
-	 * Implementation of OLB Algorithm
+	 * Implementation of Opportunistic Load Balancing Algorithm.
 	 */
 	class OLBAlgorithm : public QueueAlgorithm
 	{
@@ -181,6 +181,9 @@ namespace ClusterSimulator
 		}
 	};
 
+	/**
+	 * Implementation of Minimum Completion Time Algorithm.
+	 */
 	class MCTAlgorithm : public QueueAlgorithm
 	{
 		inline static const std::string name{ "MCT" };
@@ -200,59 +203,114 @@ namespace ClusterSimulator
 				auto best_host = Utils::min_element_parallel(hosts,
 					[&job](const Host* a, const Host* b)
 					{
-						return get_completion_time(*a, *job) < get_completion_time(*b, *job);
+						/*return get_completion_time(*a, *job) < get_completion_time(*b, *job);*/
+						return a->get_expected_completion_duration(*job) < b->get_expected_completion_duration(*job);
 					}).second;
 				job.execute(best_host);
 			}
 		}
 	};
 
+	/**
+	 * Implementation of Min-Min Algorithm.
+	 */
 	class MinMinAlgorithm : public QueueAlgorithm
 	{
 		inline static const std::string name{ "MinMin" };
 		const std::string& get_name() const noexcept override { return name; }
-		static milliseconds get_completion_duration(const Host& host, const Job& job)
-		{
-			//return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job);
-			if (!host.is_executable(job)) return milliseconds::max();
 
-			return host.get_expected_run_time(job);
-		}
+		//Utils::PoolAllocator pool_allocator;
+
+		struct JobProxy
+		{
+			//JobWrapper* job;
+			size_t job_index;
+			milliseconds min_mct;
+			size_t host_index_of_min_mct;
+			std::vector<milliseconds> mcts;
+			//milliseconds* mcts;
+
+			//JobProxy();
+			JobProxy(size_t job_index, size_t size) : job_index{ job_index }, mcts(size)
+			{
+				//mcts = pool_allocator(0ms);
+				//mcts.reserve(size);
+			}
+			void Update(std::pair<milliseconds, size_t> pair)
+			{
+				min_mct = pair.first;
+				host_index_of_min_mct = pair.second;
+			}
+		};
 public:
+		//MinMinAlgorithm(size_t cluster_size) : pool_allocator(cluster_size) {}
+
 		void run(Jobs& jobs, Cluster& cluster) const override
 		{
-			// M jobs, N hosts
-			// Prepare a matrix of M * N
-			// times[i][j] = completion_time_{i, j} := expected execution time of job i on host j.
-			std::vector<std::vector<milliseconds>> times(jobs.size());
-			for (size_t i = 0; i < times.size(); i++)
-				times.emplace_back(std::vector<milliseconds>(cluster.count()));
-			for (size_t i = 0; i < jobs.size(); i++)
-				for (size_t j = 0; j < cluster.count(); j++)
-					times[i][j] = get_completion_duration(cluster[j], *jobs[i]);  // Ready time omitted
+			// Prepare space for Hosts having minimum completion time for each job.
+			// Prepare a matrix of M * N for M jobs and N hosts.
+			std::vector<JobProxy> all_jobs;
+			all_jobs.reserve(jobs.size());
 
-			std::vector<std::tuple<milliseconds, Host*>> min_completion_times_for_jobs(jobs.size());
-
-			// Find the minimum completion time of task and the host that obtains it
-			for (size_t i = 0; i < jobs.size(); i++)
+			// Possible parallelization.
+			int i;
+			for (i = 0; i < jobs.size(); i++)
 			{
-				//auto min_iter = std::min_element(times[i].cbegin(), times[i].cend());
-				//size_t index = min_iter - times[i].begin();
-				//min_completion_times_for_jobs.emplace_back(std::make_tuple(*min_iter, &cluster[index]));
-
-				auto [index, min] = Utils::min_element_parallel(times[i], std::less<>());
-				min_completion_times_for_jobs.emplace_back(std::make_tuple(min, &cluster[index]));
+				// Find the MCT host together in this loops.
+				JobProxy proxy(i, cluster.count());
+				std::pair<milliseconds, size_t> min_pair = std::make_pair(milliseconds::max(), 0);
+;
+				int j;
+				#pragma omp parallel for
+				for (j = 0; j < cluster.count(); j++)
+				{
+					auto completion_time = cluster[j].get_expected_completion_duration(*jobs[i]);
+					proxy.mcts[j] = completion_time;
+					if (completion_time < std::get<0>(min_pair))
+						min_pair = std::make_pair(completion_time, j);
+				}
+				proxy.Update(min_pair);
+				all_jobs.push_back(std::move(proxy));
 			}
 
-			/*std::sort(min_completion_times_for_jobs.begin(), min_completion_times_for_jobs.end(), 
-				[](std::tuple<ms, Host*>& a, std::tuple<ms, Host*>& b){ return std::get<0>(a) > std::get<0>(b); });*/
+			// For each remaining jobs
+			do
+			{
+				// Find the minimum completion time
+				const auto min_iter = std::min_element(all_jobs.cbegin(), all_jobs.cend(),
+					[](const JobProxy& a, const JobProxy& b)
+					{
+						return a.min_mct < b.min_mct;
+					});
+				const auto assigned_host_index = min_iter->host_index_of_min_mct;
+				const auto assigned_host = &cluster[assigned_host_index];
 
-			// Find the job with earliest completion time
-			auto min_iter = std::min_element(min_completion_times_for_jobs.cbegin(), min_completion_times_for_jobs.cend());
-			//const Job& min_job = jobs[min_iter - min_completion_times_for_jobs.cbegin()];
+				// Assign the job with the minimum mct to the dedicated host.
+				if (min_iter->min_mct != milliseconds::max()) // Skip the incompatible jobs
+					jobs[min_iter->job_index].execute(assigned_host);
 
-			// We don't assign the job to the corresponding host here.
-			// Instead we sort the hosts
+				all_jobs.erase(min_iter);
+
+				// Update completion time for the assigned host
+				// and find the minimum mct for each job 
+				for (auto& proxy : all_jobs)
+				{
+					const auto updated_completion_time = 
+						assigned_host->get_expected_completion_duration(*jobs[proxy.job_index]);
+
+					if (proxy.host_index_of_min_mct == assigned_host_index)
+					{	// Only updates the minimum mct if its dedicated host is changed.
+						if (updated_completion_time > proxy.min_mct)
+						{
+							auto min_iter_inner = std::min_element(proxy.mcts.cbegin(), proxy.mcts.cend());
+							proxy.min_mct = *min_iter_inner;
+							proxy.host_index_of_min_mct = std::distance(proxy.mcts.cbegin(), min_iter_inner);
+						}
+					}
+
+					proxy.mcts[assigned_host_index] = updated_completion_time;
+				}
+			} while (!all_jobs.empty());
 		}
 	};
 	class QueueAlgorithms

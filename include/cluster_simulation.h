@@ -24,6 +24,8 @@ namespace ClusterSimulator
 
 	class ClusterSimulation
 	{
+		friend class Scenario;
+
 		/*Static settings for simulation.*/
 
 		static constexpr std::string_view LOG_DIRECTORY = "logs";
@@ -39,6 +41,10 @@ namespace ClusterSimulator
 		static constexpr bool SLOTS_FILE_OUTPUT = true;
 		static constexpr bool JOB_SUBMIT_FILE_OUTPUT = true;
 		static constexpr char LOGGER_PATTERN[] = "[%l] %v";
+		static constexpr milliseconds DISPATCH_FREQUENCY{ 15000 };
+		static constexpr milliseconds LOGGING_FREQUENCY{ 10000 };
+		static constexpr milliseconds COUNTING_FREQUENCY{ 10000 };
+		static constexpr bool USE_ONLY_DEFAULT_QUEUE = true;
 
 	public:
 		static constexpr bool LOG_ANY = CONSOLE_OUTPUT || LOG_FILE_OUTPUT;
@@ -64,9 +70,6 @@ namespace ClusterSimulator
 					: a.time < time;
 			}
 		};
-		milliseconds dispatch_frequency{ 1000 };
-		milliseconds logging_frequency{ 10000 };
-		milliseconds counting_frequency{ 10000 };
 	
 	private:
 		/* Event driven simulator helpers */
@@ -94,6 +97,7 @@ namespace ClusterSimulator
 
 		ms get_current_time() const { return current_time_; }
 
+		std::enable_if<USE_ONLY_DEFAULT_QUEUE, Queue>::type& get_default_queue() { return all_queues_.back(); }
 		// TODO: use id instead of name
 		Queue& find_queue (const std::string& name);
 		const Host& find_host(const std::string& name) const;
@@ -143,7 +147,7 @@ namespace ClusterSimulator
 						return;
 					}
 
-					simulation_->after_delay(simulation_->dispatch_frequency,
+					simulation_->after_delay(simulation_->DISPATCH_FREQUENCY,
 						std::ref(simulation_->dispatcher_), 1);
 					return;
 				}
@@ -155,7 +159,7 @@ namespace ClusterSimulator
 				if (flag)
 				{
 					// pending jobs exist
-					simulation_->after_delay(simulation_->dispatch_frequency,
+					simulation_->after_delay(simulation_->DISPATCH_FREQUENCY,
 						std::ref(simulation_->dispatcher_), 1);
 
 					size_t num{ 0 };

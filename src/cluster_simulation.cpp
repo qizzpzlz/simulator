@@ -24,7 +24,14 @@ namespace ClusterSimulator
 		// TODO: set default queue
 
 		current_time_ = scenario.initial_time_point;
-		std::sort(all_queues_.begin(), all_queues_.end());
+
+		if constexpr (USE_ONLY_DEFAULT_QUEUE)
+		{
+			all_queues_.clear();
+			all_queues_.emplace_back(*this);
+		}
+		else
+			std::sort(all_queues_.begin(), all_queues_.end());
 
 		if constexpr (JOB_SUBMIT_FILE_OUTPUT)
 		{
@@ -39,9 +46,9 @@ namespace ClusterSimulator
 				}
 
 				if (!scenario_.is_empty())
-					this->after_delay(this->counting_frequency, this->count_new_jobs_, 3);
+					this->after_delay(this->COUNTING_FREQUENCY, this->count_new_jobs_, 3);
 			};
-			after_delay(counting_frequency, count_new_jobs_, 3);
+			after_delay(COUNTING_FREQUENCY, count_new_jobs_, 3);
 		}
 		
 		//set algoritms
@@ -87,12 +94,20 @@ namespace ClusterSimulator
 		{
 			action = [&simulation, entry]
 			{
-				if (entry.event_detail.queue_name == "-" || entry.event_detail.queue_name.empty())
-					return;
+				Queue* queue;
+				if constexpr (USE_ONLY_DEFAULT_QUEUE)
+				{
+					queue = &simulation.get_default_queue();
+				}
+				else
+				{
+					if (entry.event_detail.queue_name == "-" || entry.event_detail.queue_name.empty())
+						return;
 
-				Queue& queue = simulation.find_queue(entry.event_detail.queue_name);
+					queue = &simulation.find_queue(entry.event_detail.queue_name);
+				}
 			
-				queue.enqueue(Job{ entry, queue, simulation.get_current_time() });
+				queue->enqueue(Job{ entry, *queue, simulation.get_current_time() });
 
 				//queue.dispatch();
 				simulation.reserve_dispatch_event();
@@ -208,14 +223,15 @@ namespace ClusterSimulator
 			"## Simulation Summary" << "\n" <<
 			"### Simulated duration (MakeSpan): " << total_simulation_time << " ms\n" <<
 			"### Available hosts: " << num_total_available_hosts << "\n" <<
+			"### Number of queues: " << all_queues_.size() << "\n" <<
 			"### Number of applications: " << num_total_applications << "\n" <<
 			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<
 			"### Number of failed jobs: " << num_failed_jobs_ << "\n" <<
 			"### Total pending duration: " << total_pending_duration_.count() << " ms\n" <<
 			"#### Queue algorithm: " << algorithm_name << "\n" <<
 			//"### Number of successful jobs: " << num_successful_jobs_ << "\n" <<
-			"#### Dispatch frequency: " << dispatch_frequency.count() << " ms\n" <<
-			"#### Logging frequency: " << logging_frequency.count() << " ms\n" <<
+			"#### Dispatch frequency: " << DISPATCH_FREQUENCY.count() << " ms\n" <<
+			"#### Logging frequency: " << LOGGING_FREQUENCY.count() << " ms\n" <<
 			"#### Actual run time of simulation: " << duration_cast<seconds>(actual_run_time_).count() << " s"
 			<< std::endl;
 
@@ -277,7 +293,7 @@ namespace ClusterSimulator
 			return;
 
 		after_delay(
-			Utils::get_time_left_until_next_period(current_time_, dispatch_frequency),
+			Utils::get_time_left_until_next_period(current_time_, DISPATCH_FREQUENCY),
 			std::ref(dispatcher_), 1);
 
 		next_dispatch_reserved = true;

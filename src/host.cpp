@@ -10,6 +10,36 @@ namespace ClusterSimulator
 	std::mt19937 Host::gen_(rd_());
 	std::uniform_int_distribution<> Host::dist_(1, MAX_RAND_NUM);
 
+	/**
+	 * Estimate the expected completion time of a specified job on this host.
+	 * Expected completition time is the sum of expected execution time of the job
+	 * and the availability time of this host after completing previously assigned jobs.
+	 */
+	milliseconds Host::get_expected_completion_duration(const Job& job) const noexcept
+	{
+		if (!is_compatible(job)) return milliseconds::max();	// Returns infinity if it can't be run.
+
+		const int slot_required = job.slot_required;
+		int remaining = remaining_slots();
+		if (slot_required <= remaining) return get_expected_run_time(job);
+
+		// Running jobs are sorted with it's finish time.
+		// Therefore we need to iterate the list in reversed order
+		// so that we can get expected available slots at future times in the correct order.
+		for (auto it = running_jobs_.rbegin(); it != running_jobs_.rend(); ++it)
+		{
+			auto& running_job = **it;
+			remaining += running_job.slot_required;
+			if (slot_required <= remaining)
+			{
+				const milliseconds ready_duration = running_job.finish_time - simulation->get_current_time();
+				return get_expected_run_time(job) + ready_duration;
+			}
+		}
+
+		throw std::runtime_error("Can't get expected completion duration.");
+	}
+
 	milliseconds Host::get_expected_run_time(const Job& job) const noexcept
 	{
 		// Estimated run time: cpu_time / factor + non_cpu_time
