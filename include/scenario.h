@@ -66,8 +66,6 @@ namespace ClusterSimulator
 				//Utils::enum_to_string(type) <<
 				timestamp.time_since_epoch().count() << std::endl;
 		};
-
-
 	};
 
 	/**

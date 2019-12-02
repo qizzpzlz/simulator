@@ -4,6 +4,7 @@
 #include "cluster.h"
 #include "cluster_simulation.h"
 #include "argparse.hpp"
+#include "queue_algorithm.h"
 #include <filesystem>
 
 const std::string SCENARIO_DIR_PATH =
@@ -14,7 +15,7 @@ const std::string SCENARIO_DIR_PATH =
 #endif
 constexpr char HOSTS_FILE[] = "hardware_raw_initial_status.json";
 constexpr char SCENARIO_FILE[] = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = 300000;
+const int NUM_SCENARIO_LINES_LIMIT = 100000;
 constexpr std::string_view LOG_DIR = "logs/";
 
 namespace fs = std::filesystem;

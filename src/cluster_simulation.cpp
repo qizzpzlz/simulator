@@ -5,6 +5,7 @@
 #include "scenario.h"
 #include "cluster_simulation.h"
 #include "job.h"
+#include "queue_algorithm.h"
 
 #include <fstream>
 
@@ -60,7 +61,7 @@ namespace ClusterSimulator
 	{
 		auto it = all_queues_.begin();
 		it = std::find_if(it, all_queues_.end(),
-		             [&name](Queue& queue) { return queue.name == name; });
+		             [&name](const Queue& queue) { return queue.name == name; });
 
 		if (it == all_queues_.end())
 			throw std::out_of_range("Can't find a queue of name " + name + " in this simulation.");

@@ -16,10 +16,10 @@ namespace ClusterSimulator
 		auto begin() const { return nodes_.cbegin(); }
 		auto end() const { return nodes_.cend(); }
 		//void add_node(const Host& node) { nodes_.push_back(node); }
-		void add_node(const Host&& node) 
+		void add_node(Host&& node) 
 		{ 
 			//nodes_.insert({node.get_name(), node}); 
-			nodes_.push_back(node);
+			nodes_.push_back(std::forward<Host>(node));
 			total_slot_number += node.max_slot;
 		}
 		//auto find_node(const std::string& name) const noexcept { return nodes_.find(name); }

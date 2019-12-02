@@ -82,7 +82,7 @@ namespace ClusterSimulator
 		std::unordered_map<ms, std::size_t , Utils::ms_hash> using_slot_record_;
 		std::vector<std::pair<ms, std::size_t>> pending_record_;
 		ms latest_finish_time_;
-		duration<double> actual_run_time_;
+		duration<double> actual_run_time_{};
 		
 		void next();
 
@@ -95,7 +95,7 @@ namespace ClusterSimulator
 		ms get_current_time() const { return current_time_; }
 
 		// TODO: use id instead of name
-		Queue& find_queue(const std::string& name);
+		Queue& find_queue (const std::string& name);
 		const Host& find_host(const std::string& name) const;
 		const Cluster& get_cluster_view() const { return cluster_; }
 		Cluster& get_cluster() const { return cluster_; }

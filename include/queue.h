@@ -7,7 +7,7 @@
 #include "job.h"
 #include "host.h"
 #include "user.h"
-#include "queue_algorithm.h"
+//#include "queue_algorithm.h"
 #include <omp.h>
 
 //#include "../includes/limit.h"
@@ -18,6 +18,18 @@ namespace ClusterSimulator
 	class Cluster;
 	class Limit;
 	class QueueAlgorithm;
+
+	class JobWrapper
+	{
+		std::unique_ptr<Job> job_;
+		bool is_dispatched_{ false };
+	public:
+		JobWrapper(std::unique_ptr<Job>&& job_ptr) : job_{ std::forward<std::unique_ptr<Job>>(job_ptr) }{}
+		bool is_dispatched() const noexcept { return is_dispatched_; }
+		void execute(Host* host) { host->execute_job(std::move(job_)); }
+		Job* operator->() const noexcept { return job_.operator->(); }
+		Job& operator*() const noexcept { return job_.operator*(); }
+	};
 
 	class Queue
 	{
@@ -69,7 +81,7 @@ namespace ClusterSimulator
 
 		std::vector<Limit*> limits;
 
-		int using_job_slots;
+		int using_job_slots{ 0 };
 		// int using_job_slots() const noexcept;
 
 		//The number you specify is multiplied by the value of lsb.params MBD_SLEEP_TIME (60 seconds by default).
@@ -105,6 +117,10 @@ namespace ClusterSimulator
 		// Creates a custom queue with custom priority and name.
 		Queue(ClusterSimulation& simulation, int priority, std::string name = std::string());
 		Queue(ClusterSimulation& simulation, const std::string& name);
+		Queue(const Queue&) = delete;				// Copy constructor & assignment is
+		Queue& operator=(const Queue&) = delete;	// deleted due to job containers.
+		Queue(Queue&&) = default;					// Instead, we define an explicit move constructor
+		Queue& operator=(Queue&&) = default;		// and an assignment operator.
 		~Queue();
 
 		bool operator<(const Queue& other) const noexcept { return priority < other.priority; }
@@ -150,8 +166,8 @@ namespace ClusterSimulator
 		bool is_default_{};
 		int default_host_specification_{};
 		ClusterSimulation* simulation_;
-		std::vector<std::shared_ptr<Job>> jobs_;
-        std::vector<std::shared_ptr<Job>> pending_jobs_;
+		std::vector<JobWrapper> jobs_;
+        std::vector<JobWrapper> pending_jobs_;
 
 		// Queue limits
 		int job_limit_{};

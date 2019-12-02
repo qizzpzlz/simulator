@@ -27,6 +27,6 @@ namespace ClusterSimulator
 
 	bool ExclusiveLimit::is_eligible(const Queue& queue, const Host& host, const Job& job) const
     {
-		return host.num_current_jobs == 0;
+		return host.num_running_jobs() == 0;
     }
 }

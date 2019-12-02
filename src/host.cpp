@@ -16,8 +16,18 @@ namespace ClusterSimulator
 		return duration_cast<milliseconds>(job.cpu_time / cpu_factor + job.non_cpu_time);
 	}
 
-	void Host::execute_job(Job& job)
+	/**
+	 * Execute a specified job in this host.
+	 * This will cause job finished event after the estimated runtime for
+	 * running the job in this host.
+	 * The runtime is calculated by: job.cpu_time / host.cpu_factor + job.non_cpu_time .
+	 * **The ownership of the job is transferred to this host.
+	 */
+	void Host::execute_job(std::unique_ptr<Job> job_ptr)
 	{
+		Job& job{ *job_ptr };
+
+		// Update dispatched slots
 		simulation->num_dispatched_slots += job.slot_required;
 		if (job.total_pending_duration > 0ms)
 			simulation->update_pending_duration(job.total_pending_duration);
@@ -28,19 +38,17 @@ namespace ClusterSimulator
 			simulation->log(LogLevel::info, "Job #{0} is executed in Host {1}"
 				, job.id, this->get_name());
 
+		// Estimate run time for the job in this host.
 		const auto run_time{ duration_cast<milliseconds>(get_expected_run_time(job) * 0.75) };
 		if (run_time < 0ms)
 			throw std::runtime_error("run time can't be negative.");
+
 		try_update_expected_time_of_completion(run_time);
 
 		if constexpr (ClusterSimulation::LOG_ANY)
-			if (slot_running_ + job.slot_required > max_slot)
+			if (num_current_running_slots + job.slot_required > max_slot)
 				simulation->log(LogLevel::err, 
 					"Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
-
-		slot_running_ += job.slot_required;
-		num_current_running_slots += job.slot_required;
-		num_current_jobs++;
 
 		const ms start_time{ simulation->get_current_time() };
 		job.start_time = start_time;
@@ -48,25 +56,33 @@ namespace ClusterSimulator
 		job.set_run_host_name(name_);
 		job.state = JobState::RUN;
 
-		// Reserve finish event
-		simulation->after_delay(run_time, [this, job]() mutable -> void
-			{
-				this->exit_job(job);
-
-				this->simulation->num_dispatched_slots -= job.slot_required;
-				job.queue_managing_this_job->using_job_slots -= job.slot_required;
-
-				this->simulation->log_using_slots();
-				this->simulation->log_jobmart(job);
-			});
+		// Reserve job finished event.
+		simulation->after_delay(run_time, std::bind(&Host::exit_job, this));
 
 		cluster->update();
+
+		// Register job to this host
+		num_current_running_slots += job.slot_required;
+		running_jobs_.push_back(std::move(job_ptr));
+		// Sort running_jobs_ here; ordering depends on finish time of job
+		std::sort(running_jobs_.begin(), running_jobs_.end(),
+			[](std::unique_ptr<Job>& a, std::unique_ptr<Job>& b)
+			{
+				return a->finish_time > b->finish_time;
+			});
 	}
 
-	
-	void Host::exit_job(const Job& job)
+	/**
+	 * Complete the job with the nearest finish time among
+	 * running jobs in this host.
+	 * This method is only used as reserved event for event simulator.
+	 */
+	void Host::exit_job()
 	{
-		slot_running_ -= job.slot_required;
+		Job& job{ *running_jobs_.back() };
+
+		if (job.finish_time != simulation->get_current_time())
+			throw std::runtime_error("Incongruous Job completion time.");
 
 		//Queue::HostInfo info;
 		// if (!job.queue_managing_this_job->try_get_dispatched_host_info(*this, &info))
@@ -74,7 +90,7 @@ namespace ClusterSimulator
 
 		//info.slot_dispatched -= job.slot_required;
 		num_current_running_slots -=  job.slot_required;
-		num_current_jobs--;
+
 
 		// std::stringstream ss(job.get_exit_host_status());
 		// ss >> Utils::enum_from_string<HostStatus>(this->status);
@@ -86,6 +102,14 @@ namespace ClusterSimulator
 				, job.cpu_time.count() + job.non_cpu_time.count());
 
 		cluster->update();
+
+		simulation->num_dispatched_slots -= job.slot_required;
+		job.queue_managing_this_job->using_job_slots -= job.slot_required;
+
+		simulation->log_using_slots();
+		simulation->log_jobmart(job);
+
+		running_jobs_.pop_back();
 	}
 
 	void Host::try_update_expected_time_of_completion(milliseconds run_time) noexcept

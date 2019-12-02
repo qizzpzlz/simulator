@@ -3,6 +3,7 @@
 #include "job.h"
 #include "limit.h"
 #include "cluster_simulation.h"
+#include "queue_algorithm.h"
 #include <utility>
 #include <omp.h>
 
@@ -61,7 +62,7 @@ namespace ClusterSimulator
 		//ClusterSimulation::log(LogLevel::info, 
 		//	"Job #{0} is added to Queue {1}.", job.id, this->name);
 
-		jobs_.push_back(std::make_shared<Job>(job));
+		jobs_.push_back(std::make_unique<Job>(job));
 
 		if constexpr (ClusterSimulation::LOG_ANY)
 			simulation_->log(LogLevel::info,
@@ -323,19 +324,23 @@ namespace ClusterSimulator
 		// Bring back all pending jobs.
 		clean_pending_jobs();
 
+		// Run algorithm.
 		current_algorithm->run(jobs_, simulation_->get_cluster());
+
+		// Pend unassigned jobs.
 		while (!jobs_.empty())
 		{
-			std::shared_ptr<Job>& job{ jobs_.back() };
+			/*Job& job{ *jobs_.back() };*/
+			JobWrapper& job{ jobs_.back() };
 
 			// Set pending for not assigned jobs
-			if (job->state != JobState::RUN)
+			if (job.is_dispatched())
 			{
 				job->set_pending(simulation_->get_current_time());
-				pending_jobs_.push_back(job);
 				if constexpr (ClusterSimulation::LOG_ANY)
 					simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
 						, job->id, job->total_pending_duration.count());
+				pending_jobs_.push_back(std::move(jobs_.back()));
 			}
 
 			jobs_.pop_back();
@@ -355,7 +360,7 @@ namespace ClusterSimulator
 		{
 			job->update_total_pending_duration(simulation_->get_current_time());
 			if (job->total_pending_duration < hours(1))
-				jobs_.push_back(job);
+				jobs_.push_back(std::move(job));
 			else
 			{
 				simulation_->increment_failed_jobs();
@@ -381,9 +386,6 @@ namespace ClusterSimulator
 				match_hosts_cache_.push_back(std::move(vec));
 			}
 
-			//match_hosts_cache_.reserve(max_threads);
-			//for (auto& vec : match_hosts_cache_)
-			//	vec.reserve(simulation_->get_cluster_view().count() / max_threads);
 			match_hosts_cache_initialised = true;
 		}
 		return match_hosts_cache_;

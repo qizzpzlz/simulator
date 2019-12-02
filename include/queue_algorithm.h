@@ -136,6 +136,7 @@
 #include <utility>
 #include <functional>
 #include <algorithm>
+#include "queue.h"
 #include "host.h"
 #include "cluster.h"
 #include "utils.h"
@@ -146,10 +147,12 @@ namespace ClusterSimulator
 	// TODO: As Template
 	class QueueAlgorithm
 	{
+	protected:
+		using Jobs = std::vector<JobWrapper>;
 	public:
 		virtual const std::string& get_name() const noexcept = 0;
 
-		virtual void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const = 0;
+		virtual void run(Jobs& jobs, Cluster& cluster) const = 0;
 	};
 
 	/**
@@ -161,7 +164,7 @@ namespace ClusterSimulator
 	public:
 		const std::string& get_name() const noexcept override { return name; }
 
-		void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const override
+		void run(Jobs& jobs, Cluster& cluster) const override
 		{
 			for (auto& job : jobs)
 			{
@@ -172,7 +175,8 @@ namespace ClusterSimulator
 					{
 						return a->remaining_slots() > b->remaining_slots();
 					}).second;
-				best_host->execute_job(*job);
+				/*best_host->execute_job(std::move(job));*/
+				job.execute(best_host);
 			}
 		}
 	};
@@ -187,7 +191,7 @@ namespace ClusterSimulator
 	public:
 		const std::string& get_name() const noexcept override { return name; }
 
-		void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const override
+		void run(Jobs& jobs, Cluster& cluster) const override
 		{
 			for (auto& job : jobs)
 			{
@@ -198,7 +202,7 @@ namespace ClusterSimulator
 					{
 						return get_completion_time(*a, *job) < get_completion_time(*b, *job);
 					}).second;
-				best_host->execute_job(*job);
+				job.execute(best_host);
 			}
 		}
 	};
@@ -215,7 +219,7 @@ namespace ClusterSimulator
 			return host.get_expected_run_time(job);
 		}
 public:
-		void run(std::vector<std::shared_ptr<Job>>& jobs, Cluster& cluster) const override
+		void run(Jobs& jobs, Cluster& cluster) const override
 		{
 			// M jobs, N hosts
 			// Prepare a matrix of M * N

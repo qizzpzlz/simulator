@@ -2,6 +2,8 @@
 #include "job.h"
 #include <string>
 #include <random>
+#include <memory>
+#include <utility>
 
 namespace ClusterSimulator
 {
@@ -43,7 +45,6 @@ namespace ClusterSimulator
 		int id{ id_gen_++ };
 		HostStatus status;
 
-		int num_current_jobs{ 0 };
 		int num_current_running_slots{ 0 };
 		bool is_available_at_least_once{ false };
 
@@ -51,9 +52,11 @@ namespace ClusterSimulator
 		Cluster* cluster;
 
 		const std::string& get_name() const noexcept{ return name_; }
-		constexpr int score() const noexcept { return score_; }
-		constexpr int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
-		constexpr bool is_executable(const Job& job) const noexcept
+		int score() const noexcept { return score_; }
+		int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
+		size_t num_running_jobs() const noexcept { return running_jobs_.size(); }
+
+		bool is_executable(const Job& job) const noexcept
 		{
 			return status == HostStatus::OK
 				&& job.slot_required <= remaining_slots()
@@ -67,8 +70,7 @@ namespace ClusterSimulator
 
 		/* Status mutator methods */
 
-		void execute_job(Job& job);
-		void exit_job(const Job& job);
+		void execute_job(std::unique_ptr<Job> job_ptr);
 		void set_status(HostStatus value) noexcept
 		{
 			status = value;
@@ -79,11 +81,10 @@ namespace ClusterSimulator
 		void try_update_expected_time_of_completion(milliseconds run_time) noexcept;
 
 		// Initialise Host from status data.
-		Host(const std::string& name, double cpu_factor, int ncpus, int nprocs, int ncores, int nthreads, int max_slot, int max_mem, int max_swp,
-			int max_tmp, const std::string& host_group, HostStatus status, Cluster& cluster)
-			: name_(name),
-			  host_group_(host_group),
-			  cpu_factor(cpu_factor <= 0 ? 30 : cpu_factor),
+		Host(std::string name, double cpu_factor, int ncpus, int nprocs, int ncores, 
+			 int nthreads, int max_slot, int max_mem, int max_swp, int max_tmp, 
+			 std::string host_group, HostStatus status, Cluster& cluster)
+			: cpu_factor(cpu_factor <= 0 ? 30 : cpu_factor),
 			  ncpus(ncpus),
 			  nprocs(nprocs),
 			  ncores(ncores),
@@ -92,12 +93,19 @@ namespace ClusterSimulator
 			  max_mem(max_mem),
 			  max_swp(max_swp),
 			  max_tmp(max_tmp),
+			  status(status),
 			  cluster(&cluster),
-			  status(status)
+			  name_(std::move(name)),
+			  host_group_(std::move(host_group))
 		{
 			if (status == HostStatus::OK)
 				is_available_at_least_once = true;
 		}
+
+		Host(const Host&) = delete;
+		Host operator=(const Host&) = delete;
+		Host(Host&&) = default;
+		Host& operator=(Host&&) = default;
 
 	private:
 		std::string name_;
@@ -107,6 +115,10 @@ namespace ClusterSimulator
 		ms expected_time_of_completion{};
 
 		// double max_procs;
+
+		std::vector<std::unique_ptr<Job>> running_jobs_;
+
+		void exit_job();
 
 		static int id_gen_;
 		static std::random_device rd_;
