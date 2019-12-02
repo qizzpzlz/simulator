@@ -1,13 +1,9 @@
+#include "host.h"
+#include "queue.h"
+#include "job.h"
+#include "limit.h"
+#include "cluster_simulation.h"
 #include <utility>
-#include <sstream>
-#include <iostream>
-#include "../includes/host.h"
-#include "../includes/queue.h"
-#include "../includes/job.h"
-#include "../includes/limit.h"
-#include "../includes/cluster_simulation.h"
-#include "../dependencies/spdlog/spdlog.h"
-
 #include <omp.h>
 
 //#include "spdlog/spdlog.h"
@@ -67,8 +63,9 @@ namespace ClusterSimulator
 
 		jobs_.push_back(std::make_shared<Job>(job));
 
-		ClusterSimulation::log(LogLevel::info,
-			"Job #{0} is added to Queue {1}.", job.id, this->name);
+		if constexpr (ClusterSimulation::LOG_ANY)
+			simulation_->log(LogLevel::info,
+				"Job #{0} is added to Queue {1}.", job.id, this->name);
 	}
 
 	/**
@@ -111,8 +108,7 @@ namespace ClusterSimulator
 		// TODO: Reuse host vector instead of allocating memory each time.
 		std::vector<Host*> eligible_host_list{};
 
-		int max = omp_get_max_threads();
-		std::vector <std::vector<Host* >> hosts(max);
+		auto& hosts{ get_match_hosts_cache() };
 
 		int i;
 #pragma omp parallel for
@@ -134,13 +130,15 @@ namespace ClusterSimulator
 				}
 				if (flag) continue;
 
-				//eligible_host_list.push_back(&host);
 				hosts[tid].push_back(&host);
 			}
 		}
 
 		for (auto& vec : hosts)
+		{
 			eligible_host_list.insert(eligible_host_list.end(), vec.begin(), vec.end());
+			vec.clear();
+		}
 
 		return eligible_host_list;
 	}
@@ -335,8 +333,9 @@ namespace ClusterSimulator
 			{
 				job->set_pending(simulation_->get_current_time());
 				pending_jobs_.push_back(job);
-				ClusterSimulation::log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
-					, job->id, job->total_pending_duration.count());
+				if constexpr (ClusterSimulation::LOG_ANY)
+					simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+						, job->id, job->total_pending_duration.count());
 			}
 
 			jobs_.pop_back();
@@ -355,17 +354,39 @@ namespace ClusterSimulator
 		for (auto& job : pending_jobs_)
 		{
 			job->update_total_pending_duration(simulation_->get_current_time());
-			if (job->total_pending_duration < std::chrono::hours(1))
+			if (job->total_pending_duration < hours(1))
 				jobs_.push_back(job);
 			else
 			{
 				simulation_->increment_failed_jobs();
-				ClusterSimulation::log(LogLevel::warn, "Job #{0} is discarded. (exceeds the maximum pending duration. slot_req: {1})"
-					, job->id, job->slot_required);
+				if constexpr (ClusterSimulation::LOG_ANY)
+					simulation_->log(LogLevel::warn, "Job #{0} is discarded. (exceeds the maximum pending duration. slot_req: {1})"
+						, job->id, job->slot_required);
 			}
 		}
 
 		pending_jobs_.clear();
+	}
+
+	auto Queue::get_match_hosts_cache() -> decltype(match_hosts_cache_)&
+	{
+		if (!match_hosts_cache_initialised)
+		{
+			auto max_threads = omp_get_max_threads();
+			auto per_vec_count = simulation_->get_cluster_view().count() / max_threads;
+			for (auto i = 0; i < max_threads; ++i)
+			{
+				std::vector<Host*> vec;
+				vec.reserve(per_vec_count);
+				match_hosts_cache_.push_back(std::move(vec));
+			}
+
+			//match_hosts_cache_.reserve(max_threads);
+			//for (auto& vec : match_hosts_cache_)
+			//	vec.reserve(simulation_->get_cluster_view().count() / max_threads);
+			match_hosts_cache_initialised = true;
+		}
+		return match_hosts_cache_;
 	}
 
 	int Queue::id_gen_ = 0;

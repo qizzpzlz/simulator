@@ -163,10 +163,10 @@ public:
     // Parse. If parse fails, return Json() and assign an error message to err.
     static Json parse(const std::string & in,
                       std::string & err,
-                      JsonParse strategy = JsonParse::STANDARD);
+                      JsonParse strategy = STANDARD);
     static Json parse(const char * in,
                       std::string & err,
-                      JsonParse strategy = JsonParse::STANDARD) {
+                      JsonParse strategy = STANDARD) {
         if (in) {
             return parse(std::string(in), err, strategy);
         } else {
@@ -179,12 +179,12 @@ public:
         const std::string & in,
         std::string::size_type & parser_stop_pos,
         std::string & err,
-        JsonParse strategy = JsonParse::STANDARD);
+        JsonParse strategy = STANDARD);
 
     static inline std::vector<Json> parse_multi(
         const std::string & in,
         std::string & err,
-        JsonParse strategy = JsonParse::STANDARD) {
+        JsonParse strategy = STANDARD) {
         std::string::size_type parser_stop_pos;
         return parse_multi(in, parser_stop_pos, err, strategy);
     }

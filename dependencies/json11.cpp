@@ -258,10 +258,10 @@ Json::Json(bool value)                 : m_ptr(value ? statics().t : statics().f
 Json::Json(const string &value)        : m_ptr(make_shared<JsonString>(value)) {}
 Json::Json(string &&value)             : m_ptr(make_shared<JsonString>(move(value))) {}
 Json::Json(const char * value)         : m_ptr(make_shared<JsonString>(value)) {}
-Json::Json(const Json::array &values)  : m_ptr(make_shared<JsonArray>(values)) {}
-Json::Json(Json::array &&values)       : m_ptr(make_shared<JsonArray>(move(values))) {}
-Json::Json(const Json::object &values) : m_ptr(make_shared<JsonObject>(values)) {}
-Json::Json(Json::object &&values)      : m_ptr(make_shared<JsonObject>(move(values))) {}
+Json::Json(const array &values)  : m_ptr(make_shared<JsonArray>(values)) {}
+Json::Json(array &&values)       : m_ptr(make_shared<JsonArray>(move(values))) {}
+Json::Json(const object &values) : m_ptr(make_shared<JsonObject>(values)) {}
+Json::Json(object &&values)      : m_ptr(make_shared<JsonObject>(move(values))) {}
 
 /* * * * * * * * * * * * * * * * * * * *
  * Accessors
@@ -423,7 +423,7 @@ struct JsonParser final {
      */
     void consume_garbage() {
       consume_whitespace();
-      if(strategy == JsonParse::COMMENTS) {
+      if(strategy == COMMENTS) {
         bool comment_found = false;
         do {
           comment_found = consume_comment();

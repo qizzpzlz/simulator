@@ -1,10 +1,12 @@
 #include "parser.h"
+#include "scenario.h"
+#include "cluster.h"
+#include "enum_converter.h"
+#include "json11.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "../includes/scenario.h"
-#include "../includes/cluster.h"
-#include "../dependencies/json11.hpp"
+
 
 namespace ClusterSimulator::Parser
 {
@@ -36,11 +38,11 @@ namespace ClusterSimulator::Parser
 				if (!flag)
 				{
 					flag = true;
-					initial_timestamp = ms{ std::chrono::seconds{json["event_timestamp"].int_value()} };
+					initial_timestamp = ms{ seconds{json["event_timestamp"].int_value()} };
 					scenario->initial_time_point = ms{};
 				}
 
-				entry.timestamp = ms(ms{ std::chrono::seconds{ json["event_timestamp"].int_value() } } - initial_timestamp);
+				entry.timestamp = ms(ms{ seconds{ json["event_timestamp"].int_value() } } - initial_timestamp);
 				if (entry.timestamp < ms{})
 				{
 					throw std::runtime_error("Scenario is not ordered properly.");

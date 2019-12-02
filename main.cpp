@@ -1,20 +1,21 @@
-#include "includes/parser.h"
-#include "includes/scenario.h"
-#include "includes/cluster.h"
-#include "includes/cluster_simulation.h"
+#define SPDLOG_COMPILED_LIB
+#include "parser.h"
+#include "scenario.h"
+#include "cluster.h"
+#include "cluster_simulation.h"
 #include "argparse.hpp"
-#include <fstream>
 #include <filesystem>
 
+const std::string SCENARIO_DIR_PATH =
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-const std::string SCENARIO_DIR_PATH = "../scenarios/";
+"../scenarios/";
 #else
-const std::string SCENARIO_DIR_PATH = "scenarios/";
+"scenarios/";
 #endif
-const std::string HOSTS_FILE = "hardware_raw_initial_status.json";
-const std::string SCENARIO_FILE = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = -1;
-const std::string LOG_DIR = "logs/";
+constexpr char HOSTS_FILE[] = "hardware_raw_initial_status.json";
+constexpr char SCENARIO_FILE[] = "scenario.json";
+const int NUM_SCENARIO_LINES_LIMIT = 300000;
+constexpr std::string_view LOG_DIR = "logs/";
 
 namespace fs = std::filesystem;
 
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
 	argparse::ArgumentParser program("cluster-simulator");
 	program
 		.add_argument("-p", "--path")
-		.required()
+		//.required()
 		.help("specify the path to scenario directory.")
 		.default_value(SCENARIO_DIR_PATH);
 	program.add_argument("-c", "--count")
@@ -47,12 +48,12 @@ int main(int argc, char *argv[])
 	const std::string host_path{ scenario_dir_path + HOSTS_FILE };
 
 	// Create logs directory
-	fs::create_directory(fs::path{ LOG_DIR });
+	create_directory(fs::path{ LOG_DIR });
 
 	using namespace ClusterSimulator;
 	
 	Scenario scenario;
-	Cluster cluster;
+	ClusterSimulator::Cluster cluster;
 		
 	// Parse the given scenario and the cluster from json files.
 	Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
@@ -62,13 +63,9 @@ int main(int argc, char *argv[])
 	// Start simulation
 	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::OLB };
 
-	
-
 	simulation.run();
 
 	// Print summary
 	simulation.print_summary();
-
-	ClusterSimulation::jobmart_file_.close();
 }
 

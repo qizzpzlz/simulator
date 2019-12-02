@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "spdlog/sinks/base_sink.h"
-#include "spdlog/details/file_helper.h"
-#include "spdlog/details/synchronous_factory.h"
+#include <spdlog/sinks/base_sink.h>
+#include <spdlog/details/file_helper.h>
+#include <spdlog/details/null_mutex.h>
+#include <spdlog/details/synchronous_factory.h>
 
-#include <chrono>
 #include <mutex>
 #include <string>
 
@@ -73,5 +73,4 @@ inline std::shared_ptr<logger> rotating_logger_st(
 } // namespace spdlog
 
 #ifdef SPDLOG_HEADER_ONLY
-#include "rotating_file_sink-inl.h"
 #endif

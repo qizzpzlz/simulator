@@ -1,5 +1,5 @@
-#include "../includes/queue.h"
-#include "../includes/scenario.h"
+#include "queue.h"
+#include "scenario.h"
 #include "queue_algorithm.h"
 
 namespace ClusterSimulator

@@ -1,6 +1,6 @@
-#include "../includes/scenario.h"
-#include "../includes/job.h"
-#include "../includes/queue.h"
+#include "scenario.h"
+#include "job.h"
+#include "queue.h"
 
 namespace ClusterSimulator
 {

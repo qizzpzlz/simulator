@@ -31,10 +31,8 @@ SOFTWARE.
 #include <algorithm>
 #include <any>
 #include <functional>
-#include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <list>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -133,7 +131,7 @@ public:
       return start;
     } else if (mNumArgs <= static_cast<size_t>(std::distance(start, end))) {
       end = std::next(start, mNumArgs);
-      if (std::any_of(start, end, Argument::is_optional)) {
+      if (std::any_of(start, end, is_optional)) {
         throw std::runtime_error("optional argument in parameter sequence");
       }
       std::transform(start, end, std::back_inserter(mValues), mAction);

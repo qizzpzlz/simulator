@@ -1,12 +1,10 @@
-#include "../includes/job.h"
-#include "../includes/host.h"
-#include "../dependencies/spdlog/spdlog.h"
-#include "../includes/cluster_simulation.h"
+#include "job.h"
+#include "host.h"
+#include "cluster_simulation.h"
+#include "enum_converter.h"
 
 namespace ClusterSimulator
 {
-	
-
 	int Host::id_gen_ = 0;
 	std::random_device Host::rd_{};
 	std::mt19937 Host::gen_(rd_());
@@ -21,21 +19,24 @@ namespace ClusterSimulator
 	void Host::execute_job(Job& job)
 	{
 		simulation->num_dispatched_slots += job.slot_required;
-		if (job.total_pending_duration > milliseconds(0))
+		if (job.total_pending_duration > 0ms)
 			simulation->update_pending_duration(job.total_pending_duration);
 
 		job.queue_managing_this_job->using_job_slots += job.slot_required;
-		ClusterSimulation::log(LogLevel::info, "Job #{0} is executed in Host {1}"
-			, job.id, this->get_name());
+
+		if constexpr (ClusterSimulation::LOG_ANY)
+			simulation->log(LogLevel::info, "Job #{0} is executed in Host {1}"
+				, job.id, this->get_name());
 
 		const auto run_time{ duration_cast<milliseconds>(get_expected_run_time(job) * 0.75) };
 		if (run_time < 0ms)
 			throw std::runtime_error("run time can't be negative.");
 		try_update_expected_time_of_completion(run_time);
 
-		if (slot_running_ + job.slot_required > max_slot)
-			ClusterSimulation::log(LogLevel::err, 
-				"Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
+		if constexpr (ClusterSimulation::LOG_ANY)
+			if (slot_running_ + job.slot_required > max_slot)
+				simulation->log(LogLevel::err, 
+					"Host {0}: Slot required for job {1} cannot be fulfilled with this host.", id, job.id);
 
 		slot_running_ += job.slot_required;
 		num_current_running_slots += job.slot_required;
@@ -56,14 +57,13 @@ namespace ClusterSimulator
 				job.queue_managing_this_job->using_job_slots -= job.slot_required;
 
 				this->simulation->log_using_slots();
-				ClusterSimulation::log_jobmart(job);
+				this->simulation->log_jobmart(job);
 			});
 
 		cluster->update();
 	}
 
 	
-
 	void Host::exit_job(const Job& job)
 	{
 		slot_running_ -= job.slot_required;
@@ -78,10 +78,12 @@ namespace ClusterSimulator
 
 		// std::stringstream ss(job.get_exit_host_status());
 		// ss >> Utils::enum_from_string<HostStatus>(this->status);
-		ClusterSimulation::log(LogLevel::info,
-			"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
-			, job.id, this->get_name(), (job.finish_time - job.start_time).count()
-			, job.cpu_time.count() + job.non_cpu_time.count());
+
+		if constexpr (ClusterSimulation::LOG_ANY)
+			simulation->log(LogLevel::info,
+				"Job #{0} is finished in Host {1}. (actual run time: {2} ms, scenario run time: {3} ms)"
+				, job.id, this->get_name(), (job.finish_time - job.start_time).count()
+				, job.cpu_time.count() + job.non_cpu_time.count());
 
 		cluster->update();
 	}
