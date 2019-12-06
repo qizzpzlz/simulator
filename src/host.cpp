@@ -69,7 +69,7 @@ namespace ClusterSimulator
 				, job.id, this->get_name());
 
 		// Estimate run time for the job in this host.
-		const auto run_time{ duration_cast<milliseconds>(get_expected_run_time(job) * 0.75) };
+		const auto run_time{ duration_cast<milliseconds>(get_expected_run_time(job) * ClusterSimulation::RUNTIME_MULTIPLIER) };
 		if (run_time < 0ms)
 			throw std::runtime_error("run time can't be negative.");
 

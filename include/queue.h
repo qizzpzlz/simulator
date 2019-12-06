@@ -26,7 +26,11 @@ namespace ClusterSimulator
 	public:
 		JobWrapper(std::unique_ptr<Job>&& job_ptr) : job_{ std::forward<std::unique_ptr<Job>>(job_ptr) }{}
 		bool is_dispatched() const noexcept { return is_dispatched_; }
-		void execute(Host* host) { host->execute_job(std::move(job_)); }
+		void execute(Host* host)
+		{
+			host->execute_job(std::move(job_));
+			is_dispatched_ = true;
+		}
 		Job* operator->() const noexcept { return job_.operator->(); }
 		Job& operator*() const noexcept { return job_.operator*(); }
 	};

@@ -149,9 +149,9 @@ namespace ClusterSimulator
 	{
 	protected:
 		using Jobs = std::vector<JobWrapper>;
+		static constexpr bool USE_OMP = true;
 	public:
 		virtual const std::string& get_name() const noexcept = 0;
-
 		virtual void run(Jobs& jobs, Cluster& cluster) const = 0;
 	};
 
@@ -261,7 +261,8 @@ public:
 				std::pair<milliseconds, size_t> min_pair = std::make_pair(milliseconds::max(), 0);
 ;
 				int j;
-				#pragma omp parallel for
+				if constexpr(USE_OMP)
+					#pragma omp parallel for
 				for (j = 0; j < cluster.count(); j++)
 				{
 					auto completion_time = cluster[j].get_expected_completion_duration(*jobs[i]);

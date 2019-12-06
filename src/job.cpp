@@ -7,18 +7,14 @@ namespace ClusterSimulator
 	int Job::id_gen_ = 0;
 
 	using namespace std::chrono;
-	milliseconds dtom(double value)
-	{
-		return duration_cast<milliseconds>(duration<double>(value));
-	}
 
 	Job::Job(const ScenarioEntry& entry, Queue& queue, const ms submit_time) :
 		id{ id_gen_++ },
 		slot_required{ entry.event_detail.num_slots },
 		mem_required{ entry.event_detail.mem_req },
 		submit_time{ submit_time },
-		cpu_time{ dtom(entry.event_detail.job_cpu_time) },
-		non_cpu_time{ dtom(entry.event_detail.job_non_cpu_time) },
+		cpu_time{ double_to_milliseconds(entry.event_detail.job_cpu_time) },
+		non_cpu_time{ double_to_milliseconds(entry.event_detail.job_non_cpu_time) },
 		queue_managing_this_job{ &queue }
 		//run_time{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(entry.event_detail.job_run_time)) },
 		//queue_managing_this_job{ std::make_shared<Queue>(queue) },

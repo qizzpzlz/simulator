@@ -20,6 +20,8 @@ constexpr std::string_view LOG_DIR = "logs/";
 
 namespace fs = std::filesystem;
 
+
+
 int main(int argc, char *argv[])
 {
 	argparse::ArgumentParser program("cluster-simulator");
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
 	//MinMinAlgorithm minmin(cluster.size());
 
 	// Start simulation
-	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MinMin};
+	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::OLB};
 
 	simulation.run();
 

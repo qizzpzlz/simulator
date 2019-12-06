@@ -336,7 +336,7 @@ namespace ClusterSimulator
 			JobWrapper& job{ jobs_.back() };
 
 			// Set pending for not assigned jobs
-			if (job.is_dispatched())
+			if (!job.is_dispatched())
 			{
 				job->set_pending(simulation_->get_current_time());
 				if constexpr (ClusterSimulation::LOG_ANY)

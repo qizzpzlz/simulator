@@ -232,6 +232,7 @@ namespace ClusterSimulator
 			//"### Number of successful jobs: " << num_successful_jobs_ << "\n" <<
 			"#### Dispatch frequency: " << DISPATCH_FREQUENCY.count() << " ms\n" <<
 			"#### Logging frequency: " << LOGGING_FREQUENCY.count() << " ms\n" <<
+			"#### Runtime multiplier: " << RUNTIME_MULTIPLIER << "\n" <<
 			"#### Actual run time of simulation: " << duration_cast<seconds>(actual_run_time_).count() << " s"
 			<< std::endl;
 
@@ -242,12 +243,7 @@ namespace ClusterSimulator
 			std::cout << ss.str();
 		
 
-		performance_file_ << "MakeSpan\n" <<
-			"### Simulated duration: " << total_simulation_time << "\n" <<
-			"### Number of submitted jobs: " << num_submitted_jobs_ << "\n" <<	
-			std::endl;
-		
-		
+		performance_file_ << ss.str() << std::endl;
 		performance_file_ << " end : "<< using_slot_record_.size() << "\n";
 		// for (const slot_record_entry s : using_slot_record_) performance_ << " time : "<< s.time_stamp.time_since_epoch().count() << ", value : "<< s.value << "\n";
 		

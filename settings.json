@@ -1,0 +1,32 @@
+{
+    "cluster_simulator_settings" : {
+        "file_config" : {
+            "scenario_files_directory_path" : "../scenarios",
+            "output_files_directory_path" : "../logs",
+            "log_output_file_name" : "log_output_file",
+            "jobmart_file_name" : "jobmart_raw_replica.txt",
+            "performance_file_name" : "performance.txt",
+            "pending_file_name" : "pending.txt"
+        },
+
+        "logging_config" : {
+            "console_output" : false,
+            "console_warning_output" : false,
+            "log_file_output" : false,
+            "slots_file_output" : false,
+            "job_submit_file_output" : false,
+            "logger_pattern" : "[%l] &v"
+        },
+
+        "parameters" : {
+            "dispatch_frequency" : 10000,
+            "logging_frequency" : 10000,
+            "counting_frequency" : 10000,
+            "use_only_default_queue" : true,
+            "runtime_multiplier" : 2.0,
+            "scenario_lines_limit" : -1
+        },
+
+        "queue_algorithm" : "MinMin"
+    }
+}

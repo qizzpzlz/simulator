@@ -25,6 +25,7 @@ namespace ClusterSimulator
 	class ClusterSimulation
 	{
 		friend class Scenario;
+		friend class Host;
 
 		/*Static settings for simulation.*/
 
@@ -41,10 +42,11 @@ namespace ClusterSimulator
 		static constexpr bool SLOTS_FILE_OUTPUT = true;
 		static constexpr bool JOB_SUBMIT_FILE_OUTPUT = true;
 		static constexpr char LOGGER_PATTERN[] = "[%l] %v";
-		static constexpr milliseconds DISPATCH_FREQUENCY{ 15000 };
+		static constexpr milliseconds DISPATCH_FREQUENCY{ 30000 };
 		static constexpr milliseconds LOGGING_FREQUENCY{ 10000 };
 		static constexpr milliseconds COUNTING_FREQUENCY{ 10000 };
-		static constexpr bool USE_ONLY_DEFAULT_QUEUE = true;
+		static constexpr bool USE_ONLY_DEFAULT_QUEUE = false;
+		static constexpr double RUNTIME_MULTIPLIER = 2;
 
 	public:
 		static constexpr bool LOG_ANY = CONSOLE_OUTPUT || LOG_FILE_OUTPUT;
@@ -97,7 +99,7 @@ namespace ClusterSimulator
 
 		ms get_current_time() const { return current_time_; }
 
-		std::enable_if<USE_ONLY_DEFAULT_QUEUE, Queue>::type& get_default_queue() { return all_queues_.back(); }
+		Queue& get_default_queue() { return all_queues_[0]; }
 		// TODO: use id instead of name
 		Queue& find_queue (const std::string& name);
 		const Host& find_host(const std::string& name) const;

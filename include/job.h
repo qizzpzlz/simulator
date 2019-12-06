@@ -83,6 +83,11 @@ namespace ClusterSimulator
 
 		static int id_gen_;
 	};
+
+	inline milliseconds double_to_milliseconds(double value)
+	{
+		return duration_cast<milliseconds>(duration<double>(value));
+	}
 }
 
 
