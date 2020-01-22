@@ -48,6 +48,8 @@ file(GLOB SRC_FILES
 # Add source to this project's executable.
 add_executable (cluster-simulator ${SRC_FILES})
 
+add_subdirectory(static-genetic-algorithm)
+
 target_include_directories(cluster-simulator PUBLIC include/)
 target_include_directories(cluster-simulator PUBLIC dependencies/)
 
