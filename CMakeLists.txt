@@ -35,6 +35,9 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/bprinter dependencies)
 add_library(argparse INTERFACE)
 target_sources(argparse INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/argparse.hpp)
 target_include_directories(argparse INTERFACE dependencies/)
+add_library(json11 INTERFACE)
+target_sources(json11 INTERFACE ${CMAKE_SOURCE_DIR}/dependencies/json11.cpp)
+target_include_directories(json11 INTERFACE dependencies/)
 
 file(GLOB SRC_FILES
 	./*.cpp
