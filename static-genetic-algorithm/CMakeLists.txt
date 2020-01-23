@@ -8,7 +8,9 @@ add_executable(static-genetic-algorithm
 	file_reader.cpp
 	host.h
 	job.h
+	parameters.h
 	chromosome.h
+	chromosome.cpp
 	genetic_algorithm.h
 	genetic_algorithm.cpp)
 

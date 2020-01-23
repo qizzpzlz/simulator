@@ -1,8 +1,7 @@
 #pragma once
-#include <array>
+#include "parameters.h"
+#include "host.h"
 #include <vector>
-#include "genetic_algorithm.h"
-#include <memory_resource>
 #include <random>
 
 namespace genetic
@@ -13,6 +12,8 @@ namespace genetic
 	{
 	public:
 		using const_iterator = std::vector<uint16_t>::const_iterator;
+		enum class Type{ RANDOM, CROSSOVER, MUTATION };
+		inline static std::string type_strings[] = { "Random", "Crossover", "Mutation" };
 
 		Chromosome() : data_(LENGTH), hosts_(host_prototypes) {}
 
@@ -29,70 +30,37 @@ namespace genetic
 			return data_[index];
 		}
 
-		static Chromosome&& create_random()
+		[[nodiscard]] static Chromosome create_random();
+
+		void make_random();
+
+		[[nodiscard]] Chromosome mutate() const;
+
+		[[nodiscard]] Chromosome crossover(const Chromosome& other) const;
+
+		void crossover(const Chromosome& p1, const Chromosome& p2);
+
+		double calculate_fitness();
+
+		double fitness()
 		{
-			static thread_local std::default_random_engine rnd;
-			std::uniform_int_distribution<> dist(0, NUM_HOSTS);
-			Chromosome chromosome(LENGTH);
-			auto& data = chromosome.data_;
-			for (int i = 0; i < LENGTH; ++i)
-				data[i] = dist(rnd);
-			return std::move(chromosome);
+			return calculate_fitness();
 		}
 
-		void make_random()
-		{
-			static thread_local std::default_random_engine rnd;
-			//std::uniform_int_distribution<> dist(0, NUM_HOSTS);
-			//for (int i = 0; i < LENGTH; ++i)
-			//	data_[i] = dist(rnd);
-			//
-			for (int i = 0; i < LENGTH; ++i)
-			{
-				auto& eligible_hosts = job_table[i].hosts;
-				std::uniform_int_distribution<> dist(0, eligible_hosts.size() - 1);
-				data_[i] = eligible_hosts[dist(rnd)].value;
-			}
-		}
+		[[nodiscard]] std::size_t age() const noexcept { return age_; }
+		void increase_age() { ++age_; }
 
-		double calculate_fitness()
+		[[nodiscard]] Type type() const noexcept { return type_; }
+
+		void save(const char* file_path) const
 		{
-			if (fitness_cache >= 0) return fitness_cache;
-			
-			double q_time = 0;
+			std::filebuf output_stream;
+			output_stream.open(file_path, std::ios::out | std::ios::binary);
 
 			for (auto i = 0; i < LENGTH; ++i)
 			{
-				auto& host = get_host(data_[i]);
-				auto& job_info = job_table[i];
-				if (host.slots_remaining >= job_info.slots())
-					host.allocate_immediately(Job(job_table[i]), host_table[data_[i]].cpu_factor);
-				else
-				{
-					while (true)
-					{
-						auto alloc = host.allocated_jobs.back();
-						host.allocated_jobs.pop_back();
-						//host.allocated_jobs.
-						host.slots_remaining += alloc.slots();
-
-						if (host.slots_remaining >= job_info.slots())
-						{
-							const auto delay =
-								std::max({ static_cast<uint32_t>(0),
-									alloc.finish_time() - job_info.submit_time() });
-
-							q_time += delay / 3600;
-
-							host.allocate(Job(job_table[i]), delay, host_table[data_[i]].cpu_factor);
-							break;
-						}
-					}
-				}
+				output_stream.sputn(reinterpret_cast<const char*>(&data_[i]), sizeof(uint16_t));
 			}
-
-			fitness_cache = q_time;
-			return q_time;
 		}
 		
 	private:
@@ -102,8 +70,21 @@ namespace genetic
 		{
 			
 		}
+
+		void reset(Type type)
+		{
+			type_ = type;
+			hosts_ = host_prototypes;
+			fitness_cache_ = 1;
+			age_ = 0;
+		}
+		
 		std::vector<uint16_t> data_;
 		std::vector<Host> hosts_;
-		double fitness_cache = -1;
+		double fitness_cache_ = 1;
+		std::size_t age_ = 0;
+		Type type_ ;
+
+		inline static thread_local std::default_random_engine rnd{};
 	};
 }
