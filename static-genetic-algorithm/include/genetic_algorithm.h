@@ -2,7 +2,6 @@
 #include "parameters.h"
 #include "chromosome.h"
 #include <array>
-#include <execution>
 #include "utils.h"
 #include <iostream>
 #include <iomanip>

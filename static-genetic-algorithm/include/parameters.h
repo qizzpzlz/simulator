@@ -16,7 +16,7 @@ namespace genetic
 	constexpr std::size_t NUM_INITIAL_POPULATION = NUM_POPULATION_TO_KEEP * OFFSPRING_RATIO;
 	constexpr std::size_t NUM_OFFSPRING = NUM_POPULATION_TO_KEEP * (OFFSPRING_RATIO - 1);
 	//constexpr std::size_t KEEP_SIZE = 15;
-	constexpr std::size_t NUM_ITERATIONS = 10;
+	constexpr std::size_t NUM_ITERATIONS = 10000;
 	//constexpr std::size_t AGE_UPPER_LIMIT = 0;
 	constexpr double CROSSOVER_PROBABILITY = 1;
 	constexpr double CROSSOVER_BALANCER = 0.5;

@@ -4,6 +4,8 @@
 #include <numeric>
 #include <random>
 #include <functional>
+#include <mutex>
+#include <memory>
 
 template <std::size_t N, typename T, std::size_t K, typename WEIGHT_TYPE, typename RND>
 std::array<std::size_t, N> get_weighted_random_items(const std::array<T, K>& array, std::function<WEIGHT_TYPE(const T&)> func, RND& rnd)
@@ -24,12 +26,11 @@ std::array<std::size_t, N> get_weighted_random_items(const std::array<T, K>& arr
 	}
 
 	std::uniform_real_distribution<WEIGHT_TYPE> dist(0, total_weight);
-	std::array<std::size_t, N> selected_indices{};
+	std::array<int, N> selected_indices{};
+	selected_indices.fill(-1);
 	std::size_t n = 0;
-	for (auto i = 0; i < N; ++i)
+	for (int i = 0; i < N; ++i)
 	{
-		
-		//reroll:
 		auto roll = dist(rnd);
 		for (auto j = 0; j < array.size(); ++j)
 		{

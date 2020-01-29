@@ -72,10 +72,19 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	const auto time_finished = std::chrono::system_clock::now();
 
 	// Save output files
 	current_best->save("best_chromosome.bin");
 	save_population(population, "last_population.bin");
 	save_epochs_record(output_buffer, "records.csv");
 	save_summary_text("summary.txt");
+
+	const auto init_duration = std::chrono::duration_cast<std::chrono::milliseconds>(time_after_initialisation - time_before_initialisation);
+	const auto genetic_duration = std::chrono::duration_cast<std::chrono::minutes>(time_finished - time_after_initialisation);
+
+	std::ofstream file("summary.txt", std::ios::app | std::ios::out);
+	file << "- Time elapsed for initialisation: " << init_duration.count() << " ms" << std::endl;
+	file << "- Time elapsed for genetic algorithm: " << genetic_duration.count() << " min" << std::endl;
+	file.close();
 }

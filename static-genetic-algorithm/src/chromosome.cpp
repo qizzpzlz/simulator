@@ -26,13 +26,14 @@ namespace genetic
 
 	Chromosome Chromosome::mutate() const
 	{
-		const std::uniform_real_distribution<> real_distribution{};
+		std::uniform_real_distribution<> real_distribution{};
 
 		Chromosome child{};
 		child.type_ = Type::MUTATION;
 		std::copy(data_.begin(), data_.end(), child.data_.begin());
 		for (int i = 0; i < LENGTH; ++i)
 		{
+			// auto roll = real_distribution(rnd_);
 			auto roll = real_distribution(rnd_);
 			if (roll >= GENE_MUTATION_PROBABILITY) continue;
 			
@@ -52,7 +53,7 @@ namespace genetic
 
 		if constexpr (CROSSOVER_TYPE == CrossoverTypes::Uniform)
 		{
-			const std::uniform_real_distribution<> real_distribution{};
+			std::uniform_real_distribution<> real_distribution{};
 
 			for (int i = 0; i < LENGTH; ++i)
 			{
@@ -82,7 +83,7 @@ namespace genetic
 		reset(Type::CROSSOVER);
 		if constexpr (CROSSOVER_TYPE == CrossoverTypes::Uniform)
 		{
-			const std::uniform_real_distribution<> real_distribution{};
+			std::uniform_real_distribution<double> real_distribution{};
 
 			for (int i = 0; i < LENGTH; ++i)
 			{

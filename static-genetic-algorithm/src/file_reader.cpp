@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
+#include <cstring>
 #include "file_reader.h"
 #include "job.h"
 
@@ -15,7 +16,7 @@ namespace genetic
 		auto file = std::ifstream(file_name, std::ios::binary | std::ios::ate);
 
 		if (!file)
-			throw std::runtime_error("");
+			throw std::runtime_error("Can't find a binary file for the job table.");
 
 		//auto end = file.tellg();
 		//file.seekg(0, std::ios::beg);
