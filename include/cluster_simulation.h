@@ -45,10 +45,11 @@ namespace ClusterSimulator
 		static constexpr milliseconds DISPATCH_FREQUENCY{ 30000 };
 		static constexpr milliseconds LOGGING_FREQUENCY{ 10000 };
 		static constexpr milliseconds COUNTING_FREQUENCY{ 10000 };
-		static constexpr bool USE_ONLY_DEFAULT_QUEUE = false;
-		static constexpr double RUNTIME_MULTIPLIER = 2;
+		static constexpr bool USE_ONLY_DEFAULT_QUEUE = true;
+		static constexpr double RUNTIME_MULTIPLIER = 1;
 
 	public:
+		static constexpr bool USE_STATIC_HOST_TABLE_FOR_JOBS = true;
 		static constexpr bool LOG_ANY = CONSOLE_OUTPUT || LOG_FILE_OUTPUT;
 		using Action = std::function<void()>;
 
@@ -117,6 +118,7 @@ namespace ClusterSimulator
 		constexpr void update_latest_finish_time(ms time) noexcept { latest_finish_time_ = time; }
 		constexpr void increment_failed_jobs() noexcept { ++num_failed_jobs_; }
 		constexpr void update_pending_duration(milliseconds duration) { total_pending_duration_ += duration; }
+		constexpr void update_total_queuing_time(milliseconds q_time) { total_queuing_time_ += q_time; }
 
 	private:
 		Cluster& cluster_;
@@ -130,6 +132,7 @@ namespace ClusterSimulator
 		std::size_t num_failed_jobs_{ 0 };
 		std::size_t num_pending_jobs_{ 0 };
 		milliseconds total_pending_duration_{};
+		milliseconds total_queuing_time_{};
 
 		class Dispatcher
 		{

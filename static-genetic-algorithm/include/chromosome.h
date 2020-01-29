@@ -12,10 +12,19 @@ namespace genetic
 	{
 	public:
 		using const_iterator = std::vector<uint16_t>::const_iterator;
-		enum class Type{ RANDOM, CROSSOVER, MUTATION };
-		inline static std::string type_strings[] = { "Random", "Crossover", "Mutation" };
+		enum class Type{ RANDOM, CROSSOVER, MUTATION, GENESIS };
+		static constexpr unsigned NUM_TYPES = static_cast<int>(Type::GENESIS) + 1;
+		static constexpr char* type_strings[] = { "Random", "Crossover", "Mutation", "Genesis" };
 
 		Chromosome() : data_(LENGTH), hosts_(host_prototypes) {}
+
+		Chromosome(uint16_t* data, std::size_t length)
+		: data_(data, data + length)
+		, hosts_(host_prototypes)
+		, type_{Type::GENESIS}
+		{
+			
+		}
 
 		[[nodiscard]] Host& get_host(std::size_t index)
 		{
@@ -47,10 +56,22 @@ namespace genetic
 			return calculate_fitness();
 		}
 
+		double fitness() const
+		{
+			if (fitness_cache_ > 0)
+				throw std::runtime_error("");
+			return fitness_cache_;
+		}
+
 		[[nodiscard]] std::size_t age() const noexcept { return age_; }
 		void increase_age() { ++age_; }
 
 		[[nodiscard]] Type type() const noexcept { return type_; }
+
+		const uint16_t* get_raw_data()
+		{
+			return data_.data();
+		}
 
 		void save(const char* file_path) const
 		{
@@ -62,6 +83,8 @@ namespace genetic
 				output_stream.sputn(reinterpret_cast<const char*>(&data_[i]), sizeof(uint16_t));
 			}
 		}
+
+		static std::default_random_engine& get_random_engine() { return rnd_; }
 		
 	private:
 		explicit Chromosome(uint16_t length)
@@ -85,6 +108,6 @@ namespace genetic
 		std::size_t age_ = 0;
 		Type type_ ;
 
-		inline static thread_local std::default_random_engine rnd{};
+		inline static thread_local std::default_random_engine rnd_{};
 	};
 }

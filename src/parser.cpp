@@ -3,6 +3,7 @@
 #include "cluster.h"
 #include "enum_converter.h"
 #include "json11.hpp"
+#include "host.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -100,6 +101,78 @@ namespace ClusterSimulator::Parser
 			std::cout << "Successfully parsed " << scenario->count() << " scenario entries." << std::endl;
 		}
 
+		void parse_scenario_from_table(Scenario* scenario, const std::string& file_path)
+		{
+			auto file = std::ifstream(file_path, std::ios::binary | std::ios::ate);
+
+			if (!file)
+				throw std::runtime_error("");
+
+			file.seekg(0, std::ifstream::end);
+			const std::size_t size = file.tellg();
+			file.seekg(0, std::ifstream::beg);
+
+			if (size == 0) return;
+
+			std::vector<std::byte> buffer(size);
+
+			if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+				throw std::runtime_error("");
+
+			auto read_uint32_padded = [](char** current_ptr, std::size_t& read) -> uint32_t
+			{
+				const uint32_t value = *reinterpret_cast<uint32_t*>(*current_ptr);
+				*current_ptr = (*current_ptr + sizeof(uint32_t) + 1);
+				read += sizeof(uint32_t) + 1;
+				return value;
+			};
+			auto read_uint16_padded = [](char** current_ptr, std::size_t& read) -> uint16_t
+			{
+				const uint16_t value = *reinterpret_cast<uint16_t*>(*current_ptr);
+				*current_ptr = *current_ptr + sizeof(uint16_t) + 1;
+				read += sizeof(uint16_t) + 1;
+				return value;
+			};
+
+			
+			Scenario& s = *scenario;
+
+			std::size_t read = 0;
+			char* current = reinterpret_cast<char*>(buffer.data());
+
+			auto first_timestamp = read_uint32_padded(&current, read);
+			ScenarioEntry first_entry;
+			first_entry.type = ScenarioEntry::ScenarioEntryType::SUBMISSION;
+			first_entry.timestamp = ms{};
+			first_entry.event_detail.num_slots = read_uint32_padded(&current, read);
+			first_entry.event_detail.job_cpu_time = read_uint32_padded(&current, read);
+			first_entry.event_detail.job_non_cpu_time = read_uint32_padded(&current, read);
+
+			auto first_array_size = read_uint16_padded(&current, read);
+			first_entry.eligible_indices.reserve(first_array_size);
+			for (auto i = 0; i < first_array_size; ++i)
+				first_entry.eligible_indices.push_back(read_uint16_padded(&current, read));
+
+			s.add_scenario_entry(first_entry);
+			
+			while (read < size)
+			{
+				ScenarioEntry entry;
+				entry.type = ScenarioEntry::ScenarioEntryType::SUBMISSION;
+				entry.timestamp = ms{ std::chrono::duration<long long>{ static_cast<long long>(read_uint32_padded(&current, read) - first_timestamp) } };
+				entry.event_detail.num_slots = read_uint32_padded(&current, read);
+				entry.event_detail.job_cpu_time = read_uint32_padded(&current, read);
+				entry.event_detail.job_non_cpu_time = read_uint32_padded(&current, read);
+
+				auto array_size = read_uint16_padded(&current, read);
+				entry.eligible_indices.reserve(array_size);
+				for (auto i = 0; i < array_size; ++i)
+					entry.eligible_indices.push_back(read_uint16_padded(&current, read));
+
+				s.add_scenario_entry(entry);
+			}
+		}
+
 		void parse_cluster(Cluster* cluster, const std::string& file_path)
 		{
 			using namespace json11;
@@ -145,5 +218,41 @@ namespace ClusterSimulator::Parser
 			}
 
 			std::cout << "Successfully parsed a cluster with " << cluster->count() << " hosts." << std::endl;
+		}
+
+		void parse_cluster_from_binary(Cluster* cluster, const std::string& file_path)
+		{
+			auto file = std::ifstream(file_path, std::ios::binary | std::ios::ate);
+
+			if (!file)
+				throw std::runtime_error("Can't find binary hosts file.");
+
+			file.seekg(0, std::ifstream::end);
+			const size_t size = file.tellg();
+			file.seekg(0, std::ifstream::beg);
+
+			if (size == 0) return;
+
+			std::vector<std::byte> buffer(size);
+
+			if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+				throw std::runtime_error("");
+
+			std::byte* ptr = buffer.data();
+
+			unsigned short count = *reinterpret_cast<unsigned short*>(ptr);
+			ptr += sizeof(unsigned short);
+
+			HostInfo* current = reinterpret_cast<HostInfo*>(ptr);
+			std::vector<HostInfo> hosts;
+			hosts.reserve(11000);
+			memcpy(hosts.data(), current, sizeof(current) / sizeof(Host));
+
+			hosts.assign(current, current + count);
+
+			for (auto& info : hosts)
+			{
+				cluster->add_node(Host("", info.cpu_factor, 0, 0, 0, 0, info.max_slots, 0, 0, 0, "", HostStatus::OK, *cluster));
+			}
 		}
 }

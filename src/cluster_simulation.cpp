@@ -222,6 +222,7 @@ namespace ClusterSimulator
 		ss << "\n" <<
 			"## Simulation Summary" << "\n" <<
 			"### Simulated duration (MakeSpan): " << total_simulation_time << " ms\n" <<
+			"### Total Queuing Time :" << total_queuing_time_.count() << " ms\n" <<
 			"### Available hosts: " << num_total_available_hosts << "\n" <<
 			"### Number of queues: " << all_queues_.size() << "\n" <<
 			"### Number of applications: " << num_total_applications << "\n" <<

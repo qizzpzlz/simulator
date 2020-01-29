@@ -32,7 +32,7 @@ namespace ClusterSimulator
 
 	Queue::~Queue() = default;
 
-	void Queue::set_algorithm(const QueueAlgorithm* const algorithm) noexcept
+	void Queue::set_algorithm(const QueueAlgorithm* const algorithm)
 	{
 		if (algorithm == nullptr)
 			throw std::runtime_error("Cannot set null algorithm.");

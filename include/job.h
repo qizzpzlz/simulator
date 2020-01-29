@@ -80,6 +80,9 @@ namespace ClusterSimulator
 		//int num_cpu_required_;
 		//int task_index_;
 		//std::vector<Task> tasks_;
+		//
+
+		std::vector<Host*> eligible_hosts_;
 
 		static int id_gen_;
 	};

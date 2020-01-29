@@ -20,7 +20,7 @@ namespace genetic
 		{
 			auto& eligible_hosts = job_table[i].hosts;
 			std::uniform_int_distribution<> dist(0, eligible_hosts.size() - 1);
-			data_[i] = eligible_hosts[dist(rnd)].value;
+			data_[i] = eligible_hosts[dist(rnd_)].value;
 		}
 	}
 
@@ -33,12 +33,12 @@ namespace genetic
 		std::copy(data_.begin(), data_.end(), child.data_.begin());
 		for (int i = 0; i < LENGTH; ++i)
 		{
-			auto roll = real_distribution(rnd);
+			auto roll = real_distribution(rnd_);
 			if (roll >= GENE_MUTATION_PROBABILITY) continue;
 			
 			auto& eligible_hosts = job_table[i].hosts;
 			std::uniform_int_distribution<> dist(0, eligible_hosts.size() - 1);
-			child.data_[i] = eligible_hosts[dist(rnd)].value;
+			child.data_[i] = eligible_hosts[dist(rnd_)].value;
 		}
 
 		return child;
@@ -56,7 +56,7 @@ namespace genetic
 
 			for (int i = 0; i < LENGTH; ++i)
 			{
-				auto roll = real_distribution(rnd);
+				auto roll = real_distribution(rnd_);
 				child.data_[i] = roll < CROSSOVER_BALANCER
 					? data_[i]
 					: other.data_[i];
@@ -65,7 +65,7 @@ namespace genetic
 		else if constexpr (CROSSOVER_TYPE == CrossoverTypes::SinglePoint)
 		{
 			std::uniform_int_distribution<> int_distribution(0, LENGTH - 1);
-			auto point = int_distribution(rnd);
+			auto point = int_distribution(rnd_);
 			std::copy(data_.begin(), data_.begin() + point, child.data_.begin());
 			std::copy(other.data_.begin() + point, other.data_.end(), child.data_.begin() + point);
 		}
@@ -86,7 +86,7 @@ namespace genetic
 
 			for (int i = 0; i < LENGTH; ++i)
 			{
-				auto roll = real_distribution(rnd);
+				auto roll = real_distribution(rnd_);
 				data_[i] = roll < CROSSOVER_BALANCER
 					? p1.data_[i]
 					: p2.data_[i];

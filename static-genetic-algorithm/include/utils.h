@@ -6,7 +6,7 @@
 #include <functional>
 
 template <std::size_t N, typename T, std::size_t K, typename WEIGHT_TYPE, typename RND>
-std::array<std::size_t, N> get_weighted_random_items(std::array<T, K>& array, std::function<WEIGHT_TYPE(T&)> func, RND& rnd)
+std::array<std::size_t, N> get_weighted_random_items(const std::array<T, K>& array, std::function<WEIGHT_TYPE(const T&)> func, RND& rnd)
 {
 	static_assert(K > 0);
 
@@ -62,3 +62,22 @@ std::array<std::size_t, N> get_weighted_random_items(std::array<T, K>& array, st
 
 	return selected_indices;
 }
+
+class _globalRandom
+{
+	void seed(int seed)
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		_engine.seed(seed);
+	}
+	double next_double()
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		return _real_dist(_engine);
+	}
+	
+
+	inline static std::mutex _mutex{};
+	inline static std::mt19937_64 _engine{};
+	inline static std::uniform_real_distribution<> _real_dist{};
+};

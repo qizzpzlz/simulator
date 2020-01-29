@@ -152,12 +152,13 @@ namespace ClusterSimulator
 		// 	return true;
 		// }
 
-		void set_algorithm(const QueueAlgorithm* const algorithm) noexcept;
+		void set_algorithm(const QueueAlgorithm* const algorithm);
 		const QueueAlgorithm* current_algorithm{ nullptr };
 
 		std::vector<Host*> match(const Job& job);
 
 	private:
+		friend class Job;
 		using HostReference = Host*;
 		using HostList = std::vector<HostReference>;
 

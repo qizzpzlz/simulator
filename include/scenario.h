@@ -66,6 +66,8 @@ namespace ClusterSimulator
 				//Utils::enum_to_string(type) <<
 				timestamp.time_since_epoch().count() << std::endl;
 		};
+
+		std::vector<unsigned short> eligible_indices;
 	};
 
 	/**
@@ -85,7 +87,7 @@ namespace ClusterSimulator
 		std::pair<std::vector<ScenarioEntry>, ms> pop_all_latest();
 
 		std::vector<Queue> generate_queues(ClusterSimulation&) const;
-		void add_scenario_entry(const ScenarioEntry& entry);
+		void add_scenario_entry(ScenarioEntry entry);
 
 	private:
 		std::queue<ScenarioEntry> entries_;

@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
 	std::default_random_engine rnd{};
 	std::uniform_real_distribution<> real_dist{};
-	
+	std::stringstream output_buffer{};
 	
 	using namespace genetic;
 	const std::function<double(Chromosome&)> get_fitness = [](Chromosome& c) { return c.fitness(); };
@@ -22,46 +22,29 @@ int main(int argc, char* argv[])
 	std::vector<Chromosome> mutants;
 
 	Chromosome* current_best;
+
+	const auto time_before_initialisation = std::chrono::system_clock::now();
 	
-	generate_initial_population(population);
+	generate_initial_population(population, offspring);
+
+	const auto time_after_initialisation = std::chrono::system_clock::now();
+
+	select_survivors(population, offspring, mutants);
 
 	for (auto iter = 0; iter < NUM_ITERATIONS; ++iter)
 	{
 		std::cout << "Epoch " << iter + 1 << std::endl;
 
 		// Generate offspring.
-		//for (int i = 0; i < NUM_OFFSPRING; ++i)
-		//{
-		//	auto roll = real_dist(rnd);
-		//	if (roll < CROSSOVER_PROBABILITY)
-		//	{
-		//		// Parent selection.
-		//		auto parent_indices = get_weighted_random_items<2>(population, get_fitness, rnd);
-
-		//		//offspring[i] = std::move(population[parent_indices[0]].crossover(population[parent_indices[1]]));
-		//		offspring[i].crossover(population[parent_indices[0]], population[parent_indices[1]]);
-		//	}
-		//	else
-		//	{
-		//		// Random children.
-		//		offspring[i].make_random();
-		//	}
-		//}
 		generate_offspring_parallel(population, offspring);
 
 		calculate_fitness_parallel(offspring);
-		//std::future<void> offspring_fitness_async(std::async([&] { return calculate_fitness_parallel(offspring); }));
-		
 
 		// Mutation
 		get_mutants(population, mutants, rnd);
 		get_mutants(offspring, mutants, rnd);
 
-		//std::future<void> mutants_fitness_async(std::async([&] {return calculate_fitness_parallel(mutants); }));
 		calculate_fitness_parallel(mutants);
-
-		//offspring_fitness_async.get();
-		//mutants_fitness_async.get();
 
 		select_survivors(population, offspring, mutants);
 
@@ -70,11 +53,18 @@ int main(int argc, char* argv[])
 		Chromosome& best = *std::max_element(population.begin(), population.end(), [](Chromosome& a, Chromosome& b) { return a.fitness() < b.fitness(); });
 		current_best = &best;
 
-		std::cout << "Best fitness: "
-				  << std::fixed << best.fitness()
-				  << " Age: " << best.age()
-				  << " Type: " << Chromosome::type_strings[static_cast<int>(best.type())]
-				  << std::endl;
+		if constexpr (CONSOLE_OUTPUT)
+		{
+			std::cout << "Best fitness: "
+				<< std::fixed << best.fitness()
+				<< " Age: " << best.age()
+				<< " Type: " << Chromosome::type_strings[static_cast<int>(best.type())]
+				<< std::endl;
+
+			print_population_composition_by_types(population);
+		}
+
+		output_buffer << std::fixed << iter << ", " << best.fitness() << std::endl;
 
 		for (auto& chromosome : population)
 		{
@@ -82,5 +72,10 @@ int main(int argc, char* argv[])
 		}
 	}
 
+
+	// Save output files
 	current_best->save("best_chromosome.bin");
+	save_population(population, "last_population.bin");
+	save_epochs_record(output_buffer, "records.csv");
+	save_summary_text("summary.txt");
 }

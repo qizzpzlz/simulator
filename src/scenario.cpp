@@ -4,7 +4,7 @@
 
 namespace ClusterSimulator
 {
-	void Scenario::add_scenario_entry(const ScenarioEntry& entry)
+	void Scenario::add_scenario_entry(ScenarioEntry entry)
 	{
 		entries_.push(entry);
 		unique_queues_.insert(entry.event_detail.queue_name);

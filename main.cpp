@@ -59,13 +59,16 @@ int main(int argc, char *argv[])
 	ClusterSimulator::Cluster cluster;
 		
 	// Parse the given scenario and the cluster from json files.
-	Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
-	Parser::parse_cluster(&cluster, host_path);
+	//Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
+	//Parser::parse_cluster(&cluster, host_path);
+
+	Parser::parse_scenario_from_table(&scenario, "../static-genetic-algorithm/job-eligibility.small.bin");
+	Parser::parse_cluster_from_binary(&cluster, "hosts.bin");
 
 	//MinMinAlgorithm minmin(cluster.size());
 
 	// Start simulation
-	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::OLB};
+	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MinMin};
 
 	simulation.run();
 

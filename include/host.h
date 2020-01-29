@@ -4,6 +4,7 @@
 #include <random>
 #include <memory>
 #include <utility>
+#include <streambuf>
 
 namespace ClusterSimulator
 {
@@ -25,6 +26,18 @@ namespace ClusterSimulator
 
 	class Cluster;
 	class ClusterSimulation;
+
+	struct HostInfo
+	{
+		float cpu_factor;
+		unsigned char max_slots;
+
+		bool write(std::streambuf& buf) const
+		{
+			const auto size = sizeof(HostInfo);
+			return buf.sputn(reinterpret_cast<const char*>(this), size);
+		}
+	};
 
 	class Host
 	{

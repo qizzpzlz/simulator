@@ -1,6 +1,7 @@
 #include "scenario.h"
 #include "job.h"
 #include "queue.h"
+#include "cluster_simulation.h"
 
 namespace ClusterSimulator
 {
@@ -25,10 +26,22 @@ namespace ClusterSimulator
 		//dedicated_host_name_{ entry.event_detail.exec_hostname },
 		//exit_host_status_{ entry.event_detail.job_exit_status },
 		//mem_usage{ entry.event_detail.job_mem_usage },
-	{ }
+	{
+		if constexpr (ClusterSimulation::USE_STATIC_HOST_TABLE_FOR_JOBS)
+		{
+			eligible_hosts_.reserve(entry.eligible_indices.size());
+			std::transform(entry.eligible_indices.begin(), entry.eligible_indices.end(), std::back_inserter(eligible_hosts_),
+				[&cluster = queue.simulation_->get_cluster()](unsigned short index){return &cluster[index]; });
+		}
+	}
 
 	std::vector<Host*> Job::get_eligible_hosts() const
 	{
+		if constexpr (ClusterSimulation::USE_STATIC_HOST_TABLE_FOR_JOBS)
+		{
+			return eligible_hosts_;
+		}
+		
 		return queue_managing_this_job->match(*this);
 	}
 }

@@ -3,29 +3,33 @@
 #include "file_reader.h"
 #include <cstddef>
 #include <vector>
+#include <sstream>
 
 namespace genetic
 {
 	constexpr char binary_file_path[] = "../static-genetic-algorithm/job-eligibility.small.bin";
 
-	constexpr std::size_t NUM_POPULATION_TO_KEEP = 200;
+	constexpr std::size_t NUM_POPULATION_TO_KEEP = 500;
 	constexpr double SURVIVAL_RATIO = 0.2;
-	constexpr double OFFSPRING_RATIO = 5;
+	constexpr double OFFSPRING_RATIO = 10;
 	static_assert(OFFSPRING_RATIO >= 1);
-	
+	constexpr std::size_t NUM_INITIAL_POPULATION = NUM_POPULATION_TO_KEEP * OFFSPRING_RATIO;
 	constexpr std::size_t NUM_OFFSPRING = NUM_POPULATION_TO_KEEP * (OFFSPRING_RATIO - 1);
 	//constexpr std::size_t KEEP_SIZE = 15;
-	constexpr std::size_t NUM_ITERATIONS = 100;
-	constexpr std::size_t AGE_UPPER_LIMIT = 3;
+	constexpr std::size_t NUM_ITERATIONS = 10;
+	//constexpr std::size_t AGE_UPPER_LIMIT = 0;
 	constexpr double CROSSOVER_PROBABILITY = 1;
 	constexpr double CROSSOVER_BALANCER = 0.5;
 	
-	constexpr double MUTATION_PROBABILITY = 0.2;
-	constexpr double MUTATION_BALANCER = 0.5;
-	constexpr double GENE_MUTATION_PROBABILITY = 0.5;
+	constexpr double MUTATION_PROBABILITY = 0.25;
+	//constexpr double MUTATION_BALANCER = 0.5;
+	constexpr double GENE_MUTATION_PROBABILITY = 0.001;
 
 	enum class CrossoverTypes { SinglePoint, MultiplePoint, Uniform };
 	constexpr CrossoverTypes CROSSOVER_TYPE = CrossoverTypes::Uniform;
+	constexpr char* CROSSOVER_TYPE_STRINGS[] = {"SinglePoint", "MultiplePoint", "Uniform"};
+
+	constexpr bool CONSOLE_OUTPUT = false;
 
 	inline static const std::vector<Entry> job_table = read_binary(binary_file_path);
 	inline static std::vector<HostInfo> host_table = read_host_binary();
@@ -42,4 +46,13 @@ namespace genetic
 	}();
 	inline static const unsigned short LENGTH = job_table.size();
 	inline static const std::size_t NUM_HOSTS = host_table.size();
+
+
+	//constexpr std::string_view parameters_summary = []
+	//{
+	//	constexpr char 
+
+	//	
+	//	return "";
+	//}();
 }
