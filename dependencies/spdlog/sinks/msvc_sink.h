@@ -11,6 +11,7 @@
 #include <winbase.h>
 
 #include <mutex>
+#include <string>
 
 namespace spdlog {
 namespace sinks {

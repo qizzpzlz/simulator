@@ -4,6 +4,7 @@
 #pragma once
 
 #include <spdlog/tweakme.h>
+#include <spdlog/details/null_mutex.h>
 
 #include <atomic>
 #include <chrono>
@@ -23,6 +24,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+#include <windows.h>
 #endif //_WIN32
 
 #ifdef SPDLOG_COMPILED_LIB
@@ -239,4 +241,5 @@ std::unique_ptr<T> make_unique(Args &&... args)
 } // namespace spdlog
 
 #ifdef SPDLOG_HEADER_ONLY
+#include "common-inl.h"
 #endif

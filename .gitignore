@@ -352,7 +352,7 @@ cmake_install.cmake
 
 # Output files
 logs/*.txt
-*.a
+# *.a
 
 # scenarios
 scenarios/*.json

@@ -3,6 +3,8 @@
 #include "host.h"
 #include <vector>
 #include <random>
+#include <time.h>
+#include <thread>
 
 namespace genetic
 {
@@ -14,7 +16,7 @@ namespace genetic
 		using const_iterator = std::vector<uint16_t>::const_iterator;
 		enum class Type{ RANDOM, CROSSOVER, MUTATION, GENESIS };
 		static constexpr unsigned NUM_TYPES = static_cast<int>(Type::GENESIS) + 1;
-		static constexpr char* type_strings[] = { "Random", "Crossover", "Mutation", "Genesis" };
+		static constexpr char* const type_strings[] = { "Random", "Crossover", "Mutation", "Genesis" };
 
 		Chromosome() : data_(LENGTH), hosts_(host_prototypes) {}
 
@@ -84,7 +86,7 @@ namespace genetic
 			}
 		}
 
-		static std::default_random_engine& get_random_engine() { return rnd_; }
+		static std::mt19937_64& get_random_engine() { return rnd_; }
 		
 	private:
 		explicit Chromosome(uint16_t length)
@@ -108,6 +110,6 @@ namespace genetic
 		std::size_t age_ = 0;
 		Type type_ ;
 
-		inline static thread_local std::default_random_engine rnd_{};
+		inline static thread_local std::mt19937_64 rnd_{clock() + std::hash<std::thread::id>{}(std::this_thread::get_id())};
 	};
 }

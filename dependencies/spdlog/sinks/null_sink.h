@@ -7,6 +7,8 @@
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/details/synchronous_factory.h>
 
+#include <mutex>
+
 namespace spdlog {
 namespace sinks {
 

@@ -8,6 +8,7 @@
 #endif
 
 #include <spdlog/common.h>
+#include <spdlog/details/os.h>
 
 namespace spdlog {
 namespace sinks {

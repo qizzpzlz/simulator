@@ -7,9 +7,7 @@
 
 namespace genetic
 {
-	constexpr char binary_file_path[] = "../static-genetic-algorithm/job-eligibility.small.bin";
-
-	constexpr std::size_t NUM_POPULATION_TO_KEEP = 500;
+	constexpr std::size_t NUM_POPULATION_TO_KEEP = 100;
 	constexpr double SURVIVAL_RATIO = 0.2;
 	constexpr double OFFSPRING_RATIO = 10;
 	static_assert(OFFSPRING_RATIO >= 1);
@@ -29,7 +27,7 @@ namespace genetic
 	constexpr CrossoverTypes CROSSOVER_TYPE = CrossoverTypes::Uniform;
 	constexpr char* CROSSOVER_TYPE_STRINGS[] = {"SinglePoint", "MultiplePoint", "Uniform"};
 
-	constexpr bool CONSOLE_OUTPUT = false;
+	constexpr bool CONSOLE_OUTPUT = true;
 
 	inline static const std::vector<Entry> job_table = read_binary(binary_file_path);
 	inline static std::vector<HostInfo> host_table = read_host_binary();

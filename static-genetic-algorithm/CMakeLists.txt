@@ -11,6 +11,7 @@ add_executable(static-genetic-algorithm
 	include/parameters.h
 	include/chromosome.h
 	include/genetic_algorithm.h
+	include/utils.h
 	src/file_reader.cpp
 	src/chromosome.cpp
 	src/genetic_algorithm.cpp

@@ -5,11 +5,14 @@
 
 #include <spdlog/common.h>
 #include <spdlog/details/console_globals.h>
+#include <spdlog/details/null_mutex.h>
 #include <spdlog/sinks/sink.h>
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
+#include <wincon.h>
 
 namespace spdlog {
 namespace sinks {
@@ -85,4 +88,5 @@ using wincolor_stderr_sink_st = wincolor_stderr_sink<details::console_nullmutex>
 } // namespace spdlog
 
 #ifdef SPDLOG_HEADER_ONLY
+#include "wincolor_sink-inl.h"
 #endif

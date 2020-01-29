@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <omp.h>
+#include <time.h>
 
 namespace genetic
 {
@@ -64,17 +65,32 @@ namespace genetic
 	template <typename Chromosomes>
 	void calculate_fitness_parallel(Chromosomes& chromosomes)
 	{
-		//std::for_each(std::execution::par_unseq, chromosomes.begin(), chromosomes.end(), []
-		//(Chromosome& c) {
-		//		c.calculate_fitness();
-		//	});
-
 		int i;
 #pragma omp parallel for
 		for (i = 0; i < chromosomes.size(); ++i)
 		{
 			chromosomes[i].calculate_fitness();
 		}
+	}
+
+	inline void crossover_with_elite_parents(Chromosome& chromosome, Population& population, int thread_id = 0)
+	{
+		static thread_local std::unique_ptr<std::mt19937_64> gen = nullptr;
+		if (!gen)
+			gen = std::make_unique<std::mt19937_64>(clock() + thread_id);
+		auto parent_indices = get_weighted_random_items<2>(population,
+			static_cast<std::function<double(const Chromosome&)>>([](const Chromosome& c) { return c.fitness(); }),
+			*gen);
+		chromosome.crossover(population[parent_indices[0]], population[parent_indices[1]]);
+	}
+
+	inline void crossover_with_uniform_parents(Chromosome& chromosome, Population& population, int thread_id = 0)
+	{
+		static thread_local std::unique_ptr<std::mt19937_64> gen = nullptr;
+		if (!gen)
+			gen = std::make_unique<std::mt19937_64>(clock() + thread_id);
+		auto parent_indices = get_random_items<2>(population, *gen);
+		chromosome.crossover(population[parent_indices[0]], population[parent_indices[1]]);
 	}
 
 	inline void generate_offspring_parallel(Population& population, Offspring& offspring)
@@ -84,10 +100,7 @@ namespace genetic
 #pragma omp parallel for
 		for (i = 0; i < offspring.size(); ++i)
 		{
-			auto& c = offspring[i];
-
-			auto parent_indices = get_weighted_random_items<2>(population, get_fitness, Chromosome::get_random_engine());
-			c.crossover(population[parent_indices[0]], population[parent_indices[1]]);
+			crossover_with_uniform_parents(offspring[i], population, omp_get_thread_num());
 		}
 	}
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <vector>
+#include <cassert>
 
 namespace spdlog {
 namespace details {
@@ -86,7 +87,7 @@ public:
     }
 
     // Return const reference to item by index.
-    // If index is out of range 0...size()-1, the behavior is undefined.
+    // If index is out of range 0…size()-1, the behavior is undefined.
     const T &at(size_t i) const
     {
         assert(i < size());

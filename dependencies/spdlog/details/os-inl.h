@@ -12,8 +12,14 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <string>
+#include <thread>
+#include <array>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #ifdef _WIN32
 
@@ -25,6 +31,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <io.h>      // _get_osfhandle and _isatty support
+#include <process.h> //  _get_pid support
 #include <windows.h>
 
 #ifdef __MINGW32__

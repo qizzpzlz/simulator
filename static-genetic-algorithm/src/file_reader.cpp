@@ -111,7 +111,7 @@ namespace genetic
 		const std::filesystem::path binary_path = "hosts.bin";
 		if (!std::filesystem::exists(binary_path))
 		{
-			read_host_json("../static-genetic-algorithm/all-time-ok-hosts.json", "hosts.bin");
+			read_host_json(host_file_path, "hosts.bin");
 		}
 
 		auto file = std::ifstream(binary_path, std::ios::binary | std::ios::ate);

@@ -6,9 +6,10 @@
 #include <functional>
 #include <mutex>
 #include <memory>
+#include <iostream>
 
 template <std::size_t N, typename T, std::size_t K, typename WEIGHT_TYPE, typename RND>
-std::array<std::size_t, N> get_weighted_random_items(const std::array<T, K>& array, std::function<WEIGHT_TYPE(const T&)> func, RND& rnd)
+std::array<int, N> get_weighted_random_items(const std::array<T, K>& array, std::function<WEIGHT_TYPE(const T&)> func, RND& rnd)
 {
 	static_assert(K > 0);
 
@@ -29,8 +30,14 @@ std::array<std::size_t, N> get_weighted_random_items(const std::array<T, K>& arr
 	std::array<int, N> selected_indices{};
 	selected_indices.fill(-1);
 	std::size_t n = 0;
+
+	std::size_t count = 0;
+
 	for (int i = 0; i < N; ++i)
 	{
+		if (count++ > N * 10)
+			std::cout << " ";
+
 		auto roll = dist(rnd);
 		for (auto j = 0; j < array.size(); ++j)
 		{
@@ -62,6 +69,19 @@ std::array<std::size_t, N> get_weighted_random_items(const std::array<T, K>& arr
 	}
 
 	return selected_indices;
+}
+
+template <std::size_t N, typename T, std::size_t K, typename RND>
+std::array<std::size_t, N> get_random_items(const std::array<T, K>& array, RND& rnd)
+{
+	std::unique_ptr<std::array<std::size_t, K>> indices_ptr = std::make_unique<std::array<std::size_t, K>>();
+	std::array<std::size_t, K>& indices = *indices_ptr;
+	for (int i = 0; i < K; ++i)
+		indices[i] = i;
+	
+	std::array<std::size_t, N> output;
+	std::sample(indices.begin(), indices.end(), output.begin(), N, rnd);
+	return output;
 }
 
 class _globalRandom
