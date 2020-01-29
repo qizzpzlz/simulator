@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
+#include <cstring>
 
 namespace ClusterSimulator::Parser
 {
