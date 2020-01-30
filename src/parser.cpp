@@ -106,7 +106,7 @@ namespace ClusterSimulator::Parser
 			auto file = std::ifstream(file_path, std::ios::binary | std::ios::ate);
 
 			if (!file)
-				throw std::runtime_error("");
+				throw std::runtime_error("Binary Job table file couldn't be found.");
 
 			file.seekg(0, std::ifstream::end);
 			const std::size_t size = file.tellg();

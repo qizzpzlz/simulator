@@ -86,6 +86,10 @@ namespace ClusterSimulator
 		job.set_run_host_name(name_);
 		job.state = JobState::RUN;
 
+		// Calculate Queuing Time here.
+		auto q_time = start_time - job.submit_time;
+		simulation->update_total_queuing_time(q_time);
+
 		// Reserve job finished event.
 		simulation->after_delay(run_time, std::bind(&Host::exit_job, this));
 
@@ -135,10 +139,6 @@ namespace ClusterSimulator
 
 		simulation->num_dispatched_slots -= job.slot_required;
 		job.queue_managing_this_job->using_job_slots -= job.slot_required;
-
-		// Calculate Queuing Time here.
-		auto q_time = job.finish_time - job.submit_time;
-		simulation->update_total_queuing_time(q_time);
 
 		simulation->log_using_slots();
 		simulation->log_jobmart(job);

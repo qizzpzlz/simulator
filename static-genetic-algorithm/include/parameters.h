@@ -7,7 +7,7 @@
 
 namespace genetic
 {
-	constexpr std::size_t NUM_POPULATION_TO_KEEP = 100;
+	constexpr std::size_t NUM_POPULATION_TO_KEEP = 200;
 	constexpr double SURVIVAL_RATIO = 0.2;
 	constexpr double OFFSPRING_RATIO = 10;
 	static_assert(OFFSPRING_RATIO >= 1);
@@ -19,7 +19,7 @@ namespace genetic
 	constexpr double CROSSOVER_PROBABILITY = 1;
 	constexpr double CROSSOVER_BALANCER = 0.5;
 	
-	constexpr double MUTATION_PROBABILITY = 0.25;
+	constexpr double MUTATION_PROBABILITY = 0.5;
 	//constexpr double MUTATION_BALANCER = 0.5;
 	constexpr double GENE_MUTATION_PROBABILITY = 0.001;
 
