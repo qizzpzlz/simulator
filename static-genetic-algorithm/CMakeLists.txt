@@ -18,6 +18,7 @@ add_executable(static-genetic-algorithm
 )
 target_include_directories(static-genetic-algorithm PRIVATE include/)
 target_link_libraries(static-genetic-algorithm json11)
+target_link_libraries(static-genetic-algorithm argparse)
 
 find_package(OpenMP REQUIRED)
 if (OpenMP_CXX_FOUND)

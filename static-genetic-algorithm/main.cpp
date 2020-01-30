@@ -1,13 +1,31 @@
 #include "file_reader.h"
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include "genetic_algorithm.h"
 #include "utils.h"
 #include "chromosome.h"
-#include <future>
+#include "argparse.hpp"
 
 int main(int argc, char* argv[])
 {
+	// Parsing arguments
+	argparse::ArgumentParser program("static-genetic-algorithm");
+	program.add_argument("-p", "--population")
+		.help("Optional population file to load. if provided, initial population is replaced with the given population.")
+		.default_value("");
+	try
+	{
+		program.parse_args(argc, argv);
+	}
+	catch (const std::runtime_error& err)
+	{
+		std::cout << err.what() << std::endl;
+		program.print_help();
+		exit(0);
+	}
+
+	// Main driver code starts.
 	std::default_random_engine rnd{};
 	std::uniform_real_distribution<> real_dist{};
 	std::stringstream output_buffer{};
@@ -24,8 +42,28 @@ int main(int argc, char* argv[])
 	Chromosome* current_best;
 
 	const auto time_before_initialisation = std::chrono::system_clock::now();
-	
-	generate_initial_population(population, offspring);
+
+	if (std::string population_file_path{program.get<std::string>("--population")}; 
+		!population_file_path.empty())
+	{
+		auto population_vector = load_population(population_file_path.c_str());
+		if (NUM_POPULATION_TO_KEEP != population_vector.size())
+		{
+			std::cout << "Incompatible population." << std::endl;
+			exit(0);
+		}
+		std::copy_n(population_vector.begin(), NUM_POPULATION_TO_KEEP, population.begin());
+		calculate_fitness_parallel(population);
+
+		// TODO: should make this neat
+		for (auto& i : offspring)
+		{
+			i.make_random();
+			i.calculate_fitness();
+		}
+	}
+	else
+		generate_initial_population(population, offspring);
 
 	const auto time_after_initialisation = std::chrono::system_clock::now();
 
