@@ -78,6 +78,15 @@ namespace ClusterSimulator
 		pending_jobs_.push_back(std::move(job));
 	}
 
+	void Queue::add_pending_job(JobWrapper&& job)
+	{
+		pending_jobs_.push_back(job);
+		job->set_pending(simulation_->get_current_time());
+		if constexpr (ClusterSimulation::LOG_ANY)
+			simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+				, job->id, job->total_pending_duration.count());
+	}
+
 	/**
 	  * Returns a list of hosts being able to execute the given job.
 	  */

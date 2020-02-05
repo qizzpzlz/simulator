@@ -143,6 +143,7 @@ namespace ClusterSimulator
 		bool dispatch();
 		void enqueue(Job&& job);
 		void add_pending_job(JobWrapper& job);
+		void add_pending_job(JobWrapper&& job);
 		void add_pending_job(std::shared_ptr<Job> job)
 		{
 			add_pending_job(JobWrapper(std::move(job)));
