@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 	argparse::ArgumentParser program("static-genetic-algorithm");
 	program.add_argument("-p", "--population")
 		.help("Optional population file to load. if provided, initial population is replaced with the given population.")
-		.default_value("");
+		.default_value(static_cast<std::string>(""));
 	try
 	{
 		program.parse_args(argc, argv);

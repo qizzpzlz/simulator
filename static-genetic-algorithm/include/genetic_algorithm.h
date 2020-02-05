@@ -31,22 +31,22 @@ namespace genetic
 		}
 	}
 
-	template <std::size_t N>
-	void get_mutants_parallel(const std::array<Chromosome, N>& chromosomes, std::vector<Chromosome>& buffer)
-	{
-		int i;
-		const std::uniform_real_distribution<> real_dist;
-//#pragma omp parallel for
-//		for (i = 0; i < chromosomes.size(); ++i)
-//		{
-//			auto roll = real_dist(Chromosome::get_random_engine());
-//			if (roll < MUTATION_PROBABILITY)
-//			{
-//				
-//			}
-//		}
-		
-	}
+//	template <std::size_t N>
+//	void get_mutants_parallel(const std::array<Chromosome, N>& chromosomes, std::vector<Chromosome>& buffer)
+//	{
+//		int i;
+//		const std::uniform_real_distribution<> real_dist;
+////#pragma omp parallel for
+////		for (i = 0; i < chromosomes.size(); ++i)
+////		{
+////			auto roll = real_dist(Chromosome::get_random_engine());
+////			if (roll < MUTATION_PROBABILITY)
+////			{
+////				
+////			}
+////		}
+//		
+//	}
 
 	enum class Locations
 	{
