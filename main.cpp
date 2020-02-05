@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	//MinMinAlgorithm minmin(cluster.size());
 
 	// Start simulation
-	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MinMin};
+	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MCT};
 
 	simulation.run();
 

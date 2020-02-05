@@ -1,24 +1,19 @@
 #pragma once
 #include <chrono>
-#include <omp.h>
+#include <queue>
 
 namespace Utils
 {
     using namespace std::chrono;
     using ms = time_point<milliseconds>;
 
-    constexpr milliseconds get_time_left_until_next_period(const ms current, const milliseconds frequency)
+    inline milliseconds get_time_left_until_next_period(const ms current, const milliseconds frequency)
     {
         const double current_d{ static_cast<double>(current.time_since_epoch().count()) };
         const long long frequency_d{ frequency.count() };
-        const double dividend{ current_d / frequency_d };
-        const long long dividend_i{ static_cast<long long>(dividend) };
-
-        //if (dividend_i == static_cast<double>(dividend_i))
-        //    return std::chrono::milliseconds(1);
-
-		return milliseconds{ (dividend_i/* + (dividend > 0 ? 1 : 0)*/) * frequency_d -
-			current.time_since_epoch().count() };
+		const auto remainder = current_d / frequency_d;
+		const auto value = std::llround(frequency_d - remainder);
+		return milliseconds(value);
     }
 
     struct ms_hash
@@ -55,6 +50,68 @@ namespace Utils
 		return minIndexValue;
 	}
 
+
+	template <typename T>
+	class EventQueue : public std::priority_queue<T>
+	{
+	public:
+		using iterator = typename std::priority_queue<T>::container_type::iterator;
+		using const_iterator = typename std::priority_queue<T>::container_type::const_iterator;
+
+		[[nodiscard]] iterator end() { return this->c.end(); }
+
+		[[nodiscard]] const_iterator find(const T& val) const
+		{
+			auto begin = this->c.cbegin();
+			auto end = this->c.cend();
+			return std::find(begin, end, val);
+		}
+
+		[[nodiscard]] const_iterator find_by_id(std::size_t id) const
+		{
+			auto begin = this->c.cbegin();
+			auto end = this->c.cend();
+			while (begin != end)
+			{
+				if (begin->id == id)
+					return begin;
+				++begin;
+			}
+			return begin;
+		}
+
+		[[nodiscard]] iterator find_by_id(std::size_t id)
+		{
+			auto begin = this->c.begin();
+			auto end = this->c.end();
+			while (begin != end)
+			{
+				if (begin->id == id)
+					return begin;
+				++begin;
+			}
+			return begin;
+		}
+
+		void erase(const_iterator it)
+		{
+			this->c.erase(it);
+			std::make_heap(this->c.begin(), this->c.end(), this->comp);
+		}
+
+		iterator add_delay(std::size_t id, milliseconds delay)
+		{
+			auto it = find_by_id(id);
+			if (it == this->c.end())
+				throw std::runtime_error("Can't find a item");
+			
+			auto copy = *it;
+			erase(it);
+			copy.time += delay;
+			this->push(copy);
+		}
+	};
+	
 	class PoolAllocator
 	{
 		using T = milliseconds;

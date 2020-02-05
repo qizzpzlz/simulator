@@ -62,11 +62,20 @@ namespace ClusterSimulator
 		//ClusterSimulation::log(LogLevel::info, 
 		//	"Job #{0} is added to Queue {1}.", job.id, this->name);
 
-		jobs_.push_back(std::make_unique<Job>(job));
+		jobs_.push_back(std::make_shared<Job>(job));
 
 		if constexpr (ClusterSimulation::LOG_ANY)
 			simulation_->log(LogLevel::info,
 				"Job #{0} is added to Queue {1}.", job.id, this->name);
+	}
+
+	void Queue::add_pending_job(JobWrapper& job)
+	{
+		job->set_pending(simulation_->get_current_time());
+		if constexpr (ClusterSimulation::LOG_ANY)
+			simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+				, job->id, job->total_pending_duration.count());
+		pending_jobs_.push_back(std::move(job));
 	}
 
 	/**
@@ -279,7 +288,7 @@ namespace ClusterSimulator
 		//	ClusterSimulation::log(LogLevel::info, "Queue {0} dispatches Job #{1} to Host {2}"
 		//		,name, job.id, best_host->get_name());
 
-		//	const auto run_time = best_host->get_expected_run_time(job);
+		//	const auto run_time = best_host->get_expected_run_duration(job);
 		//	best_host->try_update_expected_time_of_completion(run_time);
 
 		//	// TODO: host.register()
@@ -338,11 +347,13 @@ namespace ClusterSimulator
 			// Set pending for not assigned jobs
 			if (!job.is_dispatched())
 			{
-				job->set_pending(simulation_->get_current_time());
-				if constexpr (ClusterSimulation::LOG_ANY)
-					simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
-						, job->id, job->total_pending_duration.count());
-				pending_jobs_.push_back(std::move(jobs_.back()));
+				//job->set_pending(simulation_->get_current_time());
+				//if constexpr (ClusterSimulation::LOG_ANY)
+				//	simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
+				//		, job->id, job->total_pending_duration.count());
+				//pending_jobs_.push_back(std::move(jobs_.back()));
+
+				add_pending_job(job);
 			}
 
 			jobs_.pop_back();

@@ -21,14 +21,19 @@ namespace ClusterSimulator
 
 	class JobWrapper
 	{
-		std::unique_ptr<Job> job_;
+		std::shared_ptr<Job> job_;
 		bool is_dispatched_{ false };
 	public:
-		JobWrapper(std::unique_ptr<Job>&& job_ptr) : job_{ std::forward<std::unique_ptr<Job>>(job_ptr) }{}
+		JobWrapper(std::shared_ptr<Job>&& job_ptr) : job_{ std::forward<std::shared_ptr<Job>>(job_ptr) }{}
 		bool is_dispatched() const noexcept { return is_dispatched_; }
 		void execute(Host* host)
 		{
-			host->execute_job(std::move(job_));
+			host->execute_job(job_);
+			is_dispatched_ = true;
+		}
+		void execute_when_ready(Host* host, milliseconds delay)
+		{
+			host->execute_job_when_ready(job_, delay);
 			is_dispatched_ = true;
 		}
 		Job* operator->() const noexcept { return job_.operator->(); }
@@ -76,7 +81,7 @@ namespace ClusterSimulator
 			int num_shares;
 		};
 		std::vector<UserShares> fairshare;
-		bool is_using_fairshare() const noexcept { return !fairshare.empty(); }
+		[[nodiscard]] bool is_using_fairshare() const noexcept { return !fairshare.empty(); }
 
 		struct HostInfo
 		{
@@ -137,6 +142,12 @@ namespace ClusterSimulator
 
 		bool dispatch();
 		void enqueue(Job&& job);
+		void add_pending_job(JobWrapper& job);
+		void add_pending_job(std::shared_ptr<Job> job)
+		{
+			add_pending_job(JobWrapper(std::move(job)));
+		}
+
 
 		// bool try_get_dispatched_host_info(const Host& host, HostInfo* out_info) const noexcept
 		// {

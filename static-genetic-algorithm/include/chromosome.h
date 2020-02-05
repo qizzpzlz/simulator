@@ -3,7 +3,7 @@
 #include "host.h"
 #include <vector>
 #include <random>
-#include <time.h>
+#include <ctime>
 #include <thread>
 
 namespace genetic
@@ -36,10 +36,7 @@ namespace genetic
 		[[nodiscard]] const_iterator begin() const { return data_.begin(); }
 		[[nodiscard]] const_iterator end() const { return data_.end(); }
 
-		[[nodiscard]] uint16_t operator[](unsigned index) const
-		{
-			return data_[index];
-		}
+		[[nodiscard]] uint16_t operator[](std::size_t index) const { return data_[index]; }
 
 		[[nodiscard]] static Chromosome create_random();
 
@@ -58,7 +55,7 @@ namespace genetic
 			return calculate_fitness();
 		}
 
-		double fitness() const
+		[[nodiscard]] double fitness() const
 		{
 			if (fitness_cache_ > 0)
 				throw std::runtime_error("");

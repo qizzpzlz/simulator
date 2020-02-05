@@ -64,10 +64,10 @@ namespace ClusterSimulator
 		ClusterSimulation* simulation;
 		Cluster* cluster;
 
-		const std::string& get_name() const noexcept{ return name_; }
-		int score() const noexcept { return score_; }
-		int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
-		size_t num_running_jobs() const noexcept { return running_jobs_.size(); }
+		[[nodiscard]] const std::string& get_name() const noexcept{ return name_; }
+		[[nodiscard]] int score() const noexcept { return score_; }
+		[[nodiscard]] int remaining_slots() const noexcept { return max_slot - num_current_running_slots; }
+		[[nodiscard]] std::size_t num_running_jobs() const noexcept { return running_jobs_.size(); }
 
 		/**
 		 * Returns true if this host's hardware spec satisfies
@@ -91,15 +91,16 @@ namespace ClusterSimulator
 				&& job.slot_required <= remaining_slots();
 		}
 
-		milliseconds get_expected_completion_duration(const Job& job) const noexcept;
-
-		milliseconds get_expected_run_time(const Job& job) const noexcept;
-		ms get_expected_time_of_all_completion() const noexcept { return expected_time_of_completion; }
+		[[nodiscard]] milliseconds get_ready_duration(const Job& job) const;
+		[[nodiscard]] milliseconds get_expected_completion_duration(const Job& job) const;
+		[[nodiscard]] milliseconds get_expected_run_duration(const Job& job) const noexcept;
+		[[nodiscard]] ms get_expected_time_of_all_completion() const noexcept { return expected_time_of_completion; }
 
 
 		/* Status mutator methods */
 
-		void execute_job(std::unique_ptr<Job> job_ptr);
+		void execute_job(std::shared_ptr<Job>& job_ptr);
+		void execute_job_when_ready(std::shared_ptr<Job>& job, milliseconds delay);
 		void set_status(HostStatus value) noexcept
 		{
 			status = value;
@@ -145,9 +146,11 @@ namespace ClusterSimulator
 
 		// double max_procs;
 
-		std::vector<std::unique_ptr<Job>> running_jobs_;
+		std::vector<std::shared_ptr<Job>> running_jobs_;
+		std::vector<std::pair<std::shared_ptr<Job>, std::size_t>> reserved_jobs_;
 
 		void exit_job();
+		void update_reserved_jobs(std::shared_ptr<Job>& new_job);
 
 		static int id_gen_;
 		static std::random_device rd_;

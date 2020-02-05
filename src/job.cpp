@@ -6,6 +6,7 @@
 namespace ClusterSimulator
 {
 	int Job::id_gen_ = 0;
+	const bool Job::USE_STATIC_HOST_TABLE = ClusterSimulation::USE_STATIC_HOST_TABLE_FOR_JOBS;
 
 	using namespace std::chrono;
 
@@ -35,14 +36,31 @@ namespace ClusterSimulator
 		}
 	}
 
+	//std::vector<Host*>& 
+
 	std::vector<Host*> Job::get_eligible_hosts() const
+	{
+		if constexpr (ClusterSimulation::USE_STATIC_HOST_TABLE_FOR_JOBS)
+		{
+			std::vector<Host*> hosts;
+			std::copy_if(eligible_hosts_.begin(), eligible_hosts_.end(), std::back_inserter(hosts),
+				[slot_required = this->slot_required](Host* host_ptr){ return host_ptr->remaining_slots() >= slot_required; });
+			return hosts;
+		}
+		
+		return queue_managing_this_job->match(*this);
+	}
+
+	const std::vector<Host*>& Job::get_compatible_hosts() const
 	{
 		if constexpr (ClusterSimulation::USE_STATIC_HOST_TABLE_FOR_JOBS)
 		{
 			return eligible_hosts_;
 		}
-		
-		return queue_managing_this_job->match(*this);
+		else
+		{
+			throw std::runtime_error("Job::get_compatible_hosts() is not implemented for the case where USE_STATIC_HOST_TABLE_FOR_JOBS is false.");
+		}
 	}
 }
 

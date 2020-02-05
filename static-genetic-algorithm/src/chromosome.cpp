@@ -130,6 +130,11 @@ namespace genetic
 						break;
 					}
 				}
+				//
+				//for (auto it = host.allocated_jobs.rbegin(); it != host.allocated_jobs.rend(); ++it)
+				//{
+				//	
+				//}
 			}
 		}
 

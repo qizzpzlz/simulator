@@ -37,16 +37,24 @@ namespace ClusterSimulator
 		static constexpr std::string_view JOB_SUBMIT_FILE_NAME = "job_submit.txt";
 		static constexpr bool CONSOLE_OUTPUT = false;
 		static constexpr bool CONSOLE_WARNING_OUTPUT = false;
-		static constexpr bool LOG_FILE_OUTPUT = false;
-		static constexpr bool JOBMART_FILE_OUTPUT = false;
+		static constexpr bool LOG_FILE_OUTPUT = true;
+		static constexpr bool JOBMART_FILE_OUTPUT = true;
 		static constexpr bool SLOTS_FILE_OUTPUT = true;
 		static constexpr bool JOB_SUBMIT_FILE_OUTPUT = true;
 		static constexpr char LOGGER_PATTERN[] = "[%l] %v";
-		static constexpr milliseconds DISPATCH_FREQUENCY{ 30000 };
+		static constexpr milliseconds DISPATCH_FREQUENCY{ 1000 };
 		static constexpr milliseconds LOGGING_FREQUENCY{ 10000 };
 		static constexpr milliseconds COUNTING_FREQUENCY{ 10000 };
 		static constexpr bool USE_ONLY_DEFAULT_QUEUE = true;
 		static constexpr double RUNTIME_MULTIPLIER = 1;
+
+		static constexpr bool DEBUG_EVENTS = false;
+		inline static bool _set_log_level = []
+		{
+			if constexpr (!DEBUG_EVENTS) return false;
+			spdlog::set_level(LogLevel::debug);
+			return true;
+		}();
 
 	public:
 		static constexpr bool USE_STATIC_HOST_TABLE_FOR_JOBS = true;
@@ -55,30 +63,45 @@ namespace ClusterSimulator
 
 		struct EventItem
 		{
+			enum class Type { SCENARIO, JOB_FINISHED, JOB_RESERVED, DISPATCH, LOG };
+			inline static const std::string type_strings[] = { "Scenario", "Job Finished", "Job Reserved", "Dispatch", "Log" };
+
+			// TODO: make atomic
+			std::size_t id = id_gen_++;
 			ms time;
 			Action action;
-			int priority;
-
-			EventItem(ms time, Action action, int priority = 0) 
+			uint8_t priority;
+			Type type;
+			
+			EventItem(ms time, const Action& action, uint8_t priority = 0, Type type = Type::SCENARIO)
 				: time{ time }
 				, action{ action }
-				, priority{ priority }{}
-
+				, priority{ priority }
+				, type{ type } {}
+			
 			EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation);
+
+			[[nodiscard]] const std::string& get_type_string() const noexcept
+			{
+				return type_strings[static_cast<int>(type)];
+			}
 
 			bool operator<(const EventItem& a) const
 			{
-				return a.time == time 
-					? a.priority < priority 
+				return a.time == time
+					? a.priority < priority
 					: a.time < time;
 			}
+
+		private:
+			inline static std::size_t id_gen_ = 0;
 		};
-	
+
 	private:
 		/* Event driven simulator helpers */
 		
 		ms current_time_;
-		std::priority_queue<EventItem> events_{};
+		Utils::EventQueue<EventItem> events_{};
 		Action log_action_;
 		Action count_new_jobs_;
 
@@ -98,18 +121,62 @@ namespace ClusterSimulator
 		bool next_dispatch_reserved{ false };
 		std::size_t num_dispatched_slots{ 0 };
 
-		ms get_current_time() const { return current_time_; }
+		[[nodiscard]] ms get_current_time() const { return current_time_; }
 
-		Queue& get_default_queue() { return all_queues_[0]; }
+		[[nodiscard]] Queue& get_default_queue() { return all_queues_[0]; }
 		// TODO: use id instead of name
-		Queue& find_queue (const std::string& name);
-		const Host& find_host(const std::string& name) const;
-		const Cluster& get_cluster_view() const { return cluster_; }
-		Cluster& get_cluster() const { return cluster_; }
+		[[nodiscard]] Queue& find_queue (const std::string& name);
+		[[nodiscard]] const Host& find_host(const std::string& name) const;
+		[[nodiscard]] const Cluster& get_cluster_view() const { return cluster_; }
+		[[nodiscard]] Cluster& get_cluster() const { return cluster_; }
+		
+		[[nodiscard]] std::size_t event_count() const { return events_.size(); }
 
-		std::size_t event_count() const { return events_.size(); }
-		void after_delay(milliseconds delay, Action block, int priority = 0);
+		/**
+		  * Reserve an event after a specified duration.
+		  * Return: id of the event.
+		  */
+		std::size_t after_delay(milliseconds delay, Action block, uint8_t priority = 0, EventItem::Type type = EventItem::Type::SCENARIO)
+		{
+			EventItem event_item{ current_time_ + delay, std::move(block), priority, type };
+			events_.push(event_item);
+
+			if constexpr (DEBUG_EVENTS)
+			{
+				log(LogLevel::debug, "Event [{0}] is added at {1} ms. Event time: {2} ms",
+					event_item.get_type_string(), current_time_.time_since_epoch().count(),
+					event_item.time.time_since_epoch().count());
+			}
+
+			return event_item.id;
+		}
+		
 		bool run();
+
+		void erase_event(std::size_t event_id)
+		{
+			auto it = events_.find_by_id(event_id);
+			if (it == events_.end()) return;
+
+			if constexpr (DEBUG_EVENTS)
+			{
+				log(LogLevel::debug, "Event [{0}] is removed. (was planed to start at {1} ms.)"
+					, it->get_type_string(), it->time.time_since_epoch().count());
+			}
+			
+			events_.erase(it);
+		}
+
+		void add_delay(std::size_t event_id, milliseconds delay)
+		{
+			events_.add_delay(event_id, delay);
+			if constexpr (DEBUG_EVENTS)
+			{
+				const auto event = events_.find_by_id(event_id);
+				log(LogLevel::debug, "Event [{0}]'s start time is changed to {1} ms.",
+					event->get_type_string(), event->time.time_since_epoch().count());
+			}
+		}
 		
 		void reserve_dispatch_event();
 
@@ -153,7 +220,7 @@ namespace ClusterSimulator
 					}
 
 					simulation_->after_delay(simulation_->DISPATCH_FREQUENCY,
-						std::ref(simulation_->dispatcher_), 1);
+						std::ref(simulation_->dispatcher_), 1, EventItem::Type::DISPATCH);
 					return;
 				}
 				latest_cluster_version_ = version;
@@ -164,8 +231,8 @@ namespace ClusterSimulator
 				if (flag)
 				{
 					// pending jobs exist
-					simulation_->after_delay(simulation_->DISPATCH_FREQUENCY,
-						std::ref(simulation_->dispatcher_), 1);
+					simulation_->after_delay(ClusterSimulation::DISPATCH_FREQUENCY,
+						std::ref(simulation_->dispatcher_), 1, EventItem::Type::DISPATCH);
 
 					size_t num{ 0 };
 					for (const auto& q : simulation_->all_queues_)

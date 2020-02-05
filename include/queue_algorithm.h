@@ -71,7 +71,7 @@
 //			}) {}
 //
 //		const std::string& get_name() const noexcept override { return name; }
-//		static ms get_completion_time(const Host& host, const Job& job) { return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job); }
+//		static ms get_completion_time(const Host& host, const Job& job) { return host.get_expected_time_of_all_completion() + host.get_expected_run_duration(job); }
 //	};
 //
 //	class MinMinAlgorithm: public QueueAlgorithm
@@ -189,7 +189,7 @@ namespace ClusterSimulator
 		inline static const std::string name{ "MCT" };
 		static ms get_completion_time(const Host& host, const Job& job)
 		{
-			return host.get_expected_time_of_all_completion() + host.get_expected_run_time(job);
+			return host.get_expected_time_of_all_completion() + host.get_expected_run_duration(job);
 		}
 	public:
 		const std::string& get_name() const noexcept override { return name; }
@@ -260,16 +260,33 @@ public:
 				JobProxy proxy(i, cluster.count());
 				std::pair<milliseconds, size_t> min_pair = std::make_pair(milliseconds::max(), 0);
 ;
-				int j;
-				if constexpr(USE_OMP)
-					#pragma omp parallel for
-				for (j = 0; j < cluster.count(); j++)
+				if (Job::USE_STATIC_HOST_TABLE)
 				{
-					auto completion_time = cluster[j].get_expected_completion_duration(*jobs[i]);
-					proxy.mcts[j] = completion_time;
-					if (completion_time < std::get<0>(min_pair))
-						min_pair = std::make_pair(completion_time, j);
+					auto hosts = jobs[i]->get_compatible_hosts();
+					for (auto& ms : proxy.mcts)
+						ms = milliseconds::max();
+					for (Host* host : hosts)
+					{
+						milliseconds completion_time = host->get_expected_completion_duration(*jobs[i]);
+						proxy.mcts[host->id] = completion_time;
+						if (completion_time < std::get<0>(min_pair))
+							min_pair = std::make_pair(completion_time, host->id);
+					}
 				}
+				else
+				{
+					int j;
+					if constexpr (USE_OMP)
+#pragma omp parallel for
+						for (j = 0; j < cluster.count(); j++)
+						{
+							auto completion_time = cluster[j].get_expected_completion_duration(*jobs[i]);
+							proxy.mcts[j] = completion_time;
+							if (completion_time < std::get<0>(min_pair))
+								min_pair = std::make_pair(completion_time, j);
+						}
+				}
+
 				proxy.Update(min_pair);
 				all_jobs.push_back(std::move(proxy));
 			}
@@ -288,7 +305,15 @@ public:
 
 				// Assign the job with the minimum mct to the dedicated host.
 				if (min_iter->min_mct != milliseconds::max()) // Skip the incompatible jobs
-					jobs[min_iter->job_index].execute(assigned_host);
+				{
+					auto& job = jobs[min_iter->job_index];
+					const auto ready_duration = assigned_host->get_ready_duration(*job);
+					if (ready_duration > 0ms)
+						// Can't be executed right now;
+						job.execute_when_ready(assigned_host, ready_duration);
+					else
+						job.execute(assigned_host);
+				}
 
 				all_jobs.erase(min_iter);
 
@@ -296,8 +321,23 @@ public:
 				// and find the minimum mct for each job 
 				for (auto& proxy : all_jobs)
 				{
-					const auto updated_completion_time = 
-						assigned_host->get_expected_completion_duration(*jobs[proxy.job_index]);
+					milliseconds updated_completion_time;
+					if (Job::USE_STATIC_HOST_TABLE)
+					{
+						const auto& compatible_hosts = jobs[proxy.job_index]->get_compatible_hosts();
+						if (std::find(compatible_hosts.begin(), compatible_hosts.end(), assigned_host) 
+							!= compatible_hosts.end())
+						{	// The assigned host is compatible for this job
+							updated_completion_time = assigned_host->get_expected_completion_duration(*jobs[proxy.job_index]);
+						}
+						else
+						{
+							updated_completion_time = milliseconds::max();
+						}
+					}
+					else
+						updated_completion_time =
+							assigned_host->get_expected_completion_duration(*jobs[proxy.job_index]);
 
 					if (proxy.host_index_of_min_mct == assigned_host_index)
 					{	// Only updates the minimum mct if its dedicated host is changed.

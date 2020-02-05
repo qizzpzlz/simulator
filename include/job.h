@@ -18,6 +18,8 @@ namespace ClusterSimulator
 	class Job
 	{
 	public:
+		static const bool USE_STATIC_HOST_TABLE;
+		
 		/* Job fields from a scenario entry*/
 
 		int id;
@@ -64,7 +66,10 @@ namespace ClusterSimulator
 		/**
 		 * Gets the list of Hosts eligible to run this job.
 		 */
-		std::vector<Host*> get_eligible_hosts() const;
+		[[nodiscard]] std::vector<Host*> get_eligible_hosts() const;
+
+
+		[[nodiscard]] const std::vector<Host*>& get_compatible_hosts() const;
 
 	private:
 		// std::string application_name_;

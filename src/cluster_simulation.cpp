@@ -46,9 +46,9 @@ namespace ClusterSimulator
 				}
 
 				if (!scenario_.is_empty())
-					this->after_delay(this->COUNTING_FREQUENCY, this->count_new_jobs_, 3);
+					this->after_delay(COUNTING_FREQUENCY, this->count_new_jobs_, 3, EventItem::Type::LOG);
 			};
-			after_delay(COUNTING_FREQUENCY, count_new_jobs_, 3);
+			after_delay(COUNTING_FREQUENCY, count_new_jobs_, 3, EventItem::Type::LOG);
 		}
 		
 		//set algoritms
@@ -86,10 +86,10 @@ namespace ClusterSimulator
 	//}
 
 	ClusterSimulation::EventItem::EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation)
+		: time{entry.timestamp}
+		, priority{0}
+		, type{Type::SCENARIO}
 	{
-		priority = 0;
-		time = entry.timestamp;
-
 		if (entry.type == ScenarioEntry::ScenarioEntryType::SUBMISSION)
 		{
 			action = [&simulation, entry]
@@ -146,15 +146,6 @@ namespace ClusterSimulator
 		}
 	}
 
-
-	/**
-	 * Reserve an event after a specified duration.
-	 */
-	void ClusterSimulation::after_delay(milliseconds delay, Action block, int priority)
-	{
-		events_.push(EventItem{current_time_ + delay, std::move(block), priority});
-	}
-
 	bool ClusterSimulation::run()
 	{
 		std::cout << "Simulation start!" << std::endl;
@@ -197,10 +188,10 @@ namespace ClusterSimulator
 
 	void ClusterSimulation::print_summary()
 	{
-		auto total_simulation_time = latest_finish_time_.time_since_epoch().count();
+		const auto total_simulation_time = latest_finish_time_.time_since_epoch().count();
 		//double total_cpu_power{ 0.0 };
-		size_t num_total_available_hosts{ 0 };
-		size_t num_total_applications{ scenario_.num_unique_apps() };
+		std::size_t num_total_available_hosts{ 0 };
+		const std::size_t num_total_applications{ scenario_.num_unique_apps() };
 		//for (const auto& [name, host] : cluster_)
 		for (auto& host : cluster_)
 		{
@@ -267,10 +258,22 @@ namespace ClusterSimulator
 	void ClusterSimulation::next()
 	{
 		const auto event_item = events_.top();
-		events_.pop(); 
+		events_.pop();
+
+		if constexpr (DEBUG_EVENTS)
+		{
+			log(LogLevel::debug, "Event [{0}] Time: {1}ms Priority: {2}", 
+				EventItem::type_strings[static_cast<int>(event_item.type)], event_item.time.time_since_epoch().count(), event_item.priority);
+		}
+		
 
 		if (current_time_ != event_item.time /*&& event_item.priority < 2*/)
 		{
+			if (current_time_ > event_item.time)
+			{
+				int i = 0;
+			}
+			
 			current_time_ = event_item.time;
 			if (event_item.priority < 2)
 			{
@@ -291,7 +294,8 @@ namespace ClusterSimulator
 
 		after_delay(
 			Utils::get_time_left_until_next_period(current_time_, DISPATCH_FREQUENCY),
-			std::ref(dispatcher_), 1);
+			std::ref(dispatcher_), 1, EventItem::Type::DISPATCH);
+
 
 		next_dispatch_reserved = true;
 	}
