@@ -36,7 +36,7 @@ namespace genetic
 			// auto roll = real_distribution(rnd_);
 			auto roll = real_distribution(rnd_);
 			if (roll >= GENE_MUTATION_PROBABILITY) continue;
-			
+
 			auto& eligible_hosts = job_table[i].hosts;
 			std::uniform_int_distribution<> dist(0, eligible_hosts.size() - 1);
 			child.data_[i] = eligible_hosts[dist(rnd_)].value;
@@ -74,7 +74,7 @@ namespace genetic
 		{
 			//static_assert(true);
 		}
-		
+
 		return child;
 	}
 
@@ -118,11 +118,12 @@ namespace genetic
 
 					if (host.slots_remaining >= job_info.slots())
 					{
-						const auto delay =
-							std::max({
-								static_cast<uint32_t>(0),
-								alloc.finish_time() - job_info.submit_time()
-							});
+						uint32_t delay;
+
+						if(alloc.finish_time() > job_info.submit_time())
+							delay = alloc.finish_time() - job_info.submit_time();
+						else
+							delay = 0;
 
 						q_time += delay / 3600.0;
 
@@ -133,7 +134,7 @@ namespace genetic
 				//
 				//for (auto it = host.allocated_jobs.rbegin(); it != host.allocated_jobs.rend(); ++it)
 				//{
-				//	
+				//
 				//}
 			}
 		}
