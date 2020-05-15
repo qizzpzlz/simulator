@@ -1,0 +1,36 @@
+# CMake generated Testfile for 
+# Source directory: /home/dongartemis/dev/simulator/dependencies/leveldb
+# Build directory: /home/dongartemis/dev/simulator/dependencies/leveldb
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+add_test(c_test "/home/dongartemis/dev/simulator/bin/c_test")
+add_test(fault_injection_test "/home/dongartemis/dev/simulator/bin/fault_injection_test")
+add_test(issue178_test "/home/dongartemis/dev/simulator/bin/issue178_test")
+add_test(issue200_test "/home/dongartemis/dev/simulator/bin/issue200_test")
+add_test(issue320_test "/home/dongartemis/dev/simulator/bin/issue320_test")
+add_test(env_test "/home/dongartemis/dev/simulator/bin/env_test")
+add_test(status_test "/home/dongartemis/dev/simulator/bin/status_test")
+add_test(no_destructor_test "/home/dongartemis/dev/simulator/bin/no_destructor_test")
+add_test(autocompact_test "/home/dongartemis/dev/simulator/bin/autocompact_test")
+add_test(corruption_test "/home/dongartemis/dev/simulator/bin/corruption_test")
+add_test(db_test "/home/dongartemis/dev/simulator/bin/db_test")
+add_test(dbformat_test "/home/dongartemis/dev/simulator/bin/dbformat_test")
+add_test(filename_test "/home/dongartemis/dev/simulator/bin/filename_test")
+add_test(log_test "/home/dongartemis/dev/simulator/bin/log_test")
+add_test(recovery_test "/home/dongartemis/dev/simulator/bin/recovery_test")
+add_test(skiplist_test "/home/dongartemis/dev/simulator/bin/skiplist_test")
+add_test(version_edit_test "/home/dongartemis/dev/simulator/bin/version_edit_test")
+add_test(version_set_test "/home/dongartemis/dev/simulator/bin/version_set_test")
+add_test(write_batch_test "/home/dongartemis/dev/simulator/bin/write_batch_test")
+add_test(memenv_test "/home/dongartemis/dev/simulator/bin/memenv_test")
+add_test(filter_block_test "/home/dongartemis/dev/simulator/bin/filter_block_test")
+add_test(table_test "/home/dongartemis/dev/simulator/bin/table_test")
+add_test(arena_test "/home/dongartemis/dev/simulator/bin/arena_test")
+add_test(bloom_test "/home/dongartemis/dev/simulator/bin/bloom_test")
+add_test(cache_test "/home/dongartemis/dev/simulator/bin/cache_test")
+add_test(coding_test "/home/dongartemis/dev/simulator/bin/coding_test")
+add_test(crc32c_test "/home/dongartemis/dev/simulator/bin/crc32c_test")
+add_test(hash_test "/home/dongartemis/dev/simulator/bin/hash_test")
+add_test(logging_test "/home/dongartemis/dev/simulator/bin/logging_test")
+add_test(env_posix_test "/home/dongartemis/dev/simulator/bin/env_posix_test")
