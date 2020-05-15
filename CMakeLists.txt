@@ -11,7 +11,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # set(CMAKE_BUILD_TYPE Release)
 
 if(NOT MSVC)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs")
    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
    endif()
@@ -30,6 +30,7 @@ endif(NOT MSVC)
 find_library(LIBS spdlog ${CMAKE_SOURCE_DIR}/lib REQUIRED)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/bprinter dependencies)
+add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/leveldb)
 
 # Interface libraries
 add_library(argparse INTERFACE)

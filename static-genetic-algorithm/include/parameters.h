@@ -7,6 +7,7 @@
 
 namespace genetic
 {
+	constexpr std::size_t RESERVED_ENTRIES_COUNT = 8000000;
 	constexpr std::size_t NUM_POPULATION_TO_KEEP = 200;
 	constexpr double SURVIVAL_RATIO = 0.2;
 	constexpr double OFFSPRING_RATIO = 10;
@@ -15,10 +16,11 @@ namespace genetic
 	constexpr std::size_t NUM_OFFSPRING = NUM_POPULATION_TO_KEEP * (OFFSPRING_RATIO - 1);
 	//constexpr std::size_t KEEP_SIZE = 15;
 	constexpr std::size_t NUM_ITERATIONS = 10000;
+	constexpr std::size_t SAVE_INTERVAL = 10;
 	//constexpr std::size_t AGE_UPPER_LIMIT = 0;
 	constexpr double CROSSOVER_PROBABILITY = 1;
 	constexpr double CROSSOVER_BALANCER = 0.5;
-	
+
 	constexpr double MUTATION_PROBABILITY = 0.5;
 	//constexpr double MUTATION_BALANCER = 0.5;
 	constexpr double GENE_MUTATION_PROBABILITY = 0.001;
@@ -42,15 +44,15 @@ namespace genetic
 
 		return result;
 	}();
-	inline static const unsigned short LENGTH = job_table.size();
-	inline static const std::size_t NUM_HOSTS = host_table.size();
+	inline static const uint32_t LENGTH = job_table.size();
+	inline static const uint32_t NUM_HOSTS = host_table.size();
 
 
 	//constexpr std::string_view parameters_summary = []
 	//{
-	//	constexpr char 
+	//	constexpr char
 
-	//	
+	//
 	//	return "";
 	//}();
 }

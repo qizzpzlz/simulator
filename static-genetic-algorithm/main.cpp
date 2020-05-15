@@ -29,10 +29,10 @@ int main(int argc, char* argv[])
 	std::default_random_engine rnd{};
 	std::uniform_real_distribution<> real_dist{};
 	std::stringstream output_buffer{};
-	
+
 	using namespace genetic;
 	const std::function<double(Chromosome&)> get_fitness = [](Chromosome& c) { return c.fitness(); };
-	
+
 	auto pop_data = std::make_unique<Population>();
 	auto offspring_data = std::make_unique<Offspring>();
 	Population& population = *pop_data;
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
 	const auto time_before_initialisation = std::chrono::system_clock::now();
 
-	if (std::string population_file_path{program.get<std::string>("--population")}; 
+	if (std::string population_file_path{program.get<std::string>("--population")};
 		!population_file_path.empty())
 	{
 		auto population_vector = load_population(population_file_path.c_str());
@@ -55,19 +55,19 @@ int main(int argc, char* argv[])
 		std::copy_n(population_vector.begin(), NUM_POPULATION_TO_KEEP, population.begin());
 		calculate_fitness_parallel(population);
 
-		// TODO: should make this neat
-		for (auto& i : offspring)
-		{
-			i.make_random();
-			i.calculate_fitness();
-		}
+		generate_offspring_parallel(population, offspring);
+		calculate_fitness_parallel(offspring);
 	}
-	else
+	else {
 		generate_initial_population(population, offspring);
+	}
 
 	const auto time_after_initialisation = std::chrono::system_clock::now();
 
 	select_survivors(population, offspring, mutants);
+
+	// as chromosome gets bigger creating initial population takes long time, thus save
+	save_population(population, "last_population.bin");
 
 	for (auto iter = 0; iter < NUM_ITERATIONS; ++iter)
 	{
@@ -107,6 +107,10 @@ int main(int argc, char* argv[])
 		for (auto& chromosome : population)
 		{
 			chromosome.increase_age();
+		}
+
+		if(iter % SAVE_INTERVAL == 0) {
+			save_population(population, "last_population.bin");
 		}
 	}
 

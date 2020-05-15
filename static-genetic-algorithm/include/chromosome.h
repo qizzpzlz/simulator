@@ -18,21 +18,15 @@ namespace genetic
 		static constexpr unsigned NUM_TYPES = static_cast<int>(Type::GENESIS) + 1;
 		static constexpr char* const type_strings[] = { "Random", "Crossover", "Mutation", "Genesis" };
 
-		Chromosome() : data_(LENGTH), hosts_(host_prototypes) {}
+		Chromosome() : data_(LENGTH) {}
 
-		Chromosome(uint16_t* data, std::size_t length)
+		Chromosome(uint16_t* data, uint64_t length)
 		: data_(data, data + length)
-		, hosts_(host_prototypes)
 		, type_{Type::GENESIS}
 		{
-			
+
 		}
 
-		[[nodiscard]] Host& get_host(std::size_t index)
-		{
-			return hosts_[index];
-		}
-		
 		[[nodiscard]] const_iterator begin() const { return data_.begin(); }
 		[[nodiscard]] const_iterator end() const { return data_.end(); }
 
@@ -84,25 +78,22 @@ namespace genetic
 		}
 
 		static std::mt19937_64& get_random_engine() { return rnd_; }
-		
+
 	private:
-		explicit Chromosome(uint16_t length)
+		explicit Chromosome(uint64_t length)
 			: data_(length)
-			, hosts_(host_prototypes)
 		{
-			
+
 		}
 
 		void reset(Type type)
 		{
 			type_ = type;
-			hosts_ = host_prototypes;
 			fitness_cache_ = 1;
 			age_ = 0;
 		}
-		
+
 		std::vector<uint16_t> data_;
-		std::vector<Host> hosts_;
 		double fitness_cache_ = 1;
 		std::size_t age_ = 0;
 		Type type_ ;

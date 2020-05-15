@@ -349,6 +349,7 @@ CMakeFiles/
 Makefile
 CMakeCache.txt
 cmake_install.cmake
+compile_commands.json
 
 # Output files
 logs/*.txt

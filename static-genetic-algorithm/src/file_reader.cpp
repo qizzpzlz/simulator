@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cstring>
 #include "file_reader.h"
+#include "parameters.h"
 #include "job.h"
 
 namespace genetic
@@ -37,28 +38,16 @@ namespace genetic
 		int read = 0;
 		char* current = reinterpret_cast<char*>(buffer.data());
 		std::vector<Entry> entries;
-		entries.reserve(20000);
+		entries.reserve(RESERVED_ENTRIES_COUNT);
 		while (read < size)
 		{
-			Str_20* front_ptr = reinterpret_cast<Str_20*>(current);
-			current += 20;
-
+			RawJobMetaData* front_ptr = reinterpret_cast<RawJobMetaData*>(current);
 			Entry entry;
 			entry.values = *front_ptr;
-
-			UInt16_padded array_size = *reinterpret_cast<UInt16_padded*>(current);
-			current += 3;
-
-			const std::size_t array_length_in_bytes = sizeof(UInt16_padded) * array_size.value;
-
-			entry.hosts = std::vector<UInt16_padded>(array_size.value);
-			UInt16_padded* hosts_ptr = entry.hosts.data();
-			memcpy(hosts_ptr, current, array_length_in_bytes);
-			current += array_length_in_bytes;
-
 			entries.push_back(std::move(entry));
 
-			read += 23 + array_length_in_bytes;
+			current += 22;
+			read += 22;
 		}
 
 		return entries;
