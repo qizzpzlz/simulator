@@ -7,6 +7,7 @@
 
 namespace genetic
 {
+	constexpr std::size_t RESERVED_ENTRIES_COUNT = 8000000;
 	constexpr std::size_t NUM_POPULATION_TO_KEEP = 200;
 	constexpr double SURVIVAL_RATIO = 0.2;
 	constexpr double OFFSPRING_RATIO = 10;

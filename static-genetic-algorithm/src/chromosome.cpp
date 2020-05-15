@@ -18,9 +18,8 @@ namespace genetic
 		reset(Type::RANDOM);
 		for (int i = 0; i < LENGTH; ++i)
 		{
-			auto& eligible_hosts = job_table[i].hosts;
-			std::uniform_int_distribution<> dist(0, eligible_hosts.size() - 1);
-			data_[i] = eligible_hosts[dist(rnd_)].value;
+			std::uniform_int_distribution<> dist(0, job_table[i].num_eligible_hosts() - 1);
+			data_[i] = job_table[i].get_host(dist(rnd_));
 		}
 	}
 
@@ -37,9 +36,8 @@ namespace genetic
 			auto roll = real_distribution(rnd_);
 			if (roll >= GENE_MUTATION_PROBABILITY) continue;
 
-			auto& eligible_hosts = job_table[i].hosts;
-			std::uniform_int_distribution<> dist(0, eligible_hosts.size() - 1);
-			child.data_[i] = eligible_hosts[dist(rnd_)].value;
+			std::uniform_int_distribution<> dist(0, job_table[i].num_eligible_hosts() - 1);
+			child.data_[i] = job_table[i].get_host(dist(rnd_));
 		}
 
 		return child;
@@ -100,10 +98,11 @@ namespace genetic
 		if (fitness_cache_ <= 0) return fitness_cache_;
 
 		double q_time = 0;
+		auto hosts = host_prototypes;
 
 		for (auto i = 0; i < LENGTH; ++i)
 		{
-			auto& host = get_host(data_[i]);
+			auto& host = hosts[data_[i]];
 			auto& job_info = job_table[i];
 			if (host.slots_remaining >= job_info.slots())
 				host.allocate_immediately(Job(job_table[i]), host_table[data_[i]].cpu_factor);

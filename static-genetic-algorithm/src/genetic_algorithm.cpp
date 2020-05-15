@@ -9,25 +9,27 @@ namespace genetic
 	{
 		auto timer = std::chrono::system_clock::now();
 
-		
 		//std::vector<Chromosome*> population;
 		//std::array<Chromosome, NUM_POPULATION_TO_KEEP> population;
-	
-		for (auto& i : population)
+
+		#pragma omp parallel for
+		for (std::size_t i = 0; i < population.size(); ++i)
 		{
-			i.make_random();
-			i.calculate_fitness();
+			population[i].make_random();
+			population[i].calculate_fitness();
 		}
-		for (auto& i : offspring)
+
+		#pragma omp parallel for
+		for (std::size_t i = 0; i < offspring.size(); ++i)
 		{
-			i.make_random();
-			i.calculate_fitness();
-		}		
+			offspring[i].make_random();
+			offspring[i].calculate_fitness();
+		}
 
 		std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - timer;
 
 		const auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
-		
+
 		std::cout << "Time elapsed for " << NUM_INITIAL_POPULATION << " chromosomes: " << milliseconds.count() << "ms" << std::endl;
 	}
 
@@ -79,7 +81,7 @@ namespace genetic
 		{
 			std::swap(population[it->index], population[k++]);
 		}
-		
+
 		for (auto it = temp_list.cbegin(); it != end; ++it)
 		{
 			auto location = it->location;
@@ -96,10 +98,10 @@ namespace genetic
 		output_stream.open(file_path, std::ios::out | std::ios::binary);
 
 		std::size_t pop_size = population.size();
-		unsigned short chromosome_length = LENGTH;
-		
+		uint32_t chromosome_length = LENGTH;
+
 		output_stream.sputn(reinterpret_cast<char*>(&pop_size), sizeof(std::size_t));
-		output_stream.sputn(reinterpret_cast<char*>(&chromosome_length), sizeof(unsigned short));
+		output_stream.sputn(reinterpret_cast<char*>(&chromosome_length), sizeof(uint32_t));
 
 		for (auto& c : population)
 		{
@@ -141,9 +143,9 @@ namespace genetic
 
 		std::cout << "Loading population of " << pop_size << " Chromosomes..." << std::endl;
 
-		const unsigned short chromosome_length = *reinterpret_cast<unsigned short*>(current);
+		const uint32_t chromosome_length = *reinterpret_cast<uint32_t*>(current);
 		const std::size_t c_length_in_bytes = chromosome_length * sizeof(uint16_t);
-		current += sizeof(unsigned short);
+		current += sizeof(uint32_t);
 
 		std::vector<Chromosome> result;
 		result.reserve(pop_size);
@@ -154,7 +156,7 @@ namespace genetic
 		}
 
 		std::cout << "Successfully loading " << pop_size << " Chromosomes with the length " << chromosome_length << std::endl;
-		
+
 		return result;
 	}
 }
