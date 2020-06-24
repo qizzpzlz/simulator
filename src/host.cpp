@@ -236,6 +236,9 @@ namespace ClusterSimulator
 			{
 				return a->finish_time > b->finish_time;
 			});
+
+		// Record allocation
+		simulation->log_allocation(job, id);
 	}
 
 	/**

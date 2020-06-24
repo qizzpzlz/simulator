@@ -112,6 +112,21 @@ namespace ClusterSimulator
 		std::vector<std::pair<ms, std::size_t>> pending_record_;
 		ms latest_finish_time_;
 		duration<double> actual_run_time_{};
+
+#pragma pack(push, 1)
+		struct _Allocation_record_entry
+		{
+			uint64_t job_id;
+			uint16_t host_id;
+			int64_t start_time;
+
+			_Allocation_record_entry(const Job& job, int host_id) noexcept
+			: job_id{job.id}
+			, host_id{static_cast<uint16_t>(host_id)}
+			, start_time{job.start_time.time_since_epoch().count()} {}
+		};
+#pragma pack(pop)
+		std::vector<_Allocation_record_entry> allocation_records_;
 		
 		void next();
 
@@ -418,6 +433,34 @@ namespace ClusterSimulator
 
 			using_slot_record_.insert_or_assign(get_current_time(), num_dispatched_slots);
 			pending_record_.emplace_back(get_current_time(), num_pending_jobs_);
+		}
+
+		/**
+		 * Log a job allocation record for the allocation binary output.
+		 */
+		void log_allocation(const Job& job, int host_id)
+		{
+			allocation_records_.emplace_back(job, host_id);
+		}
+		/**
+		 * Generate an allocation binary file.
+		 * The binary file contains the following information:
+		 * - Allocated host for each processed job.
+		 * - The time of execution for each processed job.
+		 */
+		void generate_allocation_binary(std::string_view output_path = "allocation.bin")
+		{
+			using record_t = const _Allocation_record_entry;
+
+			// Sort records by job id
+			std::sort(allocation_records_.begin(), allocation_records_.end(), 
+			[](record_t& a, record_t& b) { return a.job_id < b.job_id; });
+
+			std::filebuf output_stream;
+			output_stream.open(output_path, std::ios::out | std::ios::binary);
+
+			for (auto& record : allocation_records_)
+				output_stream.sputn(reinterpret_cast<const char*>(&record), sizeof(record_t));
 		}
 	};
 #pragma endregion

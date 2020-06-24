@@ -5,7 +5,7 @@
 
 namespace ClusterSimulator
 {
-	int Job::id_gen_ = 0;
+	std::size_t Job::id_gen_ = 0;
 	const bool Job::USE_STATIC_HOST_TABLE = ClusterSimulation::USE_STATIC_HOST_TABLE_FOR_JOBS;
 
 	using namespace std::chrono;

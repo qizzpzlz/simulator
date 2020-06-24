@@ -22,7 +22,7 @@ namespace ClusterSimulator
 		
 		/* Job fields from a scenario entry*/
 
-		int id;
+		std::size_t id;
 		int slot_required;			// The actual number of slots used for job execution.
 		long mem_required;
 		ms submit_time;
@@ -89,7 +89,7 @@ namespace ClusterSimulator
 
 		std::vector<Host*> eligible_hosts_;
 
-		static int id_gen_;
+		static std::size_t id_gen_;
 	};
 
 	inline milliseconds double_to_milliseconds(double value)
