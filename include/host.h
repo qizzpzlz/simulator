@@ -6,7 +6,7 @@
 #include <utility>
 #include <streambuf>
 
-namespace ClusterSimulator
+namespace cs
 {
 	enum class HostStatus
 	{
@@ -73,7 +73,7 @@ namespace ClusterSimulator
 		 * Returns true if this host's hardware spec satisfies
 		 * the requirements imposed by a specified job.
 		 */
-		bool is_compatible(const Job& job) const noexcept
+		[[nodiscard]] bool is_compatible(const Job& job) const noexcept
 		{
 			return status == HostStatus::OK
 				&& job.slot_required <= max_slot
@@ -85,7 +85,7 @@ namespace ClusterSimulator
 		/**
 		 * Returns true if this host is eligible for a specified job.
 		 */
-		bool is_executable(const Job& job) const noexcept
+		[[nodiscard]] bool is_executable(const Job& job) const noexcept
 		{
 			return is_compatible(job)
 				&& job.slot_required <= remaining_slots();
@@ -99,7 +99,7 @@ namespace ClusterSimulator
 
 		/* Status mutator methods */
 
-		void execute_job(std::shared_ptr<Job>& job_ptr);
+		void execute_job(std::shared_ptr<Job>& job_ptr, bool reserved = false);
 		void execute_job_when_ready(std::shared_ptr<Job>& job, milliseconds delay);
 		void set_status(HostStatus value) noexcept
 		{
@@ -140,17 +140,17 @@ namespace ClusterSimulator
 	private:
 		std::string name_;
 		std::string host_group_;
-		int slot_running_{};
+		//int slot_running_{};
 		int score_{};
 		ms expected_time_of_completion{};
 
 		// double max_procs;
 
 		std::vector<std::shared_ptr<Job>> running_jobs_;
-		std::vector<std::pair<std::shared_ptr<Job>, std::size_t>> reserved_jobs_;
+		//std::vector<std::pair<std::shared_ptr<Job>, std::size_t>> reserved_jobs_;
 
-		void exit_job();
-		void update_reserved_jobs(std::shared_ptr<Job>& new_job);
+		void update_job_list(const std::shared_ptr<Job>& job_ptr);
+		void exit_job(std::shared_ptr<Job> job_ptr, bool reserved = false);
 
 		static int id_gen_;
 		static std::random_device rd_;

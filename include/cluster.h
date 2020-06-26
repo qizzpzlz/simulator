@@ -3,7 +3,7 @@
 #include "host.h"
 #include <unordered_map>
 
-namespace ClusterSimulator
+namespace cs
 {
 	class Cluster
 	{
@@ -24,14 +24,9 @@ namespace ClusterSimulator
 		}
 		//auto find_node(const std::string& name) const noexcept { return nodes_.find(name); }
 		//auto find_node(const std::string& name) noexcept { return nodes_.find(name); }
-		size_t count() const { return nodes_.size(); }
-		Host& operator[](unsigned index)
-		{
-			//auto it = nodes_.begin();
-			//std::advance(it, index);
-			//return it->second;
-			return nodes_[index];
-		}
+		std::size_t count() const { return nodes_.size(); }
+		Host& operator[](unsigned index) { return nodes_[index]; }
+		const Host& operator[](unsigned index) const { return nodes_[index]; }
 
 		void update() noexcept { ++version_; }
 		auto get_version() const noexcept { return version_; }

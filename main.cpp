@@ -7,19 +7,8 @@
 #include "queue_algorithm.h"
 #include <filesystem>
 
-const std::string SCENARIO_DIR_PATH =
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-"../scenarios/";
-#else
-"scenarios/";
-#endif
-constexpr char HOSTS_FILE[] = "hardware_raw_initial_status.json";
-constexpr char SCENARIO_FILE[] = "scenario.json";
-const int NUM_SCENARIO_LINES_LIMIT = -1;
-constexpr std::string_view LOG_DIR = "logs/";
-
 namespace fs = std::filesystem;
-
+using namespace cs;
 
 
 int main(int argc, char *argv[])
@@ -27,13 +16,16 @@ int main(int argc, char *argv[])
 	argparse::ArgumentParser program("cluster-simulator");
 	program
 		.add_argument("-p", "--path")
-		//.required()
 		.help("specify the path to scenario directory.")
-		.default_value(SCENARIO_DIR_PATH);
+		.default_value(std::string(config::SCENARIO_FILE_PATH_STRING));
 	program.add_argument("-c", "--count")
 		.help("number of items to read in the given scenario.")
-		.default_value(NUM_SCENARIO_LINES_LIMIT)
+		.default_value(-1)
 		.action([](const std::string& value) { return std::stoi(value); });
+	program.add_argument("-t", "--use-table")
+		.help("Use binary scenario table instead of json scenario file.")
+		.default_value(true)
+		.implicit_value(true);
 
 	try
 	{
@@ -47,32 +39,39 @@ int main(int argc, char *argv[])
 	}
 
 	const auto scenario_dir_path{ program.get<std::string>("--path") };
-	const std::string scenario_path{ scenario_dir_path + SCENARIO_FILE };
-	const std::string host_path{ scenario_dir_path + HOSTS_FILE };
+	const std::string scenario_path{ scenario_dir_path + std::string(config::JSON_SCENARIO_FILE_NAME) };
+	const std::string host_path{ scenario_dir_path + std::string(config::JSON_HOST_FILE_NAME) };
 
 	// Create logs directory
-	create_directory(fs::path{ LOG_DIR });
-
-	using namespace ClusterSimulator;
+	create_directory(fs::path{ config::LOG_DIR_PATH_STRING });
 	
 	Scenario scenario;
-	ClusterSimulator::Cluster cluster;
+	cs::Cluster cluster;
+	
+	if (program["--use-table"] == true)
+	{
+		// TODO: parse paths from the argument parser.
+		constexpr std::string_view scenario_binary_path = "../static-genetic-algorithm/job-eligibility.small.bin";
+		constexpr std::string_view host_binary_path = "hosts.bin";
 		
-	// Parse the given scenario and the cluster from json files.
-	//Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
-	//Parser::parse_cluster(&cluster, host_path);
-
-	Parser::parse_scenario_from_table(&scenario, "../static-genetic-algorithm/job-eligibility.small.bin");
-	Parser::parse_cluster_from_binary(&cluster, "hosts.bin");
-
-	//MinMinAlgorithm minmin(cluster.size());
+		Parser::parse_scenario_from_table(&scenario, scenario_binary_path);
+		Parser::parse_cluster_from_binary(&cluster, host_binary_path);
+	}
+	else
+	{
+		// Parse the given scenario and the cluster from json files.
+		Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
+		Parser::parse_cluster(&cluster, host_path);
+	}
 
 	// Start simulation
-	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MCT};
+	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MinMin};
 
 	simulation.run();
 
 	// Print summary
 	simulation.print_summary();
+
+	return 0;
 }
 

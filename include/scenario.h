@@ -7,7 +7,7 @@
 
 class Cluster;
 
-namespace ClusterSimulator
+namespace cs
 {
 	class ClusterSimulation;
 	class Queue;
@@ -16,8 +16,7 @@ namespace ClusterSimulator
 
 	struct ScenarioEntry
 	{
-
-		enum class ScenarioEntryType
+		enum class Type
 		{
 			CHANGE_STATUS,
 			SUBMISSION
@@ -55,7 +54,7 @@ namespace ClusterSimulator
 		};
 
 
-		ScenarioEntryType type;
+		Type type;
 		ms timestamp;
 		EventDetail event_detail;
 		bool is_multi_host_submission;
@@ -67,7 +66,7 @@ namespace ClusterSimulator
 				timestamp.time_since_epoch().count() << std::endl;
 		};
 
-		std::vector<unsigned short> eligible_indices;
+		std::shared_ptr<std::vector<unsigned short>> eligible_indices;
 	};
 
 	/**
@@ -79,15 +78,15 @@ namespace ClusterSimulator
 	public:
 		ms initial_time_point;
 
-		size_t count() const { return entries_.size(); }
-		size_t num_unique_apps() const { return unique_apps_.size(); }
-		bool is_empty() const { return entries_.empty(); }
+		[[nodiscard]] std::size_t count() const { return entries_.size(); }
+		[[nodiscard]] std::size_t num_unique_apps() const { return unique_apps_.size(); }
+		[[nodiscard]] bool is_empty() const { return entries_.empty(); }
 
 		const ScenarioEntry pop();
-		std::pair<std::vector<ScenarioEntry>, ms> pop_all_latest();
+		[[nodiscard]] std::vector<ScenarioEntry> pop_all_latest();
 
-		std::vector<Queue> generate_queues(ClusterSimulation&) const;
-		void add_scenario_entry(ScenarioEntry entry);
+		[[nodiscard]] std::vector<Queue> generate_queues(ClusterSimulation&) const;
+		void add_scenario_entry(ScenarioEntry&& entry);
 
 	private:
 		std::queue<ScenarioEntry> entries_;

@@ -1,4 +1,6 @@
 #pragma once
+#include "config.h"
+#include "event_item.h"
 #include "cluster.h"
 #include "scenario.h"
 #include "queue.h"
@@ -16,7 +18,7 @@
 
 using LogLevel = spdlog::level::level_enum;
 
-namespace ClusterSimulator
+namespace cs
 {
 	class Scenario;
 	struct ScenarioEntry;
@@ -27,75 +29,9 @@ namespace ClusterSimulator
 		friend class Scenario;
 		friend class Host;
 
-		/*Static settings for simulation.*/
-
-		static constexpr std::string_view LOG_DIRECTORY = "logs";
-		static constexpr std::string_view LOG_OUTPUT_FILE_NAME = "log_output.txt";
-		static constexpr std::string_view JOBMART_FILE_NAME = "jobmart_raw_replica.txt";
-		static constexpr std::string_view PERFORMANCE_FILE_NAME = "performance.txt";
-		static constexpr std::string_view PENDING_FILE_NAME = "pending.txt";
-		static constexpr std::string_view JOB_SUBMIT_FILE_NAME = "job_submit.txt";
-		static constexpr bool CONSOLE_OUTPUT = false;
-		static constexpr bool CONSOLE_WARNING_OUTPUT = false;
-		static constexpr bool LOG_FILE_OUTPUT = true;
-		static constexpr bool JOBMART_FILE_OUTPUT = true;
-		static constexpr bool SLOTS_FILE_OUTPUT = true;
-		static constexpr bool JOB_SUBMIT_FILE_OUTPUT = true;
-		static constexpr char LOGGER_PATTERN[] = "[%l] %v";
-		static constexpr milliseconds DISPATCH_FREQUENCY{ 1000 };
-		static constexpr milliseconds LOGGING_FREQUENCY{ 10000 };
-		static constexpr milliseconds COUNTING_FREQUENCY{ 10000 };
-		static constexpr bool USE_ONLY_DEFAULT_QUEUE = true;
-		static constexpr double RUNTIME_MULTIPLIER = 1;
-
-		static constexpr bool DEBUG_EVENTS = false;
-		inline static bool _set_log_level = []
-		{
-			if constexpr (!DEBUG_EVENTS) return false;
-			spdlog::set_level(LogLevel::debug);
-			return true;
-		}();
-
 	public:
-		static constexpr bool USE_STATIC_HOST_TABLE_FOR_JOBS = true;
-		static constexpr bool LOG_ANY = CONSOLE_OUTPUT || LOG_FILE_OUTPUT;
-		using Action = std::function<void()>;
+		static constexpr bool LOG_ANY = config::CONSOLE_OUTPUT || config::LOG_FILE_OUTPUT;
 
-		struct EventItem
-		{
-			enum class Type { SCENARIO, JOB_FINISHED, JOB_RESERVED, DISPATCH, LOG };
-			inline static const std::string type_strings[] = { "Scenario", "Job Finished", "Job Reserved", "Dispatch", "Log" };
-
-			// TODO: make atomic
-			std::size_t id = id_gen_++;
-			ms time;
-			Action action;
-			uint8_t priority;
-			Type type;
-			
-			EventItem(ms time, const Action& action, uint8_t priority = 0, Type type = Type::SCENARIO)
-				: time{ time }
-				, action{ action }
-				, priority{ priority }
-				, type{ type } {}
-			
-			EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation);
-
-			[[nodiscard]] const std::string& get_type_string() const noexcept
-			{
-				return type_strings[static_cast<int>(type)];
-			}
-
-			bool operator<(const EventItem& a) const
-			{
-				return a.time == time
-					? a.priority < priority
-					: a.time < time;
-			}
-
-		private:
-			inline static std::size_t id_gen_ = 0;
-		};
 
 	private:
 		/* Event driven simulator helpers */
@@ -141,7 +77,7 @@ namespace ClusterSimulator
 			EventItem event_item{ current_time_ + delay, std::move(block), priority, type };
 			events_.push(event_item);
 
-			if constexpr (DEBUG_EVENTS)
+			if constexpr (config::DEBUG_EVENTS)
 			{
 				log(LogLevel::debug, "Event [{0}] is added at {1} ms. Event time: {2} ms",
 					event_item.get_type_string(), current_time_.time_since_epoch().count(),
@@ -158,7 +94,7 @@ namespace ClusterSimulator
 			auto it = events_.find_by_id(event_id);
 			if (it == events_.end()) return;
 
-			if constexpr (DEBUG_EVENTS)
+			if constexpr (config::DEBUG_EVENTS)
 			{
 				log(LogLevel::debug, "Event [{0}] is removed. (was planed to start at {1} ms.)"
 					, it->get_type_string(), it->time.time_since_epoch().count());
@@ -170,7 +106,7 @@ namespace ClusterSimulator
 		void add_delay(std::size_t event_id, milliseconds delay)
 		{
 			events_.add_delay(event_id, delay);
-			if constexpr (DEBUG_EVENTS)
+			if constexpr (config::DEBUG_EVENTS)
 			{
 				const auto event = events_.find_by_id(event_id);
 				log(LogLevel::debug, "Event [{0}]'s start time is changed to {1} ms.",
@@ -186,6 +122,8 @@ namespace ClusterSimulator
 		constexpr void increment_failed_jobs() noexcept { ++num_failed_jobs_; }
 		constexpr void update_pending_duration(milliseconds duration) { total_pending_duration_ += duration; }
 		constexpr void update_total_queuing_time(milliseconds q_time) { total_queuing_time_ += q_time; }
+
+		void increment_job_submission_counters() { ++num_submitted_jobs_; ++newly_submitted_jobs_; }
 
 	private:
 		Cluster& cluster_;
@@ -219,7 +157,7 @@ namespace ClusterSimulator
 						return;
 					}
 
-					simulation_->after_delay(simulation_->DISPATCH_FREQUENCY,
+					simulation_->after_delay(config::DISPATCH_FREQUENCY,
 						std::ref(simulation_->dispatcher_), 1, EventItem::Type::DISPATCH);
 					return;
 				}
@@ -231,7 +169,7 @@ namespace ClusterSimulator
 				if (flag)
 				{
 					// pending jobs exist
-					simulation_->after_delay(ClusterSimulation::DISPATCH_FREQUENCY,
+					simulation_->after_delay(config::DISPATCH_FREQUENCY,
 						std::ref(simulation_->dispatcher_), 1, EventItem::Type::DISPATCH);
 
 					size_t num{ 0 };
@@ -254,46 +192,53 @@ namespace ClusterSimulator
 
 #pragma region logger
 	private:
+		inline static bool _set_log_level = []
+		{
+			if constexpr (!config::DEBUG_EVENTS) return false;
+			spdlog::set_level(LogLevel::debug);
+			return true;
+		}();
+		
 		static std::ofstream generate_file(std::string_view directory, std::string_view file)
 		{
 			return std::ofstream(std::filesystem::path(directory) / file);
 		}
 
 		std::ofstream jobmart_file_ = [] {
-			if constexpr (JOBMART_FILE_OUTPUT)
-				return generate_file(LOG_DIRECTORY, JOBMART_FILE_NAME);
+			if constexpr (config::JOBMART_FILE_OUTPUT)
+				return generate_file(config::LOG_DIRECTORY, config::JOBMART_FILE_NAME);
 			else
 				return std::ofstream{};
 		}();
 		std::ofstream performance_file_ = []
 		{
-			if constexpr (SLOTS_FILE_OUTPUT)
-				return generate_file(LOG_DIRECTORY, PERFORMANCE_FILE_NAME);
+			if constexpr (config::SLOTS_FILE_OUTPUT)
+				return generate_file(config::LOG_DIRECTORY, config::PERFORMANCE_FILE_NAME);
 			else
 				return std::ofstream{};
 		}();
 		std::ofstream pending_jobs_file_ = []
 		{
-			if constexpr (SLOTS_FILE_OUTPUT)
-				return generate_file(LOG_DIRECTORY, PENDING_FILE_NAME);
+			if constexpr (config::SLOTS_FILE_OUTPUT)
+				return generate_file(config::LOG_DIRECTORY, config::PENDING_FILE_NAME);
 			else
 				return std::ofstream{};
 		}();
 		std::ofstream job_submit_file_ = []
 		{
-			if constexpr (JOB_SUBMIT_FILE_OUTPUT)
-				return generate_file(LOG_DIRECTORY, JOB_SUBMIT_FILE_NAME);
+			if constexpr (config::JOB_SUBMIT_FILE_OUTPUT)
+				return generate_file(config::LOG_DIRECTORY, config::JOB_SUBMIT_FILE_NAME);
 			else
 				return std::ofstream{};
 		}();
 		std::shared_ptr<spdlog::logger> file_logger_ = []
 		{
-			if constexpr (LOG_FILE_OUTPUT)
+			if constexpr (config::LOG_FILE_OUTPUT)
 			{
-				std::filesystem::path path = LOG_DIRECTORY;
-				path /= LOG_OUTPUT_FILE_NAME;
+				std::filesystem::path path = config::LOG_DIRECTORY;
+				path /= config::LOG_OUTPUT_FILE_NAME;
 				auto logger = spdlog::basic_logger_mt("file_logger", path.string());
-				logger->set_pattern(LOGGER_PATTERN);
+				logger->set_pattern(config::LOGGER_PATTERN);
 				return logger;
 			}
 			else
@@ -307,30 +252,30 @@ namespace ClusterSimulator
 		template<typename... Args>
 		void log(LogLevel level, const char* fmt, const Args&... args) const
 		{
-			if constexpr (CONSOLE_OUTPUT)
+			if constexpr (config::CONSOLE_OUTPUT)
 				spdlog::log(level, fmt, args...);
-			else if constexpr (CONSOLE_WARNING_OUTPUT)
+			else if constexpr (config::CONSOLE_WARNING_OUTPUT)
 				if (level > LogLevel::info)
 					spdlog::log(level, fmt, args...);
-			if constexpr (LOG_FILE_OUTPUT)
+			if constexpr (config::LOG_FILE_OUTPUT)
 				file_logger_->log(level, fmt, args...);
 		}
 
 		template<typename T>
 		void log(LogLevel level, const T& msg) const
 		{
-			 if constexpr (CONSOLE_OUTPUT)
+			 if constexpr (config::CONSOLE_OUTPUT)
 			 	spdlog::log(level, msg);
-			 else if constexpr (CONSOLE_WARNING_OUTPUT) 
+			 else if constexpr (config::CONSOLE_WARNING_OUTPUT) 
 			 	if (level > LogLevel::info)
 			 		spdlog::log(level, msg);
-			 if constexpr (LOG_FILE_OUTPUT)
+			 if constexpr (config::LOG_FILE_OUTPUT)
 			 	file_logger_->log(level, msg);
 		}
 
 		void log_jobmart(const Job& job)
 		{
-			if constexpr (!JOBMART_FILE_OUTPUT)
+			if constexpr (!config::JOBMART_FILE_OUTPUT)
 				return;
 
 			tp_ <<
@@ -414,7 +359,7 @@ namespace ClusterSimulator
 
 		void log_using_slots()
 		{ 
-			if constexpr (!SLOTS_FILE_OUTPUT) return;
+			if constexpr (!config::SLOTS_FILE_OUTPUT) return;
 
 			using_slot_record_.insert_or_assign(get_current_time(), num_dispatched_slots);
 			pending_record_.emplace_back(get_current_time(), num_pending_jobs_);

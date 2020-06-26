@@ -12,7 +12,7 @@
 
 //#include "../includes/limit.h"
 
-namespace ClusterSimulator
+namespace cs
 {
 	class ClusterSimulation;
 	class Cluster;
@@ -141,28 +141,10 @@ namespace ClusterSimulator
 		bool is_default() const { return is_default_; }
 
 		bool dispatch();
-		void enqueue(Job&& job);
+		void enqueue(std::shared_ptr<Job> job);
 		void add_pending_job(JobWrapper& job);
 		void add_pending_job(JobWrapper&& job);
-		void add_pending_job(std::shared_ptr<Job> job)
-		{
-			add_pending_job(JobWrapper(std::move(job)));
-		}
-
-
-		// bool try_get_dispatched_host_info(const Host& host, HostInfo* out_info) const noexcept
-		// {
-		// 	const auto search = dispatched_hosts_.find(&host);
-		// 	if (search == dispatched_hosts_.end())
-		// 	{
-		// 		out_info = nullptr;
-		// 		return false;
-		// 	}
-
-		// 	*out_info = search->second;	// HostInfo is copy-assigned here!
-
-		// 	return true;
-		// }
+		void add_pending_job(std::shared_ptr<Job> job) { add_pending_job(JobWrapper(std::move(job))); }
 
 		void set_algorithm(const QueueAlgorithm* const algorithm);
 		const QueueAlgorithm* current_algorithm{ nullptr };

@@ -2,40 +2,40 @@
 #include "scenario.h"
 #include "queue_algorithm.h"
 
-namespace ClusterSimulator
+namespace cs
 {
-	void Scenario::add_scenario_entry(ScenarioEntry entry)
+	void Scenario::add_scenario_entry(ScenarioEntry&& entry)
 	{
-		entries_.push(entry);
 		unique_queues_.insert(entry.event_detail.queue_name);
 		unique_apps_.insert(entry.event_detail.application_name);
+		entries_.push(std::move(entry));
 	}
 
 	const ScenarioEntry Scenario::pop()
 	{
-		ScenarioEntry entry = entries_.front(); // Copy
+		ScenarioEntry entry = std::move(entries_.front());
 		entries_.pop();
 		return entry; // Move
 	}
 
-	std::pair<std::vector<ScenarioEntry>, ms> Scenario::pop_all_latest()
+	std::vector<ScenarioEntry> Scenario::pop_all_latest()
 	{
-		ScenarioEntry front = std::move(entries_.front());
-		std::vector<ScenarioEntry> result{ front };
-		ms time = front.timestamp;
+		std::vector<ScenarioEntry> result;
+		result.push_back(std::move(entries_.front()));
+		ms time = result.back().timestamp;
 
 		entries_.pop();
-		if (entries_.empty()) return std::make_pair(result, time);
+		if (entries_.empty()) return result;
 
 		ms next_time = entries_.front().timestamp;
 		while (next_time == time)
 		{
-			result.push_back(entries_.front());
+			result.push_back(std::move(entries_.front()));
 			entries_.pop();
 			if (entries_.empty()) break;
 			next_time = entries_.front().timestamp;
 		}
-		return std::make_pair(result, time);
+		return result;
 	}
 
 	std::vector<Queue> Scenario::generate_queues(ClusterSimulation& simulation) const

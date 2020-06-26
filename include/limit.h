@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <chrono>
-namespace ClusterSimulator
+namespace cs
 {
     class Queue;
     class Host;

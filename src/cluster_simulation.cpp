@@ -11,7 +11,7 @@
 
 //#include "dependencies/
 
-namespace ClusterSimulator
+namespace cs
 {
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm)
 		: cluster_{ cluster }
@@ -25,7 +25,7 @@ namespace ClusterSimulator
 
 		current_time_ = scenario.initial_time_point;
 
-		if constexpr (USE_ONLY_DEFAULT_QUEUE)
+		if constexpr (config::USE_ONLY_DEFAULT_QUEUE)
 		{
 			all_queues_.clear();
 			all_queues_.emplace_back(*this);
@@ -33,7 +33,7 @@ namespace ClusterSimulator
 		else
 			std::sort(all_queues_.begin(), all_queues_.end());
 
-		if constexpr (JOB_SUBMIT_FILE_OUTPUT)
+		if constexpr (config::JOB_SUBMIT_FILE_OUTPUT)
 		{
 			count_new_jobs_ = [this]
 			{
@@ -46,9 +46,9 @@ namespace ClusterSimulator
 				}
 
 				if (!scenario_.is_empty())
-					this->after_delay(COUNTING_FREQUENCY, this->count_new_jobs_, 3, EventItem::Type::LOG);
+					this->after_delay(config::COUNTING_FREQUENCY, this->count_new_jobs_, 3, EventItem::Type::LOG);
 			};
-			after_delay(COUNTING_FREQUENCY, count_new_jobs_, 3, EventItem::Type::LOG);
+			after_delay(config::COUNTING_FREQUENCY, count_new_jobs_, 3, EventItem::Type::LOG);
 		}
 		
 		//set algoritms
@@ -85,82 +85,22 @@ namespace ClusterSimulator
 	//	return it->second;
 	//}
 
-	ClusterSimulation::EventItem::EventItem(const ScenarioEntry& entry, ClusterSimulation& simulation)
-		: time{entry.timestamp}
-		, priority{0}
-		, type{Type::SCENARIO}
-	{
-		if (entry.type == ScenarioEntry::ScenarioEntryType::SUBMISSION)
-		{
-			action = [&simulation, entry]
-			{
-				Queue* queue;
-				if constexpr (USE_ONLY_DEFAULT_QUEUE)
-				{
-					queue = &simulation.get_default_queue();
-				}
-				else
-				{
-					if (entry.event_detail.queue_name == "-" || entry.event_detail.queue_name.empty())
-						return;
-
-					queue = &simulation.find_queue(entry.event_detail.queue_name);
-				}
-			
-				queue->enqueue(Job{ entry, *queue, simulation.get_current_time() });
-
-				//queue.dispatch();
-				simulation.reserve_dispatch_event();
-				
-				simulation.num_submitted_jobs_++;
-				simulation.newly_submitted_jobs_++;
-				//log(LogLevel::info, "newly_submitted_jobs{0}", simulation.newly_submitted_jobs_);
-			};
-		}
-		else if (entry.type == ScenarioEntry::ScenarioEntryType::CHANGE_STATUS)
-		{
-			action = [&simulation, &entry]
-			{
-				//if (entry.event_detail.host_name.empty())
-				//	return;
-
-				//Host& host = simulation.get_cluster().find_node(entry.event_detail.host_name)->second;
-
-				//host.set_status(entry.event_detail.host_status);
-				//host.cpu_factor = entry.event_detail.cpu_factor;
-				//host.ncpus = entry.event_detail.ncpus;
-				//host.nprocs = entry.event_detail.nprocs;
-				//host.ncores = entry.event_detail.ncores;
-				//host.nthreads = entry.event_detail.nthreads;
-
-				//Utils::enum_const_ref_holder<HostStatus> test = Utils::enum_to_string<HostStatus>(host.status);
-				//std::stringstream ss;
-				//ss << test;
-
-				//log(LogLevel::info, "Host {0}'s status is changed to {1}", host.id, ss.str());
-			};
-		}
-		else
-		{
-			throw std::logic_error("Not implemented;");
-		}
-	}
-
 	bool ClusterSimulation::run()
 	{
 		std::cout << "Simulation start!" << std::endl;
 		const auto start_timer = high_resolution_clock::now();
 
-		if constexpr(!CONSOLE_OUTPUT)
+		if constexpr(!config::CONSOLE_OUTPUT)
 			std::cout << std::endl;
 		
 		while (true)
 		{
 			if (!scenario_.is_empty())
 			{
-				auto [next_entries, next_arrival_time] = scenario_.pop_all_latest();
+				auto next_entries = scenario_.pop_all_latest();
+				auto next_arrival_time = next_entries.front().timestamp;
 				
-				if constexpr(!CONSOLE_OUTPUT)
+				if constexpr(!config::CONSOLE_OUTPUT)
 					std::cout << "\33[2K\r" << "Remaining scenarios: " << scenario_.count();
 
 				auto next_event_time = events_.top().time;
@@ -170,8 +110,8 @@ namespace ClusterSimulator
 					next_event_time = events_.top().time;
 				}
 
-				for (const auto& entry : next_entries)
-					events_.push(EventItem(entry, *this));
+				for (auto& entry : next_entries)
+					events_.push(EventItem(std::move(entry), *this));
 			}
 			else
 			{
@@ -222,14 +162,14 @@ namespace ClusterSimulator
 			"### Total pending duration: " << total_pending_duration_.count() << " ms\n" <<
 			"#### Queue algorithm: " << algorithm_name << "\n" <<
 			//"### Number of successful jobs: " << num_successful_jobs_ << "\n" <<
-			"#### Dispatch frequency: " << DISPATCH_FREQUENCY.count() << " ms\n" <<
-			"#### Logging frequency: " << LOGGING_FREQUENCY.count() << " ms\n" <<
-			"#### Runtime multiplier: " << RUNTIME_MULTIPLIER << "\n" <<
+			"#### Dispatch frequency: " << config::DISPATCH_FREQUENCY.count() << " ms\n" <<
+			"#### Logging frequency: " << config::LOGGING_FREQUENCY.count() << " ms\n" <<
+			"#### Runtime multiplier: " << config::RUNTIME_MULTIPLIER << "\n" <<
 			"#### Actual run time of simulation: " << duration_cast<seconds>(actual_run_time_).count() << " s"
 			<< std::endl;
 
 
-		if constexpr(CONSOLE_OUTPUT)
+		if constexpr(config::CONSOLE_OUTPUT)
 			log(LogLevel::info, ss.str());
 		else
 			std::cout << ss.str();
@@ -260,7 +200,7 @@ namespace ClusterSimulator
 		const auto event_item = events_.top();
 		events_.pop();
 
-		if constexpr (DEBUG_EVENTS)
+		if constexpr (config::DEBUG_EVENTS)
 		{
 			log(LogLevel::debug, "Event [{0}] Time: {1}ms Priority: {2}", 
 				EventItem::type_strings[static_cast<int>(event_item.type)], event_item.time.time_since_epoch().count(), event_item.priority);
@@ -277,7 +217,7 @@ namespace ClusterSimulator
 			current_time_ = event_item.time;
 			if (event_item.priority < 2)
 			{
-				if constexpr (ClusterSimulation::LOG_ANY)
+				if constexpr (LOG_ANY)
 					log(LogLevel::info, "Current Time: {0}", current_time_.time_since_epoch().count());
 				update_latest_finish_time(current_time_);
 			}
@@ -293,7 +233,7 @@ namespace ClusterSimulator
 			return;
 
 		after_delay(
-			Utils::get_time_left_until_next_period(current_time_, DISPATCH_FREQUENCY),
+			Utils::get_time_left_until_next_period(current_time_, config::DISPATCH_FREQUENCY),
 			std::ref(dispatcher_), 1, EventItem::Type::DISPATCH);
 
 
@@ -305,7 +245,7 @@ namespace ClusterSimulator
 	 */
 	void ClusterSimulation::initialise_tp()
 	{
-		if constexpr (!JOBMART_FILE_OUTPUT)
+		if constexpr (!config::JOBMART_FILE_OUTPUT)
 			return;
 
 		jobmart_file_.open("logs/jobmart_raw_replica.txt");

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <cstring>
 
-namespace ClusterSimulator::Parser
+namespace cs::Parser
 {
 		void parse_scenario(Scenario* scenario, const std::string& file_path, int limit)
 		{
@@ -51,7 +51,7 @@ namespace ClusterSimulator::Parser
 					
 				if (json["event_action"] == "submission")
 				{
-					entry.type = ScenarioEntry::ScenarioEntryType::SUBMISSION;
+					entry.type = ScenarioEntry::Type::SUBMISSION;
 					entry.event_detail.queue_name = details["queue_name"].string_value();
 					entry.event_detail.exec_hostname = details["exec_hostname"].string_value();
 					entry.event_detail.application_name = details["application_name"].string_value();
@@ -76,7 +76,7 @@ namespace ClusterSimulator::Parser
 				}
 				else
 				{
-					entry.type = ScenarioEntry::ScenarioEntryType::CHANGE_STATUS;
+					entry.type = ScenarioEntry::Type::CHANGE_STATUS;
 					entry.event_detail.host_name = details["host_name"].string_value();
 					HostStatus status;
 					std::stringstream ss(details["host_status"].string_value());
@@ -89,7 +89,7 @@ namespace ClusterSimulator::Parser
 					entry.event_detail.nthreads = details["NTHREADS"].int_value();
 				}
 
-				scenario->add_scenario_entry(entry);
+				scenario->add_scenario_entry(std::move(entry));
 
 				if (count++ == limit)
 					break;
@@ -101,9 +101,9 @@ namespace ClusterSimulator::Parser
 			std::cout << "Successfully parsed " << scenario->count() << " scenario entries." << std::endl;
 		}
 
-		void parse_scenario_from_table(Scenario* scenario, const std::string& file_path)
+		void parse_scenario_from_table(Scenario* scenario, std::string_view file_path)
 		{
-			auto file = std::ifstream(file_path, std::ios::binary | std::ios::ate);
+			auto file = std::ifstream(file_path.data(), std::ios::binary | std::ios::ate);
 
 			if (!file)
 				throw std::runtime_error("Binary Job table file couldn't be found.");
@@ -142,34 +142,36 @@ namespace ClusterSimulator::Parser
 
 			auto first_timestamp = read_uint32_padded(&current, read);
 			ScenarioEntry first_entry;
-			first_entry.type = ScenarioEntry::ScenarioEntryType::SUBMISSION;
+			first_entry.type = ScenarioEntry::Type::SUBMISSION;
 			first_entry.timestamp = ms{};
+			first_entry.eligible_indices = std::make_shared<decltype(ScenarioEntry::eligible_indices)::element_type>();
 			first_entry.event_detail.num_slots = read_uint32_padded(&current, read);
 			first_entry.event_detail.job_cpu_time = read_uint32_padded(&current, read);
 			first_entry.event_detail.job_non_cpu_time = read_uint32_padded(&current, read);
 
 			auto first_array_size = read_uint16_padded(&current, read);
-			first_entry.eligible_indices.reserve(first_array_size);
+			first_entry.eligible_indices->reserve(first_array_size);
 			for (auto i = 0; i < first_array_size; ++i)
-				first_entry.eligible_indices.push_back(read_uint16_padded(&current, read));
+				first_entry.eligible_indices->push_back(read_uint16_padded(&current, read));
 
-			s.add_scenario_entry(first_entry);
+			s.add_scenario_entry(std::move(first_entry));
 			
 			while (read < size)
 			{
 				ScenarioEntry entry;
-				entry.type = ScenarioEntry::ScenarioEntryType::SUBMISSION;
+				entry.type = ScenarioEntry::Type::SUBMISSION;
 				entry.timestamp = ms{ std::chrono::duration<long long>{ static_cast<long long>(read_uint32_padded(&current, read) - first_timestamp) } };
+				entry.eligible_indices = std::make_shared<decltype(ScenarioEntry::eligible_indices)::element_type>();
 				entry.event_detail.num_slots = read_uint32_padded(&current, read);
 				entry.event_detail.job_cpu_time = read_uint32_padded(&current, read);
 				entry.event_detail.job_non_cpu_time = read_uint32_padded(&current, read);
 
 				auto array_size = read_uint16_padded(&current, read);
-				entry.eligible_indices.reserve(array_size);
+				entry.eligible_indices->reserve(array_size);
 				for (auto i = 0; i < array_size; ++i)
-					entry.eligible_indices.push_back(read_uint16_padded(&current, read));
+					entry.eligible_indices->push_back(read_uint16_padded(&current, read));
 
-				s.add_scenario_entry(entry);
+				s.add_scenario_entry(std::move(entry));
 			}
 		}
 
@@ -220,9 +222,9 @@ namespace ClusterSimulator::Parser
 			std::cout << "Successfully parsed a cluster with " << cluster->count() << " hosts." << std::endl;
 		}
 
-		void parse_cluster_from_binary(Cluster* cluster, const std::string& file_path)
+		void parse_cluster_from_binary(Cluster* cluster, std::string_view file_path)
 		{
-			auto file = std::ifstream(file_path, std::ios::binary | std::ios::ate);
+			auto file = std::ifstream(file_path.data(), std::ios::binary | std::ios::ate);
 
 			if (!file)
 				throw std::runtime_error("Can't find binary hosts file.");

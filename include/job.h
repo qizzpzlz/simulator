@@ -2,8 +2,11 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <stdexcept>
+#include <memory>
+#include "config.h"
 
-namespace ClusterSimulator
+namespace cs
 {
 	enum class JobState
 	{
@@ -18,8 +21,6 @@ namespace ClusterSimulator
 	class Job
 	{
 	public:
-		static const bool USE_STATIC_HOST_TABLE;
-		
 		/* Job fields from a scenario entry*/
 
 		int id;
@@ -45,7 +46,7 @@ namespace ClusterSimulator
 		int priority{ 0 };
 		JobState state{ JobState::WAIT };
 
-		Job(const ScenarioEntry& entry, Queue& queue, const ms submit_time);
+		Job(ScenarioEntry& entry, Queue& queue, ms submit_time);
 
 		// const std::string& get_application_name() const { return application_name_; }
 		// const std::string& get_dedicated_host_name() const { return dedicated_host_name_; }
@@ -69,7 +70,13 @@ namespace ClusterSimulator
 		[[nodiscard]] std::vector<Host*> get_eligible_hosts() const;
 
 
-		[[nodiscard]] const std::vector<Host*>& get_compatible_hosts() const;
+		[[nodiscard]] const std::vector<unsigned short>& get_compatible_hosts(std::enable_if_t<config::USE_STATIC_HOST_TABLE_FOR_JOBS>) const
+		{
+			if constexpr (!config::USE_STATIC_HOST_TABLE_FOR_JOBS)
+				throw std::runtime_error("Job::get_compatible_hosts() is not implemented for the case where USE_STATIC_HOST_TABLE_FOR_JOBS is false.");
+
+			return *eligible_hosts_;
+		}
 
 	private:
 		// std::string application_name_;
@@ -87,7 +94,7 @@ namespace ClusterSimulator
 		//std::vector<Task> tasks_;
 		//
 
-		std::vector<Host*> eligible_hosts_;
+		std::shared_ptr<const std::vector<unsigned short>> eligible_hosts_;
 
 		static int id_gen_;
 	};

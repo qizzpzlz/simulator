@@ -13,14 +13,14 @@ namespace genetic
 		//std::array<Chromosome, NUM_POPULATION_TO_KEEP> population;
 
 		#pragma omp parallel for
-		for (std::size_t i = 0; i < population.size(); ++i)
+		for (long long i = 0; i < population.size(); ++i)
 		{
 			population[i].make_random();
 			population[i].calculate_fitness();
 		}
 
 		#pragma omp parallel for
-		for (std::size_t i = 0; i < offspring.size(); ++i)
+		for (long long i = 0; i < offspring.size(); ++i)
 		{
 			offspring[i].make_random();
 			offspring[i].calculate_fitness();

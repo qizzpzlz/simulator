@@ -3,7 +3,7 @@
 #include "queue.h"
 #include <stdexcept>
 
-namespace ClusterSimulator
+namespace cs
 {
     bool RuntimeLimit::is_eligible(const Queue& queue, const Host& host, const Job& job) const
     {
