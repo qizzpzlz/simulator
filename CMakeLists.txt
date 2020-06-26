@@ -50,7 +50,7 @@ file(GLOB SRC_FILES
 	dependencies/*.h)
 
 # Add source to this project's executable.
-add_executable (cluster-simulator ${SRC_FILES} "shared/placeholder.cpp")
+add_executable (cluster-simulator ${SRC_FILES})
 
 add_subdirectory(static-genetic-algorithm)
 
