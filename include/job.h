@@ -23,7 +23,7 @@ namespace cs
 	public:
 		/* Job fields from a scenario entry*/
 
-		int id;
+		std::size_t id;
 		int slot_required;			// The actual number of slots used for job execution.
 		long mem_required;
 		ms submit_time;
@@ -96,7 +96,7 @@ namespace cs
 
 		std::shared_ptr<const std::vector<unsigned short>> eligible_hosts_;
 
-		static int id_gen_;
+		inline static std::size_t id_gen_ = 0;
 	};
 
 	inline milliseconds double_to_milliseconds(double value)

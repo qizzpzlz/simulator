@@ -118,6 +118,9 @@ namespace cs
 		// Reserve job finished event.
 		simulation->after_delay(run_time, std::bind(&Host::exit_job, this, job_ptr, reserved),
 			0, EventItem::Type::JOB_FINISHED);
+
+		// Record allocation
+		simulation->log_allocation(job, id);
 	}
 
 	/**

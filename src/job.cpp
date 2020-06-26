@@ -5,8 +5,6 @@
 
 namespace cs
 {
-	int Job::id_gen_ = 0;
-
 	using namespace std::chrono;
 
 	Job::Job(ScenarioEntry& entry, Queue& queue, ms submit_time) :
