@@ -30,7 +30,7 @@ endif(NOT MSVC)
 find_library(LIBS spdlog ${CMAKE_SOURCE_DIR}/lib REQUIRED)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/bprinter dependencies)
-add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/leveldb)
+# add_subdirectory(${CMAKE_SOURCE_DIR}/dependencies/leveldb)
 
 # Interface libraries
 add_library(argparse INTERFACE)

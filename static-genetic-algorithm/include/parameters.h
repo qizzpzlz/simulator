@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 #include <sstream>
+#include <string_view>
 
 namespace genetic
 {
@@ -15,7 +16,7 @@ namespace genetic
 	constexpr std::size_t NUM_INITIAL_POPULATION = NUM_POPULATION_TO_KEEP * OFFSPRING_RATIO;
 	constexpr std::size_t NUM_OFFSPRING = NUM_POPULATION_TO_KEEP * (OFFSPRING_RATIO - 1);
 	//constexpr std::size_t KEEP_SIZE = 15;
-	constexpr std::size_t NUM_ITERATIONS = 10000;
+	constexpr std::size_t NUM_ITERATIONS = 200;
 	constexpr std::size_t SAVE_INTERVAL = 10;
 	//constexpr std::size_t AGE_UPPER_LIMIT = 0;
 	constexpr double CROSSOVER_PROBABILITY = 1;
@@ -31,21 +32,13 @@ namespace genetic
 
 	constexpr bool CONSOLE_OUTPUT = true;
 
-	inline static const std::vector<Entry> job_table = read_binary(binary_file_path);
-	inline static std::vector<HostInfo> host_table = read_host_binary();
-	inline static const std::vector<Host> host_prototypes = []
-	{
-		std::vector<Host> result;
-		result.reserve(host_table.size());
-		for (auto& info : host_table)
-		{
-			result.push_back(Host{ info.max_slots });
-		}
+	constexpr std::string_view OUTPUT_DIR_PATH = "./out-genetic/";
 
-		return result;
-	}();
-	inline static const uint32_t LENGTH = job_table.size();
-	inline static const uint32_t NUM_HOSTS = host_table.size();
+	extern std::vector<Entry> job_table;
+	extern std::vector<HostInfo> host_table;
+	extern std::vector<Host> host_prototypes;
+	extern uint32_t LENGTH;
+	extern uint32_t NUM_HOSTS;
 
 
 	//constexpr std::string_view parameters_summary = []

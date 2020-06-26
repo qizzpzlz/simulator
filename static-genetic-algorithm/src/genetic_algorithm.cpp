@@ -92,7 +92,7 @@ namespace genetic
 		}
 	}
 
-	void save_population(Population& population, const char* file_path)
+	void save_population(Population& population, const std::filesystem::path& file_path)
 	{
 		std::filebuf output_stream;
 		output_stream.open(file_path, std::ios::out | std::ios::binary);
@@ -109,7 +109,7 @@ namespace genetic
 		}
 	}
 
-	void save_epochs_record(std::stringstream& ss, const char* file_path)
+	void save_epochs_record(std::stringstream& ss, const std::filesystem::path& file_path)
 	{
 		std::ofstream output_stream;
 		output_stream.open(file_path);
@@ -117,7 +117,7 @@ namespace genetic
 		output_stream.close();
 	}
 
-	std::vector<Chromosome> load_population(const char* file_path)
+	std::vector<Chromosome> load_population(const std::filesystem::path& file_path)
 	{
 		auto file = std::ifstream(file_path, std::ios::binary | std::ios::ate);
 

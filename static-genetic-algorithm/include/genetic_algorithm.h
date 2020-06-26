@@ -124,9 +124,9 @@ namespace genetic
 		std::cout << std::endl;
 	}
 
-	void save_population(Population& population, const char* file_path);
-	void save_epochs_record(std::stringstream& ss, const char* file_path);
-	inline void save_summary_text(const char* file_path)
+	void save_population(Population& population, const std::filesystem::path& file_path);
+	void save_epochs_record(std::stringstream& ss, const std::filesystem::path& file_path);
+	inline void save_summary_text(const std::filesystem::path& file_path)
 	{
 		std::ofstream output_stream(file_path);
 		output_stream << "###### Summary ######\n"
@@ -141,5 +141,5 @@ namespace genetic
 		output_stream.close();
 	}
 
-	std::vector<Chromosome> load_population(const char* file_path);
+	std::vector<Chromosome> load_population(const std::filesystem::path& file_path);
 }

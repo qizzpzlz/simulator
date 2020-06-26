@@ -53,6 +53,7 @@ namespace cs
 
 	public:
 		ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm);
+		ClusterSimulation(Cluster& cluster, Scenario& scenario, std::string_view binary_allocation_file_path, bool minimal_format);
 
 		bool next_dispatch_reserved{ false };
 		std::size_t num_dispatched_slots{ 0 };
@@ -218,7 +219,7 @@ namespace cs
 		 * - Allocated host for each processed job.
 		 * - The time of execution for each processed job.
 		 */
-		void generate_allocation_binary(std::string_view output_path = "allocation.bin")
+		void generate_allocation_binary(std::filesystem::path output_path)
 		{
 			using record_t = const _Allocation_record_entry;
 

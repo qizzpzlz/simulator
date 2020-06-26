@@ -5,11 +5,10 @@
 #include <random>
 #include <ctime>
 #include <thread>
+#include <filesystem>
 
 namespace genetic
 {
-	struct Entry;
-
 	class Chromosome
 	{
 	public:
@@ -66,7 +65,7 @@ namespace genetic
 			return data_.data();
 		}
 
-		void save(const char* file_path) const
+		void save(const std::filesystem::path& file_path) const
 		{
 			std::filebuf output_stream;
 			output_stream.open(file_path, std::ios::out | std::ios::binary);

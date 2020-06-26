@@ -6,6 +6,7 @@
 #include "argparse.hpp"
 #include "queue_algorithm.h"
 #include <filesystem>
+#include "test.h"
 
 namespace fs = std::filesystem;
 using namespace cs;
@@ -18,14 +19,37 @@ int main(int argc, char *argv[])
 		.add_argument("-p", "--path")
 		.help("specify the path to scenario directory.")
 		.default_value(std::string(config::SCENARIO_FILE_PATH_STRING));
+	program.add_argument("--table-binary-path")
+		.help("Path to the job table binary file")
+		.default_value(std::string("table.bin"))
+		.required();
 	program.add_argument("-c", "--count")
 		.help("number of items to read in the given scenario.")
 		.default_value(-1)
 		.action([](const std::string& value) { return std::stoi(value); });
-	program.add_argument("-t", "--use-table")
-		.help("Use binary scenario table instead of json scenario file.")
-		.default_value(true)
+	program.add_argument("-j", "--use-json")
+		.help("Use json scenario instead of binary job table.")
+		.default_value(false)
 		.implicit_value(true);
+	program.add_argument("-a", "--algorithm")
+		.help("Queue algorithm to be used. (OLB, MCT or MinMin)")
+		.required()
+		.default_value(QueueAlgorithms::MinMin)
+		.action([](const std::string& value)->const QueueAlgorithm*
+				{
+					if (value == "OLB") return QueueAlgorithms::OLB;
+					if (value == "MCT") return QueueAlgorithms::MCT;
+					if (value == "MinMin") return QueueAlgorithms::MinMin;
+					throw std::runtime_error("Queue algorithm " + value + " is invalid.");
+				});
+	program.add_argument("--binary-old")
+		.help("Use generated allocation binary for queue algorithm (simple format).")
+		.default_value(false)
+		.implicit_value(true);
+	program.add_argument("--alloc-binary-path")
+		.help("Path to the allocation binary file")
+		.default_value(std::string("allocs.bin"))
+		.required();
 
 	try
 	{
@@ -39,6 +63,12 @@ int main(int argc, char *argv[])
 	}
 
 	const auto scenario_dir_path{ program.get<std::string>("--path") };
+	if (!fs::exists(scenario_dir_path))
+	{
+		std::cerr << "Scenario directory is missing" << std::endl;
+		exit(1);
+	}
+	
 	const std::string scenario_path{ scenario_dir_path + std::string(config::JSON_SCENARIO_FILE_NAME) };
 	const std::string host_path{ scenario_dir_path + std::string(config::JSON_HOST_FILE_NAME) };
 
@@ -48,10 +78,11 @@ int main(int argc, char *argv[])
 	Scenario scenario;
 	cs::Cluster cluster;
 	
-	if (program["--use-table"] == true)
+	if (program["--use-json"] == false)
 	{
 		// TODO: parse paths from the argument parser.
-		constexpr std::string_view scenario_binary_path = "../static-genetic-algorithm/job-eligibility.small.bin";
+		//constexpr std::string_view scenario_binary_path = "../static-genetic-algorithm/job-eligibility.small.bin";
+		std::string scenario_binary_path = program.get<std::string>("--table-binary-path");
 		constexpr std::string_view host_binary_path = "hosts.bin";
 		
 		Parser::parse_scenario_from_table(&scenario, scenario_binary_path);
@@ -64,13 +95,20 @@ int main(int argc, char *argv[])
 		Parser::parse_cluster(&cluster, host_path);
 	}
 
-	// Start simulation
-	ClusterSimulation simulation{ scenario, cluster, *QueueAlgorithms::MinMin};
+	std::string binary_allocation_file_name = program.get<std::string>("--alloc-binary-path");
+	std::string binary_allocation_file_path = scenario_dir_path + std::string(binary_allocation_file_name);
 
-	simulation.run();
+	// Start simulation	
+	std::unique_ptr<ClusterSimulation> simulation;
+	if (program["--binary-old"] == false)
+		simulation = std::make_unique<ClusterSimulation>(scenario, cluster, *program.get<const QueueAlgorithm*>("--algorithm"));
+	else
+		simulation = std::make_unique<ClusterSimulation>(cluster, scenario, binary_allocation_file_path, true);
+
+	simulation->run();
 
 	// Print summary
-	simulation.print_summary();
+	simulation->print_summary();
 
 	return 0;
 }

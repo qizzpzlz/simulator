@@ -64,6 +64,68 @@ namespace cs
 		initialise_tp();
 	}
 
+	ClusterSimulation::ClusterSimulation(Cluster& cluster, Scenario& scenario, std::string_view binary_allocation_file_path, bool minimal_format)
+	: cluster_{cluster}
+	, scenario_{scenario}
+	, dispatcher_{this}
+	{
+		cluster_.set_simulation(this);
+		all_queues_.emplace_back(*this);
+		auto& queue = all_queues_.back();
+		
+		// Open the binary file
+		std::ifstream file(binary_allocation_file_path.data(), std::ios::binary | std::ios::ate);
+		if (!file) throw std::runtime_error("Can't find a binary allocation file.");
+
+		file.seekg(0, std::ifstream::end);
+		const std::size_t size = file.tellg();
+		file.seekg(0, std::ifstream::beg);
+		if (size == 0) throw std::runtime_error("Binary allocation file is empty.");
+
+		std::cout << "Parsing allcation binary..." << std::endl;
+
+		auto buffer = std::make_unique<std::byte[]>(size);
+
+		file.read(reinterpret_cast<char*>(buffer.get()), size);
+		std::size_t read = 0;
+		//char* ptr = reinterpret_cast<char*>(buffer.get());
+		auto* ptr = buffer.get();
+
+		struct MinimalEntry
+		{
+			uint16_t allocated_host_id;
+		};
+
+		if (minimal_format)
+		{
+			auto* array = reinterpret_cast<MinimalEntry*>(ptr);
+			const std::size_t length = size / sizeof(MinimalEntry);
+			if (length != scenario.count()) throw std::runtime_error("Invalid allocation binary for the given scenario.");
+
+			for (auto i = 0; i < length; ++i)
+			{
+				auto& host = cluster[array[i].allocated_host_id];
+
+				auto entry = scenario.pop();
+				ms current = entry.timestamp;
+				current_time_ = current;
+				auto job = std::make_shared<Job>(std::move(entry), queue, current);
+
+				auto ready_duration = host.get_ready_duration(*job);
+				if (ready_duration > 0ms)
+					host.execute_job_when_ready(job, ready_duration);
+				else
+					host.execute_job(job);
+			}
+			current_time_ = scenario.initial_time_point;
+		}
+		else
+			while (read < size)
+			{
+				
+			}
+	}
+
 	Queue& ClusterSimulation::find_queue(const std::string& name)
 	{
 		auto it = all_queues_.begin();
@@ -193,6 +255,12 @@ namespace cs
 
 		for (auto [time, count] : pending_record_)
 			pending_jobs_file_ << time.time_since_epoch().count() << ", " << count << "\n";
+
+
+		if (config::LOG_ALLOCATION)
+		{
+			generate_allocation_binary(std::filesystem::path(config::LOG_DIRECTORY) / config::ALLOCATION_BINARY_FILE_NAME);
+		}
 	}
 
 	void ClusterSimulation::next()

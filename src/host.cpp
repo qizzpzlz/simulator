@@ -120,7 +120,8 @@ namespace cs
 			0, EventItem::Type::JOB_FINISHED);
 
 		// Record allocation
-		simulation->log_allocation(job, id);
+		if (config::LOG_ALLOCATION)
+			simulation->log_allocation(job, id);
 	}
 
 	/**

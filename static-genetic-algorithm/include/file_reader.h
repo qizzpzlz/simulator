@@ -6,7 +6,7 @@
 
 namespace genetic
 {
-	constexpr char binary_file_path[] = "../static-genetic-algorithm/job-eligibility-meta.bin";
+	constexpr char binary_file_path[] = "../static-genetic-algorithm/job-eligibility.small.bin";
 	constexpr char host_file_path[] = "../static-genetic-algorithm/all-time-ok-hosts.json";
 
 	std::vector<Entry> read_binary(const char* file_name);

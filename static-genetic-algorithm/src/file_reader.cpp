@@ -17,7 +17,10 @@ namespace genetic
 		auto file = std::ifstream(file_name, std::ios::binary | std::ios::ate);
 
 		if (!file)
-			throw std::runtime_error("Can't find a binary file for the job table.");
+		{
+			std::cerr << "Can't find a binary file for the job table. (" << file_name << ')' << std::endl;
+			exit(1);
+		}
 
 		//auto end = file.tellg();
 		//file.seekg(0, std::ios::beg);
@@ -35,21 +38,19 @@ namespace genetic
 		if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
 			throw std::runtime_error("");
 
-		int read = 0;
 		char* current = reinterpret_cast<char*>(buffer.data());
+		char* end = current + size;
 		std::vector<Entry> entries;
 		entries.reserve(RESERVED_ENTRIES_COUNT);
-		while (read < size)
-		{
-			RawJobMetaData* front_ptr = reinterpret_cast<RawJobMetaData*>(current);
-			Entry entry;
-			entry.values = *front_ptr;
-			entries.push_back(std::move(entry));
+		
+		while (current < end)
+			entries.push_back(Entry::from_binary(&current));
 
-			current += 22;
-			read += 22;
-		}
+		entries.shrink_to_fit();
 
+		if (CONSOLE_OUTPUT)
+			std::cout << "Binary job table is successfully loaded." << std::endl;
+		
 		return entries;
 	}
 
@@ -58,7 +59,10 @@ namespace genetic
 		using namespace json11;
 		std::ifstream file(file_name);
 		if (!file)
-			std::cerr << "File couldn't be opened.";
+		{
+			std::cerr << "Can't find a host file. (" << file_name << ')' << std::endl;
+			exit(1);
+		}
 
 		std::cout << "Parsing hosts json..." << std::endl;
 
@@ -104,9 +108,11 @@ namespace genetic
 		}
 
 		auto file = std::ifstream(binary_path, std::ios::binary | std::ios::ate);
-
 		if (!file)
-			throw std::runtime_error("Can't find binary hosts file.");
+		{
+			std::cerr << "Can't find a binary host file. (" << binary_path << ')' << std::endl;
+			exit(1);
+		}
 
 		file.seekg(0, std::ifstream::end);
 		const size_t size = file.tellg();
@@ -132,6 +138,10 @@ namespace genetic
 		memcpy(hosts.data(), current, sizeof(current) / sizeof(Host));
 
 		hosts.assign(current, current + count);
+
+		if (CONSOLE_OUTPUT)
+			std::cout << "Binary host list is successfully loaded." << std::endl;
+		
 		return hosts;
 	}
 }
