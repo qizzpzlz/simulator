@@ -109,7 +109,7 @@ namespace cs
 				auto entry = scenario.pop();
 				ms current = entry.timestamp;
 				current_time_ = current;
-				auto job = std::make_shared<Job>(std::move(entry), queue, current);
+				auto job = std::make_shared<Job>(entry, queue, current);
 
 				auto ready_duration = host.get_ready_duration(*job);
 				if (ready_duration > 0ms)

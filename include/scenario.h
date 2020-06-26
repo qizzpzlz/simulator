@@ -4,6 +4,7 @@
 #include <queue>
 #include <set>
 #include <iostream>
+#include <memory>
 
 class Cluster;
 
