@@ -411,9 +411,13 @@ public:
 					scores[i] = score;
 				}
 
-				auto it  = std::max_element(scores.cbegin(), scores.cend());
-
-				job.execute(&cluster[std::distance(scores.cbegin(), it)]);
+				auto it = std::max_element(scores.cbegin(), scores.cend());
+				auto& selected_host = cluster[std::distance(scores.cbegin(), it)];
+				auto delay = selected_host.get_ready_duration(*job);
+				if (delay > 0ms)
+					job.execute_when_ready(&selected_host, delay);
+				else
+					job.execute(&selected_host);
 			}
 		}
 	};
