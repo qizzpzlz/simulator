@@ -167,12 +167,6 @@ namespace cs
 			// Set pending for not assigned jobs
 			if (!job.is_dispatched())
 			{
-				//job->set_pending(simulation_->get_current_time());
-				//if constexpr (ClusterSimulation::LOG_ANY)
-				//	simulation_->log(LogLevel::info, "Job #{0} is pended. (pending duration: {1}ms)"
-				//		, job->id, job->total_pending_duration.count());
-				//pending_jobs_.push_back(std::move(jobs_.back()));
-
 				add_pending_job(job);
 			}
 
@@ -189,6 +183,8 @@ namespace cs
 	 */
 	void Queue::clean_pending_jobs()
 	{
+		if (pending_jobs_.empty()) return;
+		
 		for (auto& job : pending_jobs_)
 		{
 			job->update_total_pending_duration(simulation_->get_current_time());

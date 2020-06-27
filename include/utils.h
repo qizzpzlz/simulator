@@ -9,10 +9,13 @@ namespace Utils
 
     inline milliseconds get_time_left_until_next_period(const ms current, const milliseconds frequency)
     {
-        const double current_d{ static_cast<double>(current.time_since_epoch().count()) };
+        //const double current_d{ static_cast<double>(current.time_since_epoch().count()) };
+        const long long current_d{ current.time_since_epoch().count() };
         const long long frequency_d{ frequency.count() };
-		const auto remainder = current_d / frequency_d;
-		const auto value = std::llround(frequency_d - remainder);
+		const auto remainder = current_d % frequency_d;
+		//const auto value = std::llround(frequency_d - remainder);
+		const auto value = frequency_d - remainder;
+
 		return milliseconds(value);
     }
 

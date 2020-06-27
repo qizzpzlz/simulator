@@ -14,7 +14,9 @@
 namespace cs
 {
 	ClusterSimulation::ClusterSimulation(Scenario& scenario, Cluster& cluster, const QueueAlgorithm& algorithm)
-		: cluster_{ cluster }
+		: current_time_{ scenario.initial_time_point }
+		, next_arrival_time_{ 0ms }
+		, cluster_{ cluster }
 		, scenario_{ scenario }
 		, all_queues_{ scenario.generate_queues(*this) }
 		, dispatcher_{ this }
@@ -22,9 +24,6 @@ namespace cs
 		cluster.set_simulation(this);
 
 		// TODO: set default queue
-
-		current_time_ = scenario.initial_time_point;
-
 		if constexpr (config::USE_ONLY_DEFAULT_QUEUE)
 		{
 			all_queues_.clear();
@@ -160,13 +159,13 @@ namespace cs
 			if (!scenario_.is_empty())
 			{
 				auto next_entries = scenario_.pop_all_latest();
-				auto next_arrival_time = next_entries.front().timestamp;
+				next_arrival_time_ = next_entries.front().timestamp;
 				
 				if constexpr(!config::CONSOLE_OUTPUT)
 					std::cout << "\33[2K\r" << "Remaining scenarios: " << scenario_.count();
 
 				auto next_event_time = events_.top().time;
-				while (next_event_time <= next_arrival_time)
+				while (next_event_time < next_arrival_time_)
 				{
 					next();
 					next_event_time = events_.top().time;
@@ -265,6 +264,14 @@ namespace cs
 
 	void ClusterSimulation::next()
 	{
+		struct EventLog
+		{
+			EventItem::Type type;
+			ms time;
+			std::size_t id;
+		};
+		static std::vector<EventLog> logs;
+		
 		const auto event_item = events_.top();
 		events_.pop();
 
@@ -290,6 +297,13 @@ namespace cs
 				update_latest_finish_time(current_time_);
 			}
 		}
+
+		if constexpr (config::DEBUG_EVENTS)
+		{
+			logs.push_back({ event_item.type, current_time_, event_item.id });
+		}
+
+		
 		event_item.action();
 
 		//log(LogLevel::warn, "Time: {0}, Priority: {1}", event_item.time.time_since_epoch().count(), event_item.priority);

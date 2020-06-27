@@ -37,6 +37,7 @@ namespace cs
 		/* Event driven simulator helpers */
 		
 		ms current_time_;
+		ms next_arrival_time_;
 		Utils::EventQueue<EventItem> events_{};
 		Action log_action_;
 		Action count_new_jobs_;
@@ -59,6 +60,7 @@ namespace cs
 		std::size_t num_dispatched_slots{ 0 };
 
 		[[nodiscard]] ms get_current_time() const { return current_time_; }
+		[[nodiscard]] ms get_next_arriaval_time() const { return next_arrival_time_; }
 
 		[[nodiscard]] Queue& get_default_queue() { return all_queues_[0]; }
 		// TODO: use id instead of name
@@ -149,34 +151,40 @@ namespace cs
 			explicit Dispatcher(ClusterSimulation* simulation) : simulation_{simulation}{} 
 			void operator()()
 			{
-				auto version{ simulation_->cluster_.get_version() };
+				const auto version{ simulation_->cluster_.get_version() };
 				if (version == latest_cluster_version_)
 				{
-					if (simulation_->scenario_.count() == 0 && simulation_->num_pending_jobs_ == 0)
+					if (simulation_->scenario_.is_empty() && simulation_->num_pending_jobs_ == 0)
 					{
 						simulation_->next_dispatch_reserved = false;
 						return;
 					}
 
 					simulation_->after_delay(config::DISPATCH_FREQUENCY,
-						std::ref(simulation_->dispatcher_), 1, EventItem::Type::DISPATCH);
+						std::ref(*this), 1, EventItem::Type::DISPATCH);
 					return;
 				}
 				latest_cluster_version_ = version;
 
-				bool flag{ false };
+				bool pending_any{ false };
 				for (auto& q : simulation_->all_queues_)
-					flag |= q.dispatch();
-				if (flag)
+					pending_any |= q.dispatch();
+				if (pending_any)
 				{
 					// pending jobs exist
 					simulation_->after_delay(config::DISPATCH_FREQUENCY,
-						std::ref(simulation_->dispatcher_), 1, EventItem::Type::DISPATCH);
+						std::ref(*this), 1, EventItem::Type::DISPATCH);
 
 					size_t num{ 0 };
 					for (const auto& q : simulation_->all_queues_)
 						num += q.get_num_pending_jobs();
 					simulation_->num_pending_jobs_ = num;
+				}
+				else if (!simulation_->scenario_.is_empty())
+				{
+					simulation_->after_delay(
+						/*delay:*/Utils::get_time_left_until_next_period(simulation_->get_next_arriaval_time(), config::DISPATCH_FREQUENCY),
+						std::ref(*this), 1, EventItem::Type::DISPATCH);
 				}
 				else
 				{
