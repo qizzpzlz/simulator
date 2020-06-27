@@ -63,6 +63,31 @@ namespace cs
 			(job.cpu_time / cpu_factor + job.non_cpu_time) * config::RUNTIME_MULTIPLIER);
 	}
 
+	int Host::get_expected_remaining_slots(const Job& job) const
+	{
+		int remaining = remaining_slots();
+		
+		if (job.slot_required <= remaining)
+			return remaining - job.slot_required;
+
+		const ms ready_time = get_ready_duration(job) + simulation->get_current_time();
+
+		for (auto it = running_jobs_.rbegin(), end = running_jobs_.rend(); it != end; ++it)
+		{
+			auto& j = **it;
+			if (j.finish_time <= ready_time)
+			{
+				remaining += j.slot_required;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return remaining - job.slot_required;
+	}
+
 	/**
 	 * Execute a specified job in this host.
 	 * This will cause job finished event after the estimated runtime for

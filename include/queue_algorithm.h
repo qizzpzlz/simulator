@@ -140,6 +140,7 @@
 #include "host.h"
 #include "cluster.h"
 #include "utils.h"
+#include <array>
 
 namespace cs
 {
@@ -363,12 +364,67 @@ public:
 			} while (!all_jobs.empty());
 		}
 	};
+
+	class WeightBasedGreedySelection : public QueueAlgorithm
+	{
+		inline static std::string name_ = "Weight Based Greedy Selection";
+	public:
+		static constexpr unsigned num_weights = 5;
+		std::array<double, num_weights> weights;
+
+		auto factor_w() const noexcept { return weights[0]; }
+		auto max_slots_w() const noexcept { return weights[1]; }
+		auto remaining_slots_w() const noexcept { return weights[2]; }
+		auto expected_remaining_slots_w() const noexcept { return weights[3]; }
+		auto ready_duration_w() const noexcept { return weights[4]; }
+		
+		explicit WeightBasedGreedySelection(std::array<double, num_weights> weights)
+		: weights{std::move(weights)} { }
+		
+		const std::string& get_name() const noexcept override { return name_; }
+		void run(Jobs& jobs, Cluster& cluster) const override
+		{
+			static std::vector<double> scores(cluster.count());
+			
+			for (auto& job : jobs)
+			{
+				for (int i = 0; i < cluster.count(); ++i)
+				{
+					auto& host = cluster[i];
+					if (!host.is_compatible(*job))
+					{
+						scores[i] = 0;
+						continue;
+					}
+					
+					double score = 0;
+					score += host.cpu_factor * factor_w();
+					score += host.max_slot * max_slots_w();
+					score += host.remaining_slots() * remaining_slots_w();
+
+					const auto expected_remaining_slots = host.get_expected_remaining_slots(*job);
+					score += expected_remaining_slots * expected_remaining_slots_w();
+					seconds ready_duration_seconds =
+						duration_cast<seconds>(host.get_ready_duration(*job));
+					score += ready_duration_seconds.count() * ready_duration_w();
+
+					scores[i] = score;
+				}
+
+				auto it  = std::max_element(scores.cbegin(), scores.cend());
+
+				job.execute(&cluster[std::distance(scores.cbegin(), it)]);
+			}
+		}
+	};
+	
 	class QueueAlgorithms
 	{
 	public:
 		inline static const QueueAlgorithm* const OLB = new OLBAlgorithm();
 		inline static const QueueAlgorithm* const MCT = new MCTAlgorithm();
 		inline static const QueueAlgorithm* const MinMin = new MinMinAlgorithm();
+		//inline static const QueueAlgorithm* const WeightBased = new WeightBasedGreedySelection();
 	};
 }
 

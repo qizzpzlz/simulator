@@ -95,6 +95,7 @@ namespace cs
 		[[nodiscard]] milliseconds get_expected_completion_duration(const Job& job) const;
 		[[nodiscard]] milliseconds get_expected_run_duration(const Job& job) const noexcept;
 		[[nodiscard]] ms get_expected_time_of_all_completion() const noexcept { return expected_time_of_completion; }
+		[[nodiscard]] int get_expected_remaining_slots(const Job& job) const;
 
 
 		/* Status mutator methods */

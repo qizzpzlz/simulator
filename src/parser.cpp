@@ -8,8 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <array>
 
-namespace cs::Parser
+namespace cs::parser
 {
 		void parse_scenario(Scenario* scenario, const std::string& file_path, int limit)
 		{
@@ -160,7 +161,8 @@ namespace cs::Parser
 			{
 				ScenarioEntry entry;
 				entry.type = ScenarioEntry::Type::SUBMISSION;
-				entry.timestamp = ms{ std::chrono::duration<long long>{ static_cast<long long>(read_uint32_padded(&current, read) - first_timestamp) } };
+				auto time = static_cast<long long>(read_uint32_padded(&current, read));
+				entry.timestamp = ms{ std::chrono::duration<long long>{ time - first_timestamp } };
 				entry.eligible_indices = std::make_shared<decltype(ScenarioEntry::eligible_indices)::element_type>();
 				entry.event_detail.num_slots = read_uint32_padded(&current, read);
 				entry.event_detail.job_cpu_time = read_uint32_padded(&current, read);

@@ -7,6 +7,7 @@
 #include "queue_algorithm.h"
 #include <filesystem>
 #include "test.h"
+#include <array>
 
 namespace fs = std::filesystem;
 using namespace cs;
@@ -50,6 +51,14 @@ int main(int argc, char *argv[])
 		.help("Path to the allocation binary file")
 		.default_value(std::string("allocs.bin"))
 		.required();
+	program.add_argument("--use-weight-csv")
+		.help("Use weights as a queue algorithm.")
+		.default_value(true)
+		.implicit_value(true);
+	program.add_argument("--weight-csv-path")
+		.help("Path to the weight csv file.")
+		.default_value(std::string("weights.csv"))
+		.required();
 
 	try
 	{
@@ -85,23 +94,40 @@ int main(int argc, char *argv[])
 		std::string scenario_binary_path = program.get<std::string>("--table-binary-path");
 		constexpr std::string_view host_binary_path = "hosts.bin";
 		
-		Parser::parse_scenario_from_table(&scenario, scenario_binary_path);
-		Parser::parse_cluster_from_binary(&cluster, host_binary_path);
+		parser::parse_scenario_from_table(&scenario, scenario_binary_path);
+		parser::parse_cluster_from_binary(&cluster, host_binary_path);
 	}
 	else
 	{
 		// Parse the given scenario and the cluster from json files.
-		Parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
-		Parser::parse_cluster(&cluster, host_path);
+		parser::parse_scenario(&scenario, scenario_path, program.get<int>("--count"));
+		parser::parse_cluster(&cluster, host_path);
 	}
 
 	std::string binary_allocation_file_name = program.get<std::string>("--alloc-binary-path");
 	std::string binary_allocation_file_path = scenario_dir_path + std::string(binary_allocation_file_name);
 
-	// Start simulation	
+	// Start simulation
+	std::shared_ptr<QueueAlgorithm> algorithm_storage;
 	std::unique_ptr<ClusterSimulation> simulation;
 	if (program["--binary-old"] == false)
-		simulation = std::make_unique<ClusterSimulation>(scenario, cluster, *program.get<const QueueAlgorithm*>("--algorithm"));
+	{
+		const QueueAlgorithm* algorithm;
+		if (program["--use-weight-csv"] == true)
+		{
+			auto weights = 
+				parser::parse_weights<WeightBasedGreedySelection::num_weights>(program.get<std::string>("--weight-csv-path"));
+
+			algorithm_storage = std::make_shared<WeightBasedGreedySelection>(weights);
+			algorithm = algorithm_storage.get();
+		}
+		else
+		{
+			algorithm = program.get<const QueueAlgorithm*>("--algorithm");
+		}
+		
+		simulation = std::make_unique<ClusterSimulation>(scenario, cluster, *algorithm);
+	}
 	else
 		simulation = std::make_unique<ClusterSimulation>(cluster, scenario, binary_allocation_file_path, true);
 
