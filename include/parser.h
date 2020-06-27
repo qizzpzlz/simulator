@@ -1,6 +1,11 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <iostream>
+#include <array>
+#include <sstream>
+#include <string>
+#include <fstream>
 
 namespace cs
 {
