@@ -139,6 +139,7 @@ namespace cs
 		std::size_t num_successful_jobs_{ 0 };
 		std::size_t num_failed_jobs_{ 0 };
 		std::size_t num_pending_jobs_{ 0 };
+		std::size_t num_reserved_jobs_{ 0 };
 		milliseconds total_pending_duration_{};
 		milliseconds total_queuing_time_{};
 
@@ -414,7 +415,7 @@ namespace cs
 			if constexpr (!config::SLOTS_FILE_OUTPUT) return;
 
 			using_slot_record_.insert_or_assign(get_current_time(), num_dispatched_slots);
-			pending_record_.emplace_back(get_current_time(), num_pending_jobs_);
+			pending_record_.emplace_back(get_current_time(), num_pending_jobs_ + num_reserved_jobs_);
 		}
 	};
 #pragma endregion

@@ -133,6 +133,12 @@ namespace cs
 
 			update_job_list(job_ptr);
 		}
+		else
+		{
+			//job.queue_managing_this_job->remove_reserved_job(job_ptr);
+			--simulation->num_reserved_jobs_;
+			simulation->update_pending_duration(start_time - job.submit_time);
+		}
 
 		job.state = JobState::RUN;
 
@@ -196,6 +202,9 @@ namespace cs
 			simulation->log(LogLevel::info, "Job #{0} is reserved in Host #{1}", job.id, this->id);
 
 		update_job_list(job_ptr);
+
+		//job.queue_managing_this_job->add_pending_job<true>(job_ptr);
+		++simulation->num_reserved_jobs_;
 	}
 
 	void Host::update_job_list(const std::shared_ptr<Job>& job_ptr)

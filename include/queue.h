@@ -137,14 +137,20 @@ namespace cs
 		// Gets priority of this queue. Higher values have higher priority.
 		int get_priority() const { return priority; }
 		size_t count() const { return jobs_.size(); }
-		auto get_num_pending_jobs() const { return pending_jobs_.size(); }
+		auto get_num_pending_jobs() const
+		{
+			auto num = pending_jobs_.size();
+			return num + num_reserved_jobs_;
+		}
 		bool is_default() const { return is_default_; }
 
 		bool dispatch();
 		void enqueue(std::shared_ptr<Job> job);
 		void add_pending_job(JobWrapper& job);
 		void add_pending_job(JobWrapper&& job);
-		void add_pending_job(std::shared_ptr<Job> job) { add_pending_job(JobWrapper(std::move(job))); }
+		template <bool Reserved = false>
+		void add_pending_job(std::shared_ptr<Job> job);
+		void remove_reserved_job(std::shared_ptr<Job> job) { --num_reserved_jobs_; }
 
 		void set_algorithm(const QueueAlgorithm* const algorithm);
 		const QueueAlgorithm* current_algorithm{ nullptr };
@@ -167,6 +173,7 @@ namespace cs
 		ClusterSimulation* simulation_;
 		std::vector<JobWrapper> jobs_;
         std::vector<JobWrapper> pending_jobs_;
+		std::size_t num_reserved_jobs_;
 
 		// Queue limits
 		int job_limit_{};
@@ -257,6 +264,15 @@ namespace cs
 
 		const static StaticQueueData data;
 	};
+
+	template<>
+	inline void Queue::add_pending_job<false>(std::shared_ptr<Job> job) { add_pending_job(JobWrapper(std::move(job))); }
+
+	template<>
+	inline void Queue::add_pending_job<true>(std::shared_ptr<Job> job)
+	{
+		++num_reserved_jobs_;
+	}
 }
 
 

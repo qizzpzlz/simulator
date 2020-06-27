@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	program.add_argument("-a", "--algorithm")
 		.help("Queue algorithm to be used. (OLB, MCT or MinMin)")
 		.required()
-		.default_value(QueueAlgorithms::MCT)
+		.default_value(QueueAlgorithms::MinMin)
 		.action([](const std::string& value)->const QueueAlgorithm*
 				{
 					if (value == "OLB") return QueueAlgorithms::OLB;
