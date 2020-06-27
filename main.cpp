@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 		.required();
 	program.add_argument("--use-weight-csv")
 		.help("Use weights as a queue algorithm.")
-		.default_value(true)
+		.default_value(false)
 		.implicit_value(true);
 	program.add_argument("--weight-csv-path")
 		.help("Path to the weight csv file.")
