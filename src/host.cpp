@@ -243,8 +243,7 @@ namespace cs
 
 		cluster->update();
 
-		if (!reserved)
-			simulation->num_dispatched_slots -= job.slot_required;
+		simulation->num_dispatched_slots -= job.slot_required;
 		job.queue_managing_this_job->using_job_slots -= job.slot_required;
 
 		simulation->log_using_slots();
